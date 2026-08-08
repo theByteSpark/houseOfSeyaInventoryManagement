@@ -73,7 +73,7 @@ export function UsersListPage() {
     <div>
       <PageHeader
         title="Users"
-        description="Manage who can sign in to House of Seya."
+        description="Manage who can sign in to Paragon Resin."
         action={<Button onClick={() => setFormOpen(true)} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add user</Button>}
       />
 

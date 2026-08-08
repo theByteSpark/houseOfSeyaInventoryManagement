@@ -3,14 +3,13 @@ import { NavLink, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
-  Package,
-  Tags,
-  Layers,
+  // Package,
+  // Tags,
+  // Layers,
   ShoppingCart,
   Truck,
   ClipboardList,
   BarChart3,
-  UserCog,
   LogOut,
   ChevronDown,
   MoreHorizontal,
@@ -56,22 +55,22 @@ const baseNavGroups: NavGroup[] = [
       { to: '/vendors', label: 'Vendors', icon: Truck },
     ],
   },
-  {
-    key: 'products',
-    label: 'Products',
-    items: [
-      { to: '/inventory/products', label: 'Products', icon: Package },
-      { to: '/inventory/categories', label: 'Categories', icon: Tags },
-      { to: '/inventory/subcategories', label: 'Subcategories', icon: Layers },
-    ],
-  },
+  // {
+  //   key: 'products',
+  //   label: 'Products',
+  //   items: [
+  //     { to: '/inventory/products', label: 'Products', icon: Package },
+  //     { to: '/inventory/categories', label: 'Categories', icon: Tags },
+  //     { to: '/inventory/subcategories', label: 'Subcategories', icon: Layers },
+  //   ],
+  // },
 ];
 
-const adminNavGroup: NavGroup = {
-  key: 'admin',
-  label: 'Admin',
-  items: [{ to: '/users', label: 'Users', icon: UserCog }],
-};
+// const adminNavGroup: NavGroup = {
+//   key: 'admin',
+//   label: 'Admin',
+//   items: [{ to: '/users', label: 'Users', icon: UserCog }],
+// };
 
 const mobilePrimaryPaths = ['/', '/sales', '/purchases', '/inventory/products'];
 
@@ -88,7 +87,7 @@ function loadCollapsedGroups(): Record<string, boolean> {
 
 export function AppShell() {
   const { user, logout } = useAuth();
-  const navGroups = user?.role === 'ADMIN' ? [...baseNavGroups, adminNavGroup] : baseNavGroups;
+  const navGroups = baseNavGroups;
   const allItems = navGroups.flatMap((g) => g.items);
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedGroups);
@@ -110,11 +109,9 @@ export function AppShell() {
       {/* Desktop sidebar (lg+) */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-graphite-200 bg-white lg:flex">
         <div className="flex items-center gap-2.5 px-5 py-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-700 text-[13px] font-bold tracking-tight text-white">
-            HS
-          </div>
+          <img src="/paragon-logo.jpg" alt="Paragon Resin" className="h-8 w-8 rounded-md object-cover" />
           <div>
-            <p className="text-[13px] font-semibold leading-tight text-graphite-900">House of Seya</p>
+            <p className="text-[13px] font-semibold leading-tight text-graphite-900">Paragon Resin</p>
             <p className="text-[11px] leading-tight text-graphite-400">Inventory &amp; Invoicing</p>
           </div>
         </div>
@@ -190,11 +187,9 @@ export function AppShell() {
       {/* Mobile top bar (< lg) */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-graphite-200 bg-white px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-700 text-[13px] font-bold tracking-tight text-white">
-            HS
-          </div>
+          <img src="/paragon-logo.jpg" alt="Paragon Resin" className="h-8 w-8 shrink-0 rounded-md object-cover" />
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-semibold leading-tight text-graphite-900">House of Seya</p>
+            <p className="truncate text-[13px] font-semibold leading-tight text-graphite-900">Paragon Resin</p>
             <p className="truncate text-[11px] leading-tight text-graphite-400">{user?.name} · {user?.role}</p>
           </div>
         </div>

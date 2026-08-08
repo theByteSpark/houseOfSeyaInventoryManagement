@@ -1,9 +1,10 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { getAccessToken, setAccessToken } from './tokenStore';
+import { getAccessToken, getRefreshToken, setAccessToken, setRefreshToken } from './tokenStore';
 
-const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api/v1';
+const baseURL =
+  import.meta.env.VITE_API_URL ?? 'https://houseofseyainventorymanagementbackend-production.up.railway.app/api/v1';
 
-export const apiClient = axios.create({ baseURL, withCredentials: true });
+export const apiClient = axios.create({ baseURL });
 
 apiClient.interceptors.request.use((config) => {
   const token = getAccessToken();
@@ -21,9 +22,18 @@ let refreshPromise: Promise<string | null> | null = null;
 
 async function refreshAccessToken(): Promise<string | null> {
   if (!refreshPromise) {
-    refreshPromise = axios
-      .post<{ accessToken: string }>(`${baseURL}/auth/refresh`, null, { withCredentials: true })
-      .then((res) => res.data.accessToken)
+    const storedRefreshToken = getRefreshToken();
+    refreshPromise = (
+      storedRefreshToken
+        ? axios.post<{ accessToken: string; refreshToken: string }>(`${baseURL}/auth/refresh`, {
+            refreshToken: storedRefreshToken,
+          })
+        : Promise.reject(new Error('No refresh token'))
+    )
+      .then((res) => {
+        setRefreshToken(res.data.refreshToken);
+        return res.data.accessToken;
+      })
       .catch(() => null)
       .finally(() => {
         refreshPromise = null;
@@ -47,6 +57,7 @@ apiClient.interceptors.response.use(
         return apiClient(config);
       }
       setAccessToken(null);
+      setRefreshToken(null);
     }
 
     return Promise.reject(error);

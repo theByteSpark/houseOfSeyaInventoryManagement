@@ -64,7 +64,7 @@ export function UserFormModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
         <Input
           label="Email"
           type="email"
-          placeholder="name@houseofseya.com"
+          placeholder="name@paragonresin.com"
           error={errors.email?.message}
           {...register('email')}
         />

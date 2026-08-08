@@ -101,7 +101,7 @@ export function ForgotPasswordPage() {
               <Input
                 label="Email"
                 type="email"
-                placeholder="you@houseofseya.com"
+                placeholder="you@paragonresin.com"
                 error={emailForm.formState.errors.email?.message}
                 {...emailForm.register('email')}
               />

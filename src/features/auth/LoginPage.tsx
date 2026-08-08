@@ -46,11 +46,8 @@ export function LoginPage() {
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-5">
       <div className="relative hidden flex-col justify-between bg-brand-800 p-12 text-white lg:col-span-2 lg:flex">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 text-[13px] font-bold tracking-tight">
-            HS
-          </div>
-          <span className="text-[15px] font-semibold tracking-tight">House of Seya</span>
+        <div className="flex pt-16">
+          <img src="/paragon-logo.jpg" alt="Paragon Resin" className="h-28 w-28 rounded-md object-cover ml-20 mt-24" />
         </div>
 
         <div>
@@ -71,16 +68,13 @@ export function LoginPage() {
           </div>
         </div>
 
-        <p className="text-xs text-brand-200">&copy; {new Date().getFullYear()} House of Seya. All rights reserved.</p>
+        <p className="text-xs text-brand-200">&copy; {new Date().getFullYear()} Paragon Resin. All rights reserved.</p>
       </div>
 
       <div className="flex items-center justify-center bg-white px-6 py-16 lg:col-span-3">
         <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
-            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-md bg-brand-700 text-[13px] font-bold text-white">
-              HS
-            </div>
-            <p className="text-[15px] font-semibold text-graphite-900">House of Seya</p>
+          <div className="mb-8 flex justify-center lg:hidden">
+            <img src="/paragon-logo.jpg" alt="Paragon Resin" className="h-28 w-28 -translate-x-3 rounded-md object-cover" />
           </div>
 
           <h2 className="text-[22px] font-semibold tracking-tight text-graphite-900">Sign in</h2>
@@ -90,7 +84,7 @@ export function LoginPage() {
             <Input
               label="Email"
               type="email"
-              placeholder="you@houseofseya.com"
+              placeholder="you@paragonresin.com"
               error={errors.email?.message}
               {...register('email')}
             />
@@ -114,7 +108,7 @@ export function LoginPage() {
           </form>
 
           <p className="mt-6 text-center text-xs text-graphite-400">
-            Demo workspace — sign in with admin@houseofseya.com / password123.
+            Demo workspace — sign in with admin@paragonresin.com / password123.
           </p>
         </div>
       </div>

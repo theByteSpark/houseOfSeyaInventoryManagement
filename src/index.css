@@ -2,17 +2,29 @@
 @import "tailwindcss";
 
 @theme {
-  /* Deep olive green — primary brand/action color, matches House of Seya packaging */
-  --color-brand-50: #f1f3ec;
-  --color-brand-100: #e2e6d6;
-  --color-brand-200: #c5cdae;
-  --color-brand-300: #a6b283;
-  --color-brand-400: #85945e;
-  --color-brand-500: #66753f;
-  --color-brand-600: #505d30;
-  --color-brand-700: #414b28;
-  --color-brand-800: #313820;
-  --color-brand-900: #1f2414;
+  /* Deep navy — primary brand/action color, matches Paragon Resin logo */
+  --color-brand-50: #eef2f6;
+  --color-brand-100: #dbe3ec;
+  --color-brand-200: #b0c1d3;
+  --color-brand-300: #7f9ab6;
+  --color-brand-400: #4c6f92;
+  --color-brand-500: #2b5170;
+  --color-brand-600: #1c3a52;
+  --color-brand-700: #16304a;
+  --color-brand-800: #10233a;
+  --color-brand-900: #0a1826;
+
+  /* Warm orange — secondary accent color, matches Paragon Resin logo */
+  --color-accent-50: #fff3ea;
+  --color-accent-100: #ffe2c9;
+  --color-accent-200: #ffc493;
+  --color-accent-300: #ffa25d;
+  --color-accent-400: #f9862f;
+  --color-accent-500: #f0791d;
+  --color-accent-600: #d3630f;
+  --color-accent-700: #a94e0d;
+  --color-accent-800: #813c0f;
+  --color-accent-900: #5c2c0d;
 
   /* Graphite neutrals used for text, borders, backgrounds */
   --color-graphite-50: #f7f8f9;

@@ -9,6 +9,7 @@ export interface LoginPayload {
 export interface LoginResponse {
   user: User;
   accessToken: string;
+  refreshToken: string;
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
@@ -25,8 +26,13 @@ export async function fetchCurrentUser(): Promise<User> {
   return data;
 }
 
-export async function refreshSession(): Promise<{ user: User; accessToken: string }> {
-  const { data } = await apiClient.post<{ user: User; accessToken: string }>('/auth/refresh');
+export async function refreshSession(
+  refreshToken: string,
+): Promise<{ user: User; accessToken: string; refreshToken: string }> {
+  const { data } = await apiClient.post<{ user: User; accessToken: string; refreshToken: string }>(
+    '/auth/refresh',
+    { refreshToken },
+  );
   return data;
 }
 
