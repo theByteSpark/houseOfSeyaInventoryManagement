@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useEffect } from 'react';
-import { Button, Input, Modal } from '@/components/ui';
+import { Button, Input, Modal, toast } from '@/components/ui';
 import { useCreateWarehouse, useUpdateWarehouse } from './hooks';
 import type { Warehouse } from '@/types';
 
@@ -47,8 +47,10 @@ export function WarehouseFormModal({
   const onSubmit = async (values: FormValues) => {
     if (isEditing && warehouse) {
       await updateWarehouse.mutateAsync({ id: warehouse.id, input: values });
+      toast.success('Warehouse updated successfully');
     } else {
       await createWarehouse.mutateAsync(values);
+      toast.success('Warehouse created successfully');
     }
     onClose();
   };

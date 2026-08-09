@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
+import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, toast, type Column } from '@/components/ui';
 import { useCancelSale, useSale, useIssueSale, useMarkSalePaid } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
 import type { SaleItem } from '@/types';
@@ -42,12 +42,15 @@ export function SaleDetailPage() {
     { key: 'lineTotal', header: 'Line total', align: 'right', render: (item) => formatCurrency(item.lineTotal) },
   ];
 
-  const runAction = async (action: () => Promise<unknown>) => {
+  const runAction = async (action: () => Promise<unknown>, successMsg?: string) => {
     setActionError(null);
     try {
       await action();
+      if (successMsg) toast.success(successMsg);
     } catch (err) {
-      setActionError(extractErrorMessage(err, 'Action failed.'));
+      const msg = extractErrorMessage(err, 'Action failed.');
+      setActionError(msg);
+      toast.error(msg);
     }
   };
 
@@ -119,7 +122,7 @@ export function SaleDetailPage() {
               {sale.status === 'DRAFT' && (
                 <Button
                   isLoading={issueSale.isPending}
-                  onClick={() => runAction(() => issueSale.mutateAsync(sale.id))}
+                  onClick={() => runAction(() => issueSale.mutateAsync(sale.id), 'Sale confirmed')}
                 >
                   Confirm sale
                 </Button>
@@ -127,7 +130,7 @@ export function SaleDetailPage() {
               {sale.status === 'ISSUED' && (
                 <Button
                   isLoading={markPaid.isPending}
-                  onClick={() => runAction(() => markPaid.mutateAsync(sale.id))}
+                  onClick={() => runAction(() => markPaid.mutateAsync(sale.id), 'Sale marked as paid')}
                 >
                   Mark as paid
                 </Button>
@@ -136,7 +139,7 @@ export function SaleDetailPage() {
                 <Button
                   variant="danger"
                   isLoading={cancelSale.isPending}
-                  onClick={() => runAction(() => cancelSale.mutateAsync(sale.id))}
+                  onClick={() => runAction(() => cancelSale.mutateAsync(sale.id), 'Sale cancelled')}
                 >
                   Cancel sale
                 </Button>

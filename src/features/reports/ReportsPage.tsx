@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { BarChart3, Package, ShoppingCart, ClipboardList } from 'lucide-react';
+import { BarChart3, Download, Package, ShoppingCart, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { formatCurrency } from '@/lib/format';
+import { generateReportPdf } from '@/lib/reportPdf';
 import {
   Badge,
+  Button,
   Card,
   CardBody,
   CardHeader,
@@ -14,6 +16,7 @@ import {
   Select,
   StatTile,
   Table,
+  toast,
   type Column,
 } from '@/components/ui';
 import { SaleStatusBadge } from '@/features/sales/statusBadge';
@@ -151,10 +154,47 @@ function SalesReportTab() {
         <StatTile label="Total tax" value={formatCurrency(data.totalTax)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2">
-        {data.statusBreakdown.map((s) => (
-          <Badge key={s.status} tone="neutral">{s.status}: {s.count}</Badge>
-        ))}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex flex-wrap gap-2">
+          {data.statusBreakdown.map((s) => (
+            <Badge key={s.status} tone="neutral">{s.status}: {s.count}</Badge>
+          ))}
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<Download className="h-4 w-4" strokeWidth={2} />}
+          onClick={() => {
+            try {
+              generateReportPdf(
+                'Sales Report',
+                `From: ${from}, To: ${to}, Status: ${status}${warehouseId ? ', Warehouse: ' + warehouseId : ''}`,
+                [
+                  { label: 'Total sales', value: String(data.totalCount) },
+                  { label: 'Total revenue', value: formatCurrency(data.totalRevenue) },
+                  { label: 'Total tax', value: formatCurrency(data.totalTax) },
+                ],
+                [
+                  {
+                    title: 'Top selling products',
+                    head: ['Product', 'SKU', 'Qty sold', 'Revenue'],
+                    body: data.topProducts.map((p) => [p.product, p.sku, p.quantity, formatCurrency(p.revenue)]),
+                  },
+                  {
+                    title: 'Sales in period',
+                    head: ['Sale #', 'Customer', 'Status', 'Total', 'Date'],
+                    body: data.sales.map((s) => [s.saleNumber, s.customerName, s.status, formatCurrency(s.total), new Date(s.createdAt).toLocaleDateString()]),
+                  },
+                ],
+              );
+              toast.success('Sales report downloaded');
+            } catch {
+              toast.error('Failed to generate PDF');
+            }
+          }}
+        >
+          Download PDF
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -228,10 +268,46 @@ function PurchasesReportTab() {
         <StatTile label="Total cost" value={formatCurrency(data.totalCost)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2">
-        {data.statusBreakdown.map((s) => (
-          <Badge key={s.status} tone="neutral">{s.status}: {s.count}</Badge>
-        ))}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex flex-wrap gap-2">
+          {data.statusBreakdown.map((s) => (
+            <Badge key={s.status} tone="neutral">{s.status}: {s.count}</Badge>
+          ))}
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<Download className="h-4 w-4" strokeWidth={2} />}
+          onClick={() => {
+            try {
+              generateReportPdf(
+                'Purchases Report',
+                `From: ${from}, To: ${to}, Status: ${status}${warehouseId ? ', Warehouse: ' + warehouseId : ''}`,
+                [
+                  { label: 'Total purchases', value: String(data.totalCount) },
+                  { label: 'Total cost', value: formatCurrency(data.totalCost) },
+                ],
+                [
+                  {
+                    title: 'Top ordered products',
+                    head: ['Product', 'SKU', 'Qty ordered', 'Cost'],
+                    body: data.topProducts.map((p) => [p.product, p.sku, p.quantity, formatCurrency(p.cost)]),
+                  },
+                  {
+                    title: 'Purchases in period',
+                    head: ['PO #', 'Vendor', 'Status', 'Total', 'Date'],
+                    body: data.purchases.map((p) => [p.purchaseNumber, p.vendorName, p.status, formatCurrency(p.total), new Date(p.createdAt).toLocaleDateString()]),
+                  },
+                ],
+              );
+              toast.success('Purchases report downloaded');
+            } catch {
+              toast.error('Failed to generate PDF');
+            }
+          }}
+        >
+          Download PDF
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -294,6 +370,49 @@ function InventoryReportTab() {
         <StatTile label="Total products" value={data.totalProducts} icon={<Package className="h-4 w-4" strokeWidth={2} />} />
         <StatTile label="Total stock value" value={formatCurrency(data.totalStockValue)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />
         <StatTile label="Low stock items" value={data.lowStockCount} icon={<Package className="h-4 w-4" strokeWidth={2} />} tone={data.lowStockCount > 0 ? 'warning' : 'neutral'} />
+      </div>
+
+      <div className="mb-6 flex items-center justify-end">
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<Download className="h-4 w-4" strokeWidth={2} />}
+          onClick={() => {
+            try {
+              generateReportPdf(
+                'Inventory Report',
+                `${warehouseId ? 'Warehouse: ' + warehouseId : 'All warehouses'}`,
+                [
+                  { label: 'Total products', value: String(data.totalProducts) },
+                  { label: 'Total stock value', value: formatCurrency(data.totalStockValue) },
+                  { label: 'Low stock items', value: String(data.lowStockCount) },
+                ],
+                [
+                  {
+                    title: 'Low stock products',
+                    head: ['Product', 'SKU', 'Stock', 'Reorder at'],
+                    body: data.lowStockProducts.map((p) => [p.name, p.sku, p.quantityInStock, p.reorderLevel]),
+                  },
+                  {
+                    title: 'Category-wise breakdown',
+                    head: ['Category', 'Products', 'Stock value'],
+                    body: data.categoryBreakdown.map((c) => [c.category, c.productCount, formatCurrency(c.stockValue)]),
+                  },
+                  {
+                    title: 'Recent stock movements',
+                    head: ['Product', 'Type', 'Qty', 'Reason', 'Date'],
+                    body: data.recentMovements.map((m) => [m.productName, m.type, m.quantity, m.reason ?? '—', new Date(m.createdAt).toLocaleString()]),
+                  },
+                ],
+              );
+              toast.success('Inventory report downloaded');
+            } catch {
+              toast.error('Failed to generate PDF');
+            }
+          }}
+        >
+          Download PDF
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

@@ -12,6 +12,7 @@ import {
   PageHeader,
   Pagination,
   Table,
+  toast,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
@@ -52,6 +53,7 @@ export function WarehousesListPage() {
     setDeleteError(null);
     try {
       await deleteWarehouse.mutateAsync(deleteTarget.id);
+      toast.success('Warehouse deleted');
       setDeleteTarget(null);
     } catch (err) {
       setDeleteError(extractErrorMessage(err, 'Could not delete warehouse.'));

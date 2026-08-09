@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, Select, SearchableCombobox } from '@/components/ui';
+import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, Select, SearchableCombobox, toast } from '@/components/ui';
 import { useVendors } from '@/features/vendors/hooks';
 import { VendorFormModal } from '@/features/vendors/VendorFormModal';
 import { useProducts } from '@/features/inventory/hooks';
@@ -121,9 +121,12 @@ export function PurchaseFormPage() {
       const purchase = isEdit
         ? await updatePurchase.mutateAsync({ id: id as string, input })
         : await createPurchase.mutateAsync(input);
+      toast.success(isEdit ? 'Purchase updated successfully' : 'Purchase created successfully');
       navigate(`/purchases/${purchase.id}`, { replace: true });
     } catch (err) {
-      setError(extractErrorMessage(err, isEdit ? 'Could not update purchase.' : 'Could not create purchase.'));
+      const msg = extractErrorMessage(err, isEdit ? 'Could not update purchase.' : 'Could not create purchase.');
+      setError(msg);
+      toast.error(msg);
     }
   };
 

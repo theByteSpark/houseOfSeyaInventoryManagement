@@ -12,6 +12,7 @@ import {
   PageHeader,
   Pagination,
   Table,
+  toast,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
@@ -158,7 +159,10 @@ export function CustomersListPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => {
           if (!deleteTarget) return;
-          deleteCustomer.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+          deleteCustomer.mutate(deleteTarget.id, { onSuccess: () => {
+            toast.success('Customer deleted');
+            setDeleteTarget(null);
+          } });
         }}
         title="Delete customer"
         description={

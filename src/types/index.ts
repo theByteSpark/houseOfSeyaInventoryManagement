@@ -115,6 +115,7 @@ export interface DashboardSummary {
   revenueThisMonth: number;
   purchasesThisMonth: number;
   pendingPOs: number;
+  pendingSales: number;
   recentSales: Sale[];
   recentPurchases: Purchase[];
   lowStockProducts: Product[];

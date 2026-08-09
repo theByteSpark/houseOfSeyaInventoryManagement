@@ -10,6 +10,7 @@ import {
   IconButton,
   PageHeader,
   Table,
+  toast,
   type Column,
 } from '@/components/ui';
 import { useAuth } from '@/features/auth/useAuth';
@@ -31,6 +32,7 @@ export function UsersListPage() {
     setDeleteError(null);
     try {
       await deleteUser.mutateAsync(deleteTarget.id);
+      toast.success('User deleted');
       setDeleteTarget(null);
     } catch (err) {
       setDeleteError(extractErrorMessage(err, 'Could not delete user.'));

@@ -1,11 +1,12 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useEffect } from 'react';
-import { Button, Input, Modal, Select } from '@/components/ui';
+import { useEffect, useState } from 'react';
+import { Plus, X } from 'lucide-react';
+import { Button, Input, Modal, Select, toast } from '@/components/ui';
 import { useAuth } from '@/features/auth/useAuth';
 import { useWarehouses } from '@/features/warehouses/hooks';
-import { useCategories, useCreateProduct, useUpdateProduct } from './hooks';
+import { useCategories, useCreateCategory, useCreateProduct, useUpdateProduct } from './hooks';
 import type { Product } from '@/types';
 
 const schema = z.object({
@@ -38,16 +39,23 @@ export function ProductFormModal({
   const { data: warehouses } = useWarehouses();
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
+  const createCategory = useCreateCategory();
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues, unknown, FormOutput>({ resolver: zodResolver(schema) });
 
   useEffect(() => {
     if (isOpen) {
+      setShowNewCategory(false);
+      setNewCategoryName('');
       reset({
         sku: product?.sku ?? '',
         name: product?.name ?? '',
@@ -61,11 +69,30 @@ export function ProductFormModal({
     }
   }, [isOpen, product, reset]);
 
+  const handleCreateCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    setIsCreatingCategory(true);
+    try {
+      const created = await createCategory.mutateAsync({ name });
+      toast.success('Category created');
+      setValue('categoryId', created.id);
+      setNewCategoryName('');
+      setShowNewCategory(false);
+    } catch {
+      toast.error('Could not create category');
+    } finally {
+      setIsCreatingCategory(false);
+    }
+  };
+
   const onSubmit = async (values: FormOutput) => {
     if (isEditing && product) {
       await updateProduct.mutateAsync({ id: product.id, input: values });
+      toast.success('Product updated successfully');
     } else {
       await createProduct.mutateAsync(values);
+      toast.success('Product created successfully');
     }
     onClose();
   };
@@ -91,14 +118,63 @@ export function ProductFormModal({
           <Input label="SKU" placeholder="FAB-COT-001" error={errors.sku?.message} {...register('sku')} />
           <Input label="Product name" placeholder="Cotton Poplin — Ivory" error={errors.name?.message} {...register('name')} />
         </div>
-        <Select label="Category" error={errors.categoryId?.message} {...register('categoryId')}>
-          <option value="">Uncategorized</option>
-          {categories?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </Select>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-[13px] font-medium text-graphite-700">Category</label>
+            <button
+              type="button"
+              onClick={() => setShowNewCategory((v) => !v)}
+              className="flex cursor-pointer items-center gap-0.5 text-[12px] font-medium text-brand-600 hover:underline"
+            >
+              <Plus className="h-3 w-3" strokeWidth={2} />
+              Add new
+            </button>
+          </div>
+          {showNewCategory ? (
+            <div className="flex gap-2">
+              <Input
+                placeholder="Category name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleCreateCategory();
+                  }
+                }}
+                autoFocus
+              />
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleCreateCategory}
+                isLoading={isCreatingCategory}
+              >
+                Add
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setShowNewCategory(false);
+                  setNewCategoryName('');
+                }}
+              >
+                <X className="h-4 w-4" strokeWidth={2} />
+              </Button>
+            </div>
+          ) : (
+            <Select error={errors.categoryId?.message} {...register('categoryId')}>
+              <option value="">Uncategorized</option>
+              {categories?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          )}
+        </div>
         <Input label="Description (optional)" placeholder="Short description" error={errors.description?.message} {...register('description')} />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Input label="Unit price" type="number" step="0.01" min="0" error={errors.unitPrice?.message} {...register('unitPrice')} />

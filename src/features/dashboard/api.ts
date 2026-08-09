@@ -33,6 +33,10 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     (p) => p.status === 'ORDERED' || p.status === 'PARTIALLY_RECEIVED',
   ).length;
 
+  const pendingSales = sales.filter(
+    (s) => s.status === 'DRAFT' || s.status === 'ISSUED',
+  ).length;
+
   const lowStockProducts = products
     .filter((p) => p.quantityInStock <= p.reorderLevel)
     .sort((a, b) => a.quantityInStock - b.quantityInStock);
@@ -54,6 +58,7 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     revenueThisMonth,
     purchasesThisMonth: purchasesThisMonth.length,
     pendingPOs,
+    pendingSales,
     recentSales,
     recentPurchases,
     lowStockProducts: lowStockProducts.slice(0, 5),

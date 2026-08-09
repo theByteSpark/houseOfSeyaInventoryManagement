@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, Select, SearchableCombobox } from '@/components/ui';
+import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, Select, SearchableCombobox, toast } from '@/components/ui';
 import { useCustomers } from '@/features/customers/hooks';
 import { CustomerFormModal } from '@/features/customers/CustomerFormModal';
 import { useProducts } from '@/features/inventory/hooks';
@@ -116,9 +116,12 @@ export function SaleFormPage() {
       const sale = isEdit
         ? await updateSale.mutateAsync({ id: id as string, input })
         : await createSale.mutateAsync(input);
+      toast.success(isEdit ? 'Sale updated successfully' : 'Sale created successfully');
       navigate(`/sales/${sale.id}`, { replace: true });
     } catch (err) {
-      setError(extractErrorMessage(err, isEdit ? 'Could not update sale.' : 'Could not create sale.'));
+      const msg = extractErrorMessage(err, isEdit ? 'Could not update sale.' : 'Could not create sale.');
+      setError(msg);
+      toast.error(msg);
     }
   };
 

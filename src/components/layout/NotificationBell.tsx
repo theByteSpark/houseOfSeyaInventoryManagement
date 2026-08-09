@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, PackageX, ShoppingCart, ClipboardCheck, Info } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import {
@@ -35,12 +36,34 @@ function timeAgo(iso: string): string {
   return `${days}d ago`;
 }
 
-function NotificationRow({ notification, onRead }: { notification: AppNotification; onRead: (id: string) => void }) {
+function getNotificationRoute(notification: AppNotification): string | null {
+  const meta = notification.metadata;
+  if (!meta) return null;
+  switch (notification.type) {
+    case 'SALE_ISSUED': {
+      const saleId = meta.saleId;
+      return typeof saleId === 'string' ? `/sales/${saleId}` : '/sales';
+    }
+    case 'PURCHASE_RECEIVED': {
+      const purchaseId = meta.purchaseId;
+      return typeof purchaseId === 'string' ? `/purchases/${purchaseId}` : '/purchases';
+    }
+    case 'LOW_STOCK':
+      return '/inventory/products';
+    default:
+      return null;
+  }
+}
+
+function NotificationRow({ notification, onRead, onNavigate }: { notification: AppNotification; onRead: (id: string) => void; onNavigate: (notification: AppNotification) => void }) {
   const Icon = typeIcon[notification.type];
   return (
     <button
       type="button"
-      onClick={() => !notification.isRead && onRead(notification.id)}
+      onClick={() => {
+        if (!notification.isRead) onRead(notification.id);
+        onNavigate(notification);
+      }}
       className={cn(
         'flex w-full cursor-pointer items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-graphite-50',
         !notification.isRead && 'bg-brand-50/40',
@@ -68,6 +91,7 @@ const PANEL_MARGIN = 16;
 const PANEL_MAX_HEIGHT = 420; // header + list, roughly
 
 export function NotificationBell() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [panelPos, setPanelPos] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -169,7 +193,13 @@ export function NotificationBell() {
               ) : (
                 <div className="divide-y divide-graphite-100">
                   {notifications.map((n) => (
-                    <NotificationRow key={n.id} notification={n} onRead={(id) => markRead.mutate(id)} />
+                    <NotificationRow key={n.id} notification={n} onRead={(id) => markRead.mutate(id)} onNavigate={(notif) => {
+                      const route = getNotificationRoute(notif);
+                      if (route) {
+                        setOpen(false);
+                        navigate(route);
+                      }
+                    }} />
                   ))}
                 </div>
               )}

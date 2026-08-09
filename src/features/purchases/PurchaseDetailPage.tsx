@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { PackageCheck, Pencil, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
+import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, toast, type Column } from '@/components/ui';
 import { useCancelPurchase, useOrderPurchase, usePurchase } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { ReceiveItemsModal } from './ReceiveItemsModal';
@@ -53,12 +53,15 @@ export function PurchaseDetailPage() {
     { key: 'lineTotal', header: 'Line total', align: 'right', render: (item) => formatCurrency(item.lineTotal) },
   ];
 
-  const runAction = async (action: () => Promise<unknown>) => {
+  const runAction = async (action: () => Promise<unknown>, successMsg?: string) => {
     setActionError(null);
     try {
       await action();
+      if (successMsg) toast.success(successMsg);
     } catch (err) {
-      setActionError(extractErrorMessage(err, 'Action failed.'));
+      const msg = extractErrorMessage(err, 'Action failed.');
+      setActionError(msg);
+      toast.error(msg);
     }
   };
 
@@ -126,7 +129,7 @@ export function PurchaseDetailPage() {
               {purchase.status === 'DRAFT' && (
                 <Button
                   isLoading={orderPurchase.isPending}
-                  onClick={() => runAction(() => orderPurchase.mutateAsync(purchase.id))}
+                  onClick={() => runAction(() => orderPurchase.mutateAsync(purchase.id), 'Purchase marked as ordered')}
                 >
                   Mark as ordered
                 </Button>
@@ -143,7 +146,7 @@ export function PurchaseDetailPage() {
                 <Button
                   variant="danger"
                   isLoading={cancelPurchase.isPending}
-                  onClick={() => runAction(() => cancelPurchase.mutateAsync(purchase.id))}
+                  onClick={() => runAction(() => cancelPurchase.mutateAsync(purchase.id), 'Purchase cancelled')}
                   icon={<XCircle className="h-4 w-4" strokeWidth={2} />}
                 >
                   Cancel purchase

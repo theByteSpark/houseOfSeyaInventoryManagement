@@ -16,6 +16,7 @@ import {
   Select,
   SplitAddButton,
   Table,
+  toast,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
@@ -152,7 +153,7 @@ export function ProductsListPage() {
   return (
     <div>
       <PageHeader
-        title="Products"
+        title="Inventory"
         description="Track stock levels and manage your product catalog."
         action={
           <SplitAddButton
@@ -162,7 +163,7 @@ export function ProductsListPage() {
             options={[
               {
                 key: 'import',
-                label: 'Import from CSV',
+                label: 'Import from CSV or Excel',
                 icon: <FilePlus2 className="h-4 w-4" strokeWidth={2} />,
                 onClick: () => setImportOpen(true),
               },
@@ -195,7 +196,7 @@ export function ProductsListPage() {
       <Card className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
         {products.length === 0 ? (
           <EmptyState
-            title="No products yet"
+            title="No inventory items yet"
             description="Add your first product to start tracking inventory."
             action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add product</Button>}
           />
@@ -226,7 +227,7 @@ export function ProductsListPage() {
       <CsvImportModal
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
-        title="Import products from CSV"
+        title="Import inventory from CSV or Excel"
         templateUrl="/import/products/template"
         templateFilename="products-import-template.csv"
         onUpload={importProductsCsv}
@@ -243,7 +244,20 @@ export function ProductsListPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => {
           if (!deleteTarget) return;
-          deleteProduct.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+          deleteProduct.mutate(deleteTarget.id, {
+            onSuccess: () => {
+              toast.success('Product deleted');
+              setDeleteTarget(null);
+            },
+            onError: (err: unknown) => {
+              const msg =
+                err && typeof err === 'object' && 'response' in err
+                  ? (err as { response?: { data?: { error?: string } } }).response?.data?.error
+                  : undefined;
+              toast.error(msg ?? 'Failed to delete product');
+              setDeleteTarget(null);
+            },
+          });
         }}
         title="Delete product"
         description={

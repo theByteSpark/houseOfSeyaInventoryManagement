@@ -16,6 +16,7 @@ import {
   Select,
   SplitAddButton,
   Table,
+  toast,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
@@ -101,7 +102,12 @@ export function SalesListPage() {
                 e.stopPropagation();
                 setActionError(null);
                 issueSale.mutate(sale.id, {
-                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not confirm sale.')),
+                  onSuccess: () => toast.success('Sale confirmed'),
+                  onError: (err) => {
+                    const msg = extractErrorMessage(err, 'Could not confirm sale.');
+                    setActionError(msg);
+                    toast.error(msg);
+                  },
                 });
               }}
             >
@@ -117,7 +123,12 @@ export function SalesListPage() {
                 e.stopPropagation();
                 setActionError(null);
                 markSalePaid.mutate(sale.id, {
-                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not mark sale as paid.')),
+                  onSuccess: () => toast.success('Sale marked as paid'),
+                  onError: (err) => {
+                    const msg = extractErrorMessage(err, 'Could not mark sale as paid.');
+                    setActionError(msg);
+                    toast.error(msg);
+                  },
                 });
               }}
             >
@@ -144,7 +155,7 @@ export function SalesListPage() {
             options={[
               {
                 key: 'import',
-                label: 'Import from CSV',
+                label: 'Import from CSV or Excel',
                 icon: <FilePlus2 className="h-4 w-4" strokeWidth={2} />,
                 onClick: () => setImportOpen(true),
               },
@@ -214,7 +225,7 @@ export function SalesListPage() {
       <CsvImportModal
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
-        title="Import sales from CSV"
+        title="Import sales from CSV or Excel"
         templateUrl="/import/sales/template"
         templateFilename="sales-import-template.csv"
         onUpload={importSalesCsv}

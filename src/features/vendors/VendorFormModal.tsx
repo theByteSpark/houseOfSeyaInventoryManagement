@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useEffect } from 'react';
-import { Button, Input, Modal, Select } from '@/components/ui';
+import { Button, Input, Modal, Select, toast } from '@/components/ui';
 import { COUNTRY_CODES, DEFAULT_COUNTRY_DIAL_CODE, joinPhoneNumber, splitPhoneNumber } from '@/lib/countryCodes';
 import { useCreateVendor, useUpdateVendor } from './hooks';
 import type { Vendor } from '@/types';
@@ -12,7 +12,13 @@ const schema = z.object({
   contactPerson: z.string().optional(),
   email: z.string().email('Enter a valid email').optional().or(z.literal('')),
   phoneDialCode: z.string(),
-  phoneNumber: z.string().optional(),
+  phoneNumber: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || (val.replace(/[\s\-()]/g, '').length >= 7 && val.replace(/[\s\-()]/g, '').length <= 11 && /^\d[\d\s\-()]*$/),
+      'Enter a valid phone number (7-11 digits)',
+    ),
   address: z.string().optional(),
 });
 
@@ -64,9 +70,11 @@ export function VendorFormModal({
     };
     if (isEditing && vendor) {
       await updateVendor.mutateAsync({ id: vendor.id, input });
+      toast.success('Vendor updated successfully');
       onClose();
     } else {
       const created = await createVendor.mutateAsync(input);
+      toast.success('Vendor created successfully');
       if (onCreated) {
         onCreated(created);
       } else {

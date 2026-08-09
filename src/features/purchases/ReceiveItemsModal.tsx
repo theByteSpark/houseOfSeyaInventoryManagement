@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Input, Modal } from '@/components/ui';
+import { Button, Input, Modal, toast } from '@/components/ui';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { useReceivePurchaseItems } from './hooks';
 import type { Purchase } from '@/types';
@@ -59,9 +59,12 @@ export function ReceiveItemsModal({
 
     try {
       await receiveMutation.mutateAsync({ id: purchase.id, input: { items } });
+      toast.success('Items received successfully');
       onClose();
     } catch (err) {
-      setError(extractErrorMessage(err, 'Could not receive items.'));
+      const msg = extractErrorMessage(err, 'Could not receive items.');
+      setError(msg);
+      toast.error(msg);
     }
   };
 

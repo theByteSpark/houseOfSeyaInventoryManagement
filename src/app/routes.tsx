@@ -49,7 +49,7 @@ export function AppRoutes() {
         <Route
           path="/users"
           element={
-            <RequireRole roles={['ADMIN', 'COMPANY_ADMIN', 'SUPER_ADMIN']}>
+            <RequireRole roles={['COMPANY_ADMIN', 'SUPER_ADMIN']}>
               <UsersListPage />
             </RequireRole>
           }

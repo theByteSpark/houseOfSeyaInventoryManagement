@@ -12,6 +12,7 @@ import {
   PageHeader,
   Pagination,
   Table,
+  toast,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
@@ -180,7 +181,10 @@ export function VendorsListPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => {
           if (!deleteTarget) return;
-          deleteVendor.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+          deleteVendor.mutate(deleteTarget.id, { onSuccess: () => {
+            toast.success('Vendor deleted');
+            setDeleteTarget(null);
+          } });
         }}
         title="Delete vendor"
         description={

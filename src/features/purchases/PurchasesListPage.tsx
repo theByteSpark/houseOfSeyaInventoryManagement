@@ -17,6 +17,7 @@ import {
   Select,
   SplitAddButton,
   Table,
+  toast,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
@@ -114,7 +115,12 @@ export function PurchasesListPage() {
                 e.stopPropagation();
                 setActionError(null);
                 orderPurchase.mutate(p.id, {
-                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not order purchase.')),
+                  onSuccess: () => toast.success('Purchase marked as ordered'),
+                  onError: (err) => {
+                    const msg = extractErrorMessage(err, 'Could not order purchase.');
+                    setActionError(msg);
+                    toast.error(msg);
+                  },
                 });
               }}
             >
@@ -130,7 +136,12 @@ export function PurchasesListPage() {
                 e.stopPropagation();
                 setActionError(null);
                 cancelPurchase.mutate(p.id, {
-                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not cancel purchase.')),
+                  onSuccess: () => toast.success('Purchase cancelled'),
+                  onError: (err) => {
+                    const msg = extractErrorMessage(err, 'Could not cancel purchase.');
+                    setActionError(msg);
+                    toast.error(msg);
+                  },
                 });
               }}
             >
@@ -157,7 +168,7 @@ export function PurchasesListPage() {
             options={[
               {
                 key: 'import',
-                label: 'Import from CSV',
+                label: 'Import from CSV or Excel',
                 icon: <FilePlus2 className="h-4 w-4" strokeWidth={2} />,
                 onClick: () => setImportOpen(true),
               },
@@ -228,7 +239,7 @@ export function PurchasesListPage() {
       <CsvImportModal
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
-        title="Import purchases from CSV"
+        title="Import purchases from CSV or Excel"
         templateUrl="/import/purchases/template"
         templateFilename="purchases-import-template.csv"
         onUpload={importPurchasesCsv}

@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useEffect } from 'react';
-import { Button, Input, Modal, Select } from '@/components/ui';
+import { Button, Input, Modal, Select, toast } from '@/components/ui';
 import { useAuth } from '@/features/auth/useAuth';
 import { useWarehouses } from '@/features/warehouses/hooks';
 import { useRestockProduct } from './hooks';
@@ -55,6 +55,7 @@ export function RestockModal({
       reason: values.reason,
       warehouseId: values.warehouseId,
     });
+    toast.success(`Added ${values.quantity} units to stock`);
     reset();
     onClose();
   };

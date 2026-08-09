@@ -59,10 +59,10 @@ const baseNavGroups: NavGroup[] = [
     ],
   },
   {
-    key: 'products',
-    label: 'Products',
+    key: 'inventory',
+    label: 'Inventory',
     items: [
-      { to: '/inventory/products', label: 'Products', icon: Package },
+      { to: '/inventory/products', label: 'Inventory', icon: Package },
       { to: '/inventory/categories', label: 'Categories', icon: Tags },
     ],
   },
@@ -95,11 +95,10 @@ function loadCollapsedGroups(): Record<string, boolean> {
 
 export function AppShell() {
   const { user, logout } = useAuth();
-  const isWarehouseAdmin = user?.role === 'ADMIN';
   const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
   const navGroups = [
     ...baseNavGroups,
-    ...(isWarehouseAdmin || isCompanyLevel ? [adminNavGroup] : []),
+    ...(isCompanyLevel ? [adminNavGroup] : []),
     ...(isCompanyLevel ? [companyNavGroup] : []),
   ];
   const allItems = navGroups.flatMap((g) => g.items);
@@ -131,9 +130,9 @@ export function AppShell() {
   const mobileMoreItems = allItems.filter((item) => !mobilePrimaryPaths.includes(item.to));
 
   return (
-    <div className="flex min-h-screen flex-col bg-graphite-50 lg:flex-row">
+    <div className="flex h-screen flex-col overflow-hidden bg-graphite-50 lg:flex-row">
       {/* Desktop sidebar (lg+) */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-graphite-200 bg-white lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-graphite-200 bg-white lg:flex">
         <div className="flex items-center gap-2.5 px-5 py-5">
           <img src="/paragon-logo.jpg" alt="Paragon Resin" className="h-8 w-8 rounded-md object-cover" />
           <div>
@@ -236,7 +235,7 @@ export function AppShell() {
       </header>
 
       {/* Main content */}
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
         <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <Outlet />
         </div>

@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useEffect } from 'react';
-import { Button, Input, Modal, Select } from '@/components/ui';
+import { Button, Input, Modal, Select, toast } from '@/components/ui';
 import { COUNTRY_CODES, DEFAULT_COUNTRY_DIAL_CODE, joinPhoneNumber, splitPhoneNumber } from '@/lib/countryCodes';
 import { useCreateCustomer, useUpdateCustomer } from './hooks';
 import type { Customer } from '@/types';
@@ -11,7 +11,13 @@ const schema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Enter a valid email').optional().or(z.literal('')),
   phoneDialCode: z.string(),
-  phoneNumber: z.string().optional(),
+  phoneNumber: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || (val.replace(/[\s\-()]/g, '').length >= 7 && val.replace(/[\s\-()]/g, '').length <= 11 && /^\d[\d\s\-()]*$/),
+      'Enter a valid phone number (7-11 digits)',
+    ),
   address: z.string().optional(),
 });
 
@@ -61,9 +67,11 @@ export function CustomerFormModal({
     };
     if (isEditing && customer) {
       await updateCustomer.mutateAsync({ id: customer.id, input });
+      toast.success('Customer updated successfully');
       onClose();
     } else {
       const created = await createCustomer.mutateAsync(input);
+      toast.success('Customer created successfully');
       if (onCreated) {
         onCreated(created);
       } else {

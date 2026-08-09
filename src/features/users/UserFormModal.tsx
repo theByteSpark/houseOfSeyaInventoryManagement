@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useEffect, useState } from 'react';
-import { Button, Input, Modal, Select } from '@/components/ui';
+import { Button, Input, Modal, Select, toast } from '@/components/ui';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { useWarehouses } from '@/features/warehouses/hooks';
 import { useCreateUser } from './hooks';
@@ -54,6 +54,7 @@ export function UserFormModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
         ...values,
         warehouseId: isWarehouseScoped ? values.warehouseId : undefined,
       });
+      toast.success('User created successfully');
       onClose();
     } catch (err) {
       setServerError(extractErrorMessage(err, 'Could not create user.'));

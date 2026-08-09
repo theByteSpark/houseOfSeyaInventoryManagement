@@ -18,5 +18,5 @@ export { SplitAddButton } from './SplitAddButton';
 export type { SplitAddButtonOption } from './SplitAddButton';
 export { CsvImportModal } from './CsvImportModal';
 export type { CsvImportResult, CsvImportRowResult } from './CsvImportModal';
-export { ToastProvider, useToast } from './ToastProvider';
+export { ToastProvider, useToast, toast } from './ToastProvider';
 export type { ToastInput } from './ToastProvider';

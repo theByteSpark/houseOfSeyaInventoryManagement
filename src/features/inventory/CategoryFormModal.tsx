@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useEffect } from 'react';
-import { Button, Input, Modal } from '@/components/ui';
+import { Button, Input, Modal, toast } from '@/components/ui';
 import { useCreateCategory, useUpdateCategory } from './hooks';
 import type { Category } from '@/types';
 
@@ -38,8 +38,10 @@ export function CategoryFormModal({
   const onSubmit = async (values: FormValues) => {
     if (isEditing && category) {
       await updateCategory.mutateAsync({ id: category.id, input: values });
+      toast.success('Category updated successfully');
     } else {
       await createCategory.mutateAsync(values);
+      toast.success('Category created successfully');
     }
     onClose();
   };
