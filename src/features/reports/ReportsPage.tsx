@@ -18,6 +18,7 @@ import {
 } from '@/components/ui';
 import { SaleStatusBadge } from '@/features/sales/statusBadge';
 import { PurchaseStatusBadge } from '@/features/purchases/statusBadge';
+import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
 import { useSalesReport, usePurchasesReport, useInventoryReport } from './hooks';
 import type { SaleStatus, PurchaseStatus } from '@/types';
 
@@ -75,6 +76,8 @@ function DateRangeFilter({
   status,
   setStatus,
   statusOptions,
+  warehouseId,
+  setWarehouseId,
 }: {
   from: string;
   to: string;
@@ -83,6 +86,8 @@ function DateRangeFilter({
   status: string;
   setStatus: (v: string) => void;
   statusOptions: { value: string; label: string }[];
+  warehouseId: string;
+  setWarehouseId: (v: string) => void;
 }) {
   return (
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
@@ -93,6 +98,7 @@ function DateRangeFilter({
           <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </Select>
+      <WarehouseFilter warehouseId={warehouseId} setWarehouseId={setWarehouseId} />
     </div>
   );
 }
@@ -103,8 +109,9 @@ function SalesReportTab() {
   const [from, setFrom] = useState(firstOfMonth);
   const [to, setTo] = useState(today);
   const [status, setStatus] = useState('ALL');
+  const [warehouseId, setWarehouseId] = useState('');
 
-  const { data, isLoading } = useSalesReport({ from, to, status });
+  const { data, isLoading } = useSalesReport({ from, to, status, warehouseId: warehouseId || undefined });
 
   if (isLoading || !data) return <FullPageSpinner />;
 
@@ -135,6 +142,7 @@ function SalesReportTab() {
           { value: 'PAID', label: 'Paid' },
           { value: 'CANCELLED', label: 'Cancelled' },
         ]}
+        warehouseId={warehouseId} setWarehouseId={setWarehouseId}
       />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -178,8 +186,9 @@ function PurchasesReportTab() {
   const [from, setFrom] = useState(firstOfMonth);
   const [to, setTo] = useState(today);
   const [status, setStatus] = useState('ALL');
+  const [warehouseId, setWarehouseId] = useState('');
 
-  const { data, isLoading } = usePurchasesReport({ from, to, status });
+  const { data, isLoading } = usePurchasesReport({ from, to, status, warehouseId: warehouseId || undefined });
 
   if (isLoading || !data) return <FullPageSpinner />;
 
@@ -211,6 +220,7 @@ function PurchasesReportTab() {
           { value: 'RECEIVED', label: 'Received' },
           { value: 'CANCELLED', label: 'Cancelled' },
         ]}
+        warehouseId={warehouseId} setWarehouseId={setWarehouseId}
       />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -248,7 +258,8 @@ function PurchasesReportTab() {
 }
 
 function InventoryReportTab() {
-  const { data, isLoading } = useInventoryReport();
+  const [warehouseId, setWarehouseId] = useState('');
+  const { data, isLoading } = useInventoryReport({ warehouseId: warehouseId || undefined });
 
   if (isLoading || !data) return <FullPageSpinner />;
 
@@ -275,6 +286,10 @@ function InventoryReportTab() {
 
   return (
     <div>
+      <div className="mb-4 flex flex-wrap sm:items-end">
+        <WarehouseFilter warehouseId={warehouseId} setWarehouseId={setWarehouseId} />
+      </div>
+
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatTile label="Total products" value={data.totalProducts} icon={<Package className="h-4 w-4" strokeWidth={2} />} />
         <StatTile label="Total stock value" value={formatCurrency(data.totalStockValue)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />

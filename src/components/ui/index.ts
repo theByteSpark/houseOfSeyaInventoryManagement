@@ -14,3 +14,7 @@ export { IconButton } from './IconButton';
 export { PageHeader } from './PageHeader';
 export { Pagination } from './Pagination';
 export { SearchableCombobox } from './SearchableCombobox';
+export { SplitAddButton } from './SplitAddButton';
+export type { SplitAddButtonOption } from './SplitAddButton';
+export { CsvImportModal } from './CsvImportModal';
+export type { CsvImportResult, CsvImportRowResult } from './CsvImportModal';

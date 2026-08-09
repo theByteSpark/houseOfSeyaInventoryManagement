@@ -47,18 +47,60 @@ export function DashboardPage() {
     <div>
       <PageHeader title="Dashboard" description="Overview of your inventory, sales, and purchases." />
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Total products" value={data.totalProducts} icon={<Package className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Low stock items" value={data.lowStockCount} icon={<AlertTriangle className="h-4 w-4" strokeWidth={2} />} tone={data.lowStockCount > 0 ? 'warning' : 'neutral'} />
-        <StatTile label="Total customers" value={data.totalCustomers} icon={<Users className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Total vendors" value={data.totalVendors} icon={<Truck className="h-4 w-4" strokeWidth={2} />} />
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <StatTile
+          label="Total products"
+          value={data.totalProducts}
+          icon={<Package className="h-4 w-4" strokeWidth={2} />}
+          onClick={() => navigate('/inventory/products')}
+        />
+        <StatTile
+          label="Low stock items"
+          value={data.lowStockCount}
+          icon={<AlertTriangle className="h-4 w-4" strokeWidth={2} />}
+          tone={data.lowStockCount > 0 ? 'warning' : 'neutral'}
+          onClick={() => navigate('/inventory/products?stockFilter=low')}
+        />
+        <StatTile
+          label="Total customers"
+          value={data.totalCustomers}
+          icon={<Users className="h-4 w-4" strokeWidth={2} />}
+          onClick={() => navigate('/customers')}
+        />
+        <StatTile
+          label="Total vendors"
+          value={data.totalVendors}
+          icon={<Truck className="h-4 w-4" strokeWidth={2} />}
+          onClick={() => navigate('/vendors')}
+        />
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Sales this month" value={data.salesThisMonth} icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Revenue this month" value={formatCurrency(data.revenueThisMonth)} icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Purchases this month" value={data.purchasesThisMonth} icon={<ClipboardList className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Pending POs" value={data.pendingPOs} icon={<ClipboardCheck className="h-4 w-4" strokeWidth={2} />} tone={data.pendingPOs > 0 ? 'warning' : 'neutral'} />
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <StatTile
+          label="Sales this month"
+          value={data.salesThisMonth}
+          icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />}
+          onClick={() => navigate('/sales')}
+        />
+        <StatTile
+          label="Revenue this month"
+          value={formatCurrency(data.revenueThisMonth)}
+          icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />}
+          onClick={() => navigate('/sales')}
+        />
+        <StatTile
+          label="Purchases this month"
+          value={data.purchasesThisMonth}
+          icon={<ClipboardList className="h-4 w-4" strokeWidth={2} />}
+          onClick={() => navigate('/purchases')}
+        />
+        <StatTile
+          label="Pending POs"
+          value={data.pendingPOs}
+          icon={<ClipboardCheck className="h-4 w-4" strokeWidth={2} />}
+          tone={data.pendingPOs > 0 ? 'warning' : 'neutral'}
+          onClick={() => navigate('/purchases?status=ORDERED')}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

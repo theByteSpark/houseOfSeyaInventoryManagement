@@ -1,14 +1,13 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
-import { AdminRoute } from '@/components/layout/AdminRoute';
+import { RequireRole } from '@/components/layout/AdminRoute';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { CustomersListPage } from '@/features/customers/CustomersListPage';
 import { ProductsListPage } from '@/features/inventory/ProductsListPage';
 import { CategoriesPage } from '@/features/inventory/CategoriesPage';
-import { SubcategoriesPage } from '@/features/inventory/SubcategoriesPage';
 import { SalesListPage } from '@/features/sales/SalesListPage';
 import { SaleFormPage } from '@/features/sales/SaleFormPage';
 import { SaleDetailPage } from '@/features/sales/SaleDetailPage';
@@ -18,6 +17,7 @@ import { PurchaseFormPage } from '@/features/purchases/PurchaseFormPage';
 import { PurchaseDetailPage } from '@/features/purchases/PurchaseDetailPage';
 import { ReportsPage } from '@/features/reports/ReportsPage';
 import { UsersListPage } from '@/features/users/UsersListPage';
+import { WarehousesListPage } from '@/features/warehouses/WarehousesListPage';
 
 export function AppRoutes() {
   return (
@@ -36,7 +36,6 @@ export function AppRoutes() {
         <Route path="/customers" element={<CustomersListPage />} />
         <Route path="/inventory/products" element={<ProductsListPage />} />
         <Route path="/inventory/categories" element={<CategoriesPage />} />
-        <Route path="/inventory/subcategories" element={<SubcategoriesPage />} />
         <Route path="/sales" element={<SalesListPage />} />
         <Route path="/sales/new" element={<SaleFormPage />} />
         <Route path="/sales/:id/edit" element={<SaleFormPage />} />
@@ -50,9 +49,17 @@ export function AppRoutes() {
         <Route
           path="/users"
           element={
-            <AdminRoute>
+            <RequireRole roles={['ADMIN', 'COMPANY_ADMIN', 'SUPER_ADMIN']}>
               <UsersListPage />
-            </AdminRoute>
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/warehouses"
+          element={
+            <RequireRole roles={['COMPANY_ADMIN', 'SUPER_ADMIN']}>
+              <WarehousesListPage />
+            </RequireRole>
           }
         />
       </Route>

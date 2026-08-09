@@ -3,19 +3,22 @@ import { NavLink, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
-  // Package,
-  // Tags,
-  // Layers,
+  Package,
+  Tags,
   ShoppingCart,
   Truck,
   ClipboardList,
   BarChart3,
+  UserCog,
+  Warehouse as WarehouseIcon,
   LogOut,
   ChevronDown,
   MoreHorizontal,
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/useAuth';
 import { cn } from '@/lib/cn';
+import { ConfirmModal } from '@/components/ui';
+import { NotificationBell } from './NotificationBell';
 
 interface NavItem {
   to: string;
@@ -55,22 +58,27 @@ const baseNavGroups: NavGroup[] = [
       { to: '/vendors', label: 'Vendors', icon: Truck },
     ],
   },
-  // {
-  //   key: 'products',
-  //   label: 'Products',
-  //   items: [
-  //     { to: '/inventory/products', label: 'Products', icon: Package },
-  //     { to: '/inventory/categories', label: 'Categories', icon: Tags },
-  //     { to: '/inventory/subcategories', label: 'Subcategories', icon: Layers },
-  //   ],
-  // },
+  {
+    key: 'products',
+    label: 'Products',
+    items: [
+      { to: '/inventory/products', label: 'Products', icon: Package },
+      { to: '/inventory/categories', label: 'Categories', icon: Tags },
+    ],
+  },
 ];
 
-// const adminNavGroup: NavGroup = {
-//   key: 'admin',
-//   label: 'Admin',
-//   items: [{ to: '/users', label: 'Users', icon: UserCog }],
-// };
+const adminNavGroup: NavGroup = {
+  key: 'admin',
+  label: 'Admin',
+  items: [{ to: '/users', label: 'Users', icon: UserCog }],
+};
+
+const companyNavGroup: NavGroup = {
+  key: 'company',
+  label: 'Company',
+  items: [{ to: '/warehouses', label: 'Warehouses', icon: WarehouseIcon }],
+};
 
 const mobilePrimaryPaths = ['/', '/sales', '/purchases', '/inventory/products'];
 
@@ -87,11 +95,29 @@ function loadCollapsedGroups(): Record<string, boolean> {
 
 export function AppShell() {
   const { user, logout } = useAuth();
-  const navGroups = baseNavGroups;
+  const isWarehouseAdmin = user?.role === 'ADMIN';
+  const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
+  const navGroups = [
+    ...baseNavGroups,
+    ...(isWarehouseAdmin || isCompanyLevel ? [adminNavGroup] : []),
+    ...(isCompanyLevel ? [companyNavGroup] : []),
+  ];
   const allItems = navGroups.flatMap((g) => g.items);
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(loadCollapsedGroups);
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleConfirmLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setIsLoggingOut(false);
+      setLogoutConfirmOpen(false);
+    }
+  };
 
   function toggleGroup(key: string) {
     setCollapsed((prev) => {
@@ -169,13 +195,17 @@ export function AppShell() {
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-graphite-200 text-[11px] font-semibold text-graphite-700">
               {user?.name?.charAt(0) ?? '?'}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-medium text-graphite-800">{user?.name}</p>
-              <p className="truncate text-[11px] uppercase tracking-wide text-graphite-400">{user?.role}</p>
+              <p className="truncate text-[11px] uppercase tracking-wide text-graphite-400">
+                {user?.role}
+                {user?.warehouse && ` · ${user.warehouse.name}`}
+              </p>
             </div>
+            <NotificationBell />
           </div>
           <button
-            onClick={() => logout()}
+            onClick={() => setLogoutConfirmOpen(true)}
             className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium text-graphite-500 hover:bg-graphite-50 hover:text-graphite-800"
           >
             <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />
@@ -193,13 +223,16 @@ export function AppShell() {
             <p className="truncate text-[11px] leading-tight text-graphite-400">{user?.name} · {user?.role}</p>
           </div>
         </div>
-        <button
-          onClick={() => logout()}
-          aria-label="Sign out"
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-graphite-500 hover:bg-graphite-100 hover:text-graphite-800"
-        >
-          <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />
-        </button>
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <button
+            onClick={() => setLogoutConfirmOpen(true)}
+            aria-label="Sign out"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-graphite-500 hover:bg-graphite-100 hover:text-graphite-800"
+          >
+            <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />
+          </button>
+        </div>
       </header>
 
       {/* Main content */}
@@ -275,6 +308,17 @@ export function AppShell() {
           <span className="max-w-full truncate">More</span>
         </button>
       </nav>
+
+      <ConfirmModal
+        isOpen={logoutConfirmOpen}
+        onClose={() => setLogoutConfirmOpen(false)}
+        onConfirm={handleConfirmLogout}
+        title="Sign out"
+        description="Are you sure you want to sign out?"
+        confirmLabel="Sign out"
+        tone="danger"
+        isLoading={isLoggingOut}
+      />
     </div>
   );
 }

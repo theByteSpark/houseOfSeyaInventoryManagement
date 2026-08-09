@@ -1,12 +1,11 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
-import { FileText, Pencil } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
 import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
 import { useCancelSale, useSale, useIssueSale, useMarkSalePaid } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
-import { InvoicePdfModal } from './InvoicePdfModal';
 import type { SaleItem } from '@/types';
 
 export function SaleDetailPage() {
@@ -17,7 +16,6 @@ export function SaleDetailPage() {
   const markPaid = useMarkSalePaid();
   const cancelSale = useCancelSale();
   const [actionError, setActionError] = useState<string | null>(null);
-  const [pdfOpen, setPdfOpen] = useState(false);
 
   if (isLoading) return <FullPageSpinner />;
   if (!sale) {
@@ -123,7 +121,7 @@ export function SaleDetailPage() {
                   isLoading={issueSale.isPending}
                   onClick={() => runAction(() => issueSale.mutateAsync(sale.id))}
                 >
-                  Issue invoice
+                  Confirm sale
                 </Button>
               )}
               {sale.status === 'ISSUED' && (
@@ -146,23 +144,10 @@ export function SaleDetailPage() {
               {(sale.status === 'PAID' || sale.status === 'CANCELLED') && (
                 <p className="text-sm text-graphite-400">No further actions available.</p>
               )}
-              {sale.status !== 'DRAFT' && (
-                <Button
-                  variant="secondary"
-                  onClick={() => setPdfOpen(true)}
-                  icon={<FileText className="h-4 w-4" strokeWidth={2} />}
-                >
-                  View / download invoice
-                </Button>
-              )}
             </CardBody>
           </Card>
         </div>
       </div>
-
-      {pdfOpen && (
-        <InvoicePdfModal saleId={sale.id} saleNumber={sale.saleNumber} onClose={() => setPdfOpen(false)} />
-      )}
     </div>
   );
 }

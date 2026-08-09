@@ -17,16 +17,19 @@ import {
 import { useTableQuery } from '@/lib/useTableQuery';
 import { useVendorsPage, useDeleteVendor } from './hooks';
 import { VendorFormModal } from './VendorFormModal';
+import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
 import type { Vendor } from '@/types';
 
 export function VendorsListPage() {
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
+  const [warehouseId, setWarehouseId] = useState('');
   const { data, isLoading, isPlaceholderData } = useVendorsPage({
     page: query.page,
     pageSize: query.pageSize,
     search: query.search,
     sortBy: query.sortBy,
     sortDir: query.sortDir,
+    warehouseId: warehouseId || undefined,
   });
   const deleteVendor = useDeleteVendor();
   const [formOpen, setFormOpen] = useState(false);
@@ -124,12 +127,21 @@ export function VendorsListPage() {
         action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add vendor</Button>}
       />
 
-      <div className="mb-4 w-full max-w-xs">
-        <Input
-          placeholder="Search by company, contact, email or phone"
-          value={query.searchInput}
-          onChange={(e) => query.setSearchInput(e.target.value)}
-          onKeyDown={query.handleSearchKeyDown}
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <div className="w-full max-w-xs flex-1 sm:w-auto">
+          <Input
+            placeholder="Search by company, contact, email or phone"
+            value={query.searchInput}
+            onChange={(e) => query.setSearchInput(e.target.value)}
+            onKeyDown={query.handleSearchKeyDown}
+          />
+        </div>
+        <WarehouseFilter
+          warehouseId={warehouseId}
+          setWarehouseId={(v) => {
+            setWarehouseId(v);
+            query.setPage(1);
+          }}
         />
       </div>
 

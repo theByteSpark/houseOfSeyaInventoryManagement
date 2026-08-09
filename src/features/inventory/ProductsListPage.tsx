@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { PackagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { FilePlus2, PackagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   Badge,
   Button,
   Card,
   ConfirmModal,
+  CsvImportModal,
   EmptyState,
   FullPageSpinner,
   IconButton,
@@ -12,20 +14,26 @@ import {
   PageHeader,
   Pagination,
   Select,
+  SplitAddButton,
   Table,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
+import { useQueryClient } from '@tanstack/react-query';
 import type { StockFilter } from './api';
-import { useDeleteProduct, useProductsPage } from './hooks';
+import { productKeys, categoryKeys, useDeleteProduct, useProductsPage } from './hooks';
 import { ProductFormModal } from './ProductFormModal';
 import { RestockModal } from './RestockModal';
+import { importProductsCsv } from '@/features/import-export/api';
 import { formatCurrency } from '@/lib/format';
 import type { Product } from '@/types';
 
 export function ProductsListPage() {
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
-  const [stockFilter, setStockFilter] = useState<StockFilter>('all');
+  const [searchParams] = useSearchParams();
+  const [stockFilter, setStockFilter] = useState<StockFilter>(
+    searchParams.get('stockFilter') === 'low' ? 'low' : 'all',
+  );
   const { data, isLoading, isPlaceholderData } = useProductsPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -35,7 +43,9 @@ export function ProductsListPage() {
     stockFilter,
   });
   const deleteProduct = useDeleteProduct();
+  const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [restockTarget, setRestockTarget] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
@@ -70,18 +80,11 @@ export function ProductsListPage() {
       ),
     },
     {
-      key: 'subcategory',
-      header: 'Subcategory',
-      sortField: 'subcategory',
+      key: 'category',
+      header: 'Category',
+      sortField: 'category',
       render: (p) =>
-        p.subcategoryName ? (
-          <div>
-            <div>{p.subcategoryName}</div>
-            {p.categoryName && <div className="text-xs text-graphite-400">{p.categoryName}</div>}
-          </div>
-        ) : (
-          <span className="text-graphite-300">—</span>
-        ),
+        p.categoryName ? <div>{p.categoryName}</div> : <span className="text-graphite-300">—</span>,
     },
     {
       key: 'price',
@@ -151,13 +154,27 @@ export function ProductsListPage() {
       <PageHeader
         title="Products"
         description="Track stock levels and manage your product catalog."
-        action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add product</Button>}
+        action={
+          <SplitAddButton
+            label="Add product"
+            icon={<Plus className="h-4 w-4" strokeWidth={2} />}
+            onClick={openCreate}
+            options={[
+              {
+                key: 'import',
+                label: 'Import from CSV',
+                icon: <FilePlus2 className="h-4 w-4" strokeWidth={2} />,
+                onClick: () => setImportOpen(true),
+              },
+            ]}
+          />
+        }
       />
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="w-full max-w-xs">
           <Input
-            placeholder="Search by product, subcategory or category"
+            placeholder="Search by product or category"
             value={query.searchInput}
             onChange={(e) => query.setSearchInput(e.target.value)}
             onKeyDown={query.handleSearchKeyDown}
@@ -205,6 +222,21 @@ export function ProductsListPage() {
 
       <ProductFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} product={editingProduct} />
       <RestockModal isOpen={!!restockTarget} onClose={() => setRestockTarget(null)} product={restockTarget} />
+
+      <CsvImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import products from CSV"
+        templateUrl="/import/products/template"
+        templateFilename="products-import-template.csv"
+        onUpload={importProductsCsv}
+        requiresWarehouse
+        onImported={() => {
+          queryClient.invalidateQueries({ queryKey: productKeys.all });
+          queryClient.invalidateQueries({ queryKey: categoryKeys.all });
+        }}
+        rowLabel={(row) => (typeof row.sku === 'string' ? row.sku : '')}
+      />
 
       <ConfirmModal
         isOpen={!!deleteTarget}

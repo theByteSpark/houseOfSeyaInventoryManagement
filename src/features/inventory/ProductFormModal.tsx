@@ -1,9 +1,11 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { Button, Input, Modal, Select } from '@/components/ui';
-import { useCreateProduct, useSubcategories, useUpdateProduct } from './hooks';
+import { useAuth } from '@/features/auth/useAuth';
+import { useWarehouses } from '@/features/warehouses/hooks';
+import { useCategories, useCreateProduct, useUpdateProduct } from './hooks';
 import type { Product } from '@/types';
 
 const schema = z.object({
@@ -13,7 +15,8 @@ const schema = z.object({
   unitPrice: z.coerce.number().positive('Must be greater than 0'),
   quantityInStock: z.coerce.number().int().min(0, 'Cannot be negative'),
   reorderLevel: z.coerce.number().int().min(0, 'Cannot be negative'),
-  subcategoryId: z.string().optional(),
+  categoryId: z.string().optional(),
+  warehouseId: z.string().optional(),
 });
 
 type FormValues = z.input<typeof schema>;
@@ -29,7 +32,10 @@ export function ProductFormModal({
   product?: Product | null;
 }) {
   const isEditing = !!product;
-  const { data: subcategories } = useSubcategories();
+  const { user } = useAuth();
+  const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
+  const { data: categories } = useCategories();
+  const { data: warehouses } = useWarehouses();
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
 
@@ -49,19 +55,11 @@ export function ProductFormModal({
         unitPrice: product?.unitPrice ?? 0,
         quantityInStock: product?.quantityInStock ?? 0,
         reorderLevel: product?.reorderLevel ?? 0,
-        subcategoryId: product?.subcategoryId ?? '',
+        categoryId: product?.categoryId ?? '',
+        warehouseId: '',
       });
     }
   }, [isOpen, product, reset]);
-
-  const subcategoriesByCategory = useMemo(() => {
-    const groups = new Map<string, { categoryName: string; items: typeof subcategories }>();
-    for (const s of subcategories ?? []) {
-      if (!groups.has(s.categoryId)) groups.set(s.categoryId, { categoryName: s.categoryName, items: [] });
-      groups.get(s.categoryId)!.items!.push(s);
-    }
-    return [...groups.values()];
-  }, [subcategories]);
 
   const onSubmit = async (values: FormOutput) => {
     if (isEditing && product) {
@@ -93,16 +91,12 @@ export function ProductFormModal({
           <Input label="SKU" placeholder="FAB-COT-001" error={errors.sku?.message} {...register('sku')} />
           <Input label="Product name" placeholder="Cotton Poplin — Ivory" error={errors.name?.message} {...register('name')} />
         </div>
-        <Select label="Subcategory" error={errors.subcategoryId?.message} {...register('subcategoryId')}>
+        <Select label="Category" error={errors.categoryId?.message} {...register('categoryId')}>
           <option value="">Uncategorized</option>
-          {subcategoriesByCategory.map((group) => (
-            <optgroup key={group.categoryName} label={group.categoryName}>
-              {group.items?.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </optgroup>
+          {categories?.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </Select>
         <Input label="Description (optional)" placeholder="Short description" error={errors.description?.message} {...register('description')} />
@@ -119,6 +113,19 @@ export function ProductFormModal({
           />
           <Input label="Reorder level" type="number" min="0" error={errors.reorderLevel?.message} {...register('reorderLevel')} />
         </div>
+        {isCompanyLevel && !isEditing && (
+          <div className="flex flex-col gap-1">
+            <Select label="Warehouse" error={errors.warehouseId?.message} {...register('warehouseId')}>
+              <option value="">Select a warehouse</option>
+              {warehouses?.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
+              ))}
+            </Select>
+            <p className="text-xs text-graphite-400">Where the initial stock quantity will be added</p>
+          </div>
+        )}
       </form>
     </Modal>
   );

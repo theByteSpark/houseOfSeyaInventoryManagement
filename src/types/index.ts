@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'STAFF';
+export type Role = 'USER' | 'ADMIN' | 'COMPANY_ADMIN' | 'SUPER_ADMIN';
 
 export type SortDir = 'asc' | 'desc';
 
@@ -9,11 +9,24 @@ export interface PaginatedResult<T> {
   pageSize: number;
 }
 
+export interface Warehouse {
+  id: string;
+  name: string;
+  code: string | null;
+  address: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   role: Role;
+  // From the UserWarehouse mapping; null for COMPANY_ADMIN/SUPER_ADMIN.
+  warehouseId?: string | null;
+  warehouseName?: string | null;
+  warehouse?: { id: string; name: string } | null;
   createdAt?: string;
 }
 
@@ -30,15 +43,13 @@ export interface Customer {
 export interface Category {
   id: string;
   name: string;
-  subcategoryCount: number;
+  productCount: number;
 }
 
-export interface Subcategory {
-  id: string;
-  name: string;
-  categoryId: string;
-  categoryName: string;
-  productCount: number;
+export interface ProductStockByWarehouse {
+  warehouseId: string;
+  warehouseName: string;
+  quantity: number;
 }
 
 export interface Product {
@@ -47,12 +58,12 @@ export interface Product {
   name: string;
   description: string | null;
   unitPrice: number;
+  // Quantity at the viewer's own warehouse when scoped; total across all warehouses for company-level roles.
   quantityInStock: number;
   reorderLevel: number;
-  subcategoryId: string | null;
-  subcategoryName: string | null;
   categoryId: string | null;
   categoryName: string | null;
+  stockByWarehouse: ProductStockByWarehouse[];
   createdAt: string;
 }
 
@@ -84,6 +95,8 @@ export interface Sale {
   saleNumber: string;
   customerId: string;
   customerName: string;
+  warehouseId: string;
+  warehouseName: string;
   status: SaleStatus;
   items: SaleItem[];
   subtotal: number;
@@ -139,6 +152,8 @@ export interface Purchase {
   purchaseNumber: string;
   vendorId: string;
   vendorName: string;
+  warehouseId: string;
+  warehouseName: string;
   status: PurchaseStatus;
   items: PurchaseItem[];
   subtotal: number;
@@ -172,4 +187,18 @@ export interface InventoryReport {
   lowStockProducts: { id: string; name: string; sku: string; quantityInStock: number; reorderLevel: number }[];
   categoryBreakdown: { category: string; productCount: number; stockValue: number }[];
   recentMovements: { id: string; productName: string; sku: string; type: StockMovementType; quantity: number; reason: string | null; createdAt: string }[];
+}
+
+export type NotificationType = 'LOW_STOCK' | 'PURCHASE_RECEIVED' | 'SALE_ISSUED' | 'SYSTEM';
+
+export interface AppNotification {
+  id: string;
+  warehouseId: string | null;
+  warehouseName: string | null;
+  type: NotificationType;
+  title: string;
+  message: string;
+  metadata: Record<string, unknown> | null;
+  isRead: boolean;
+  createdAt: string;
 }

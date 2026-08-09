@@ -6,11 +6,13 @@ export interface CreateUserInput {
   email: string;
   password: string;
   role?: Role;
+  warehouseId?: string;
 }
 
 export interface UpdateUserInput {
   name?: string;
   role?: Role;
+  warehouseId?: string;
 }
 
 export async function fetchUsers(): Promise<User[]> {

@@ -10,6 +10,7 @@ export interface SaleInput {
   customerId: string;
   items: SaleLineInput[];
   taxRate?: number; // e.g. 0.1 for 10%
+  warehouseId?: string; // required for COMPANY_ADMIN/SUPER_ADMIN; auto-resolved otherwise
 }
 
 export interface FetchSalesPageParams {
@@ -19,6 +20,7 @@ export interface FetchSalesPageParams {
   sortBy?: string;
   sortDir?: SortDir;
   status?: SaleStatus | 'ALL';
+  warehouseId?: string;
 }
 
 export async function fetchSales(): Promise<Sale[]> {
@@ -58,10 +60,5 @@ export async function markSalePaid(id: string): Promise<Sale> {
 
 export async function cancelSale(id: string): Promise<Sale> {
   const { data } = await apiClient.patch<Sale>(`/sales/${id}/cancel`);
-  return data;
-}
-
-export async function fetchInvoicePdfBlob(id: string): Promise<Blob> {
-  const { data } = await apiClient.get(`/sales/${id}/invoice-pdf`, { responseType: 'blob' });
   return data;
 }

@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ClipboardCheck, Pencil, Plus, XCircle } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { ClipboardCheck, FilePlus2, Pencil, Plus, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
 import {
   Button,
   Card,
+  CsvImportModal,
   EmptyState,
   FullPageSpinner,
   IconButton,
@@ -13,17 +15,34 @@ import {
   PageHeader,
   Pagination,
   Select,
+  SplitAddButton,
   Table,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { useCancelPurchase, useOrderPurchase, usePurchasesPage } from './hooks';
+import { purchaseKeys, useCancelPurchase, useOrderPurchase, usePurchasesPage } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
+import { importPurchasesCsv } from '@/features/import-export/api';
+import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
 import type { Purchase, PurchaseStatus } from '@/types';
+
+const VALID_STATUSES: (PurchaseStatus | 'ALL')[] = [
+  'ALL',
+  'DRAFT',
+  'ORDERED',
+  'PARTIALLY_RECEIVED',
+  'RECEIVED',
+  'CANCELLED',
+];
 
 export function PurchasesListPage() {
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
-  const [statusFilter, setStatusFilter] = useState<PurchaseStatus | 'ALL'>('ALL');
+  const [searchParams] = useSearchParams();
+  const initialStatus = searchParams.get('status') as PurchaseStatus | 'ALL' | null;
+  const [statusFilter, setStatusFilter] = useState<PurchaseStatus | 'ALL'>(
+    initialStatus && VALID_STATUSES.includes(initialStatus) ? initialStatus : 'ALL',
+  );
+  const [warehouseId, setWarehouseId] = useState('');
   const { data, isLoading, isPlaceholderData } = usePurchasesPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -31,16 +50,24 @@ export function PurchasesListPage() {
     sortBy: query.sortBy,
     sortDir: query.sortDir,
     status: statusFilter,
+    warehouseId: warehouseId || undefined,
   });
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const orderPurchase = useOrderPurchase();
   const cancelPurchase = useCancelPurchase();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const purchases = data?.data ?? [];
 
   const handleStatusFilterChange = (value: PurchaseStatus | 'ALL') => {
     setStatusFilter(value);
+    query.setPage(1);
+  };
+
+  const handleWarehouseFilterChange = (value: string) => {
+    setWarehouseId(value);
     query.setPage(1);
   };
 
@@ -122,7 +149,21 @@ export function PurchasesListPage() {
       <PageHeader
         title="Purchases"
         description="Record purchase orders and track deliveries from vendors."
-        action={<Button onClick={() => navigate('/purchases/new')} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add purchase</Button>}
+        action={
+          <SplitAddButton
+            label="Add purchase"
+            icon={<Plus className="h-4 w-4" strokeWidth={2} />}
+            onClick={() => navigate('/purchases/new')}
+            options={[
+              {
+                key: 'import',
+                label: 'Import from CSV',
+                icon: <FilePlus2 className="h-4 w-4" strokeWidth={2} />,
+                onClick: () => setImportOpen(true),
+              },
+            ]}
+          />
+        }
       />
 
       {actionError && (
@@ -152,6 +193,7 @@ export function PurchasesListPage() {
           <option value="RECEIVED">Received</option>
           <option value="CANCELLED">Cancelled</option>
         </Select>
+        <WarehouseFilter warehouseId={warehouseId} setWarehouseId={handleWarehouseFilterChange} />
       </div>
 
       <Card className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
@@ -182,6 +224,18 @@ export function PurchasesListPage() {
           </>
         )}
       </Card>
+
+      <CsvImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import purchases from CSV"
+        templateUrl="/import/purchases/template"
+        templateFilename="purchases-import-template.csv"
+        onUpload={importPurchasesCsv}
+        requiresWarehouse
+        onImported={() => queryClient.invalidateQueries({ queryKey: purchaseKeys.all })}
+        rowLabel={(row) => (typeof row.purchaseNumber === 'string' ? row.purchaseNumber : '')}
+      />
     </div>
   );
 }

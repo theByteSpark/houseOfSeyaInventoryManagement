@@ -10,6 +10,7 @@ export interface PurchaseLineInput {
 export interface PurchaseInput {
   vendorId: string;
   items: PurchaseLineInput[];
+  warehouseId?: string; // required for COMPANY_ADMIN/SUPER_ADMIN; auto-resolved otherwise
 }
 
 export interface ReceiveItemInput {
@@ -28,6 +29,7 @@ export interface FetchPurchasesPageParams {
   sortBy?: string;
   sortDir?: SortDir;
   status?: PurchaseStatus | 'ALL';
+  warehouseId?: string;
 }
 
 export async function fetchPurchases(): Promise<Purchase[]> {

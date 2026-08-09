@@ -247,7 +247,7 @@ export function SaleFormPage() {
                 {isEdit ? 'Save changes' : 'Save draft sale'}
               </Button>
               <p className="mt-2 text-center text-xs text-graphite-400">
-                Stock is only deducted once the sale is issued as an invoice.
+                Stock is only deducted once the sale is confirmed.
               </p>
             </CardBody>
           </Card>

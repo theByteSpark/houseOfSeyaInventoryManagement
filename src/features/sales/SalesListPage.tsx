@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Banknote, FileText, Pencil, Plus, Send } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Banknote, FilePlus2, Pencil, Plus, Send } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import {
   Button,
   Card,
+  CsvImportModal,
   EmptyState,
   FullPageSpinner,
   IconButton,
@@ -12,19 +14,22 @@ import {
   PageHeader,
   Pagination,
   Select,
+  SplitAddButton,
   Table,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
 import { formatCurrency } from '@/lib/format';
-import { useIssueSale, useMarkSalePaid, useSalesPage } from './hooks';
+import { saleKeys, useIssueSale, useMarkSalePaid, useSalesPage } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
-import { InvoicePdfModal } from './InvoicePdfModal';
+import { importSalesCsv } from '@/features/import-export/api';
+import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
 import type { Sale, SaleStatus } from '@/types';
 
 export function SalesListPage() {
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
   const [statusFilter, setStatusFilter] = useState<SaleStatus | 'ALL'>('ALL');
+  const [warehouseId, setWarehouseId] = useState('');
   const { data, isLoading, isPlaceholderData } = useSalesPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -32,17 +37,24 @@ export function SalesListPage() {
     sortBy: query.sortBy,
     sortDir: query.sortDir,
     status: statusFilter,
+    warehouseId: warehouseId || undefined,
   });
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const issueSale = useIssueSale();
   const markSalePaid = useMarkSalePaid();
   const [actionError, setActionError] = useState<string | null>(null);
-  const [pdfSale, setPdfSale] = useState<Sale | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const sales = data?.data ?? [];
 
   const handleStatusFilterChange = (value: SaleStatus | 'ALL') => {
     setStatusFilter(value);
+    query.setPage(1);
+  };
+
+  const handleWarehouseFilterChange = (value: string) => {
+    setWarehouseId(value);
     query.setPage(1);
   };
 
@@ -82,14 +94,14 @@ export function SalesListPage() {
           )}
           {sale.status === 'DRAFT' && (
             <IconButton
-              label="Issue invoice"
+              label="Confirm sale"
               tone="brand"
               disabled={issueSale.isPending}
               onClick={(e) => {
                 e.stopPropagation();
                 setActionError(null);
                 issueSale.mutate(sale.id, {
-                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not issue sale.')),
+                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not confirm sale.')),
                 });
               }}
             >
@@ -112,18 +124,6 @@ export function SalesListPage() {
               <Banknote className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
-          {sale.status !== 'DRAFT' && (
-            <IconButton
-              label="View / download invoice"
-              tone="neutral"
-              onClick={(e) => {
-                e.stopPropagation();
-                setPdfSale(sale);
-              }}
-            >
-              <FileText className="h-4 w-4" strokeWidth={2} />
-            </IconButton>
-          )}
         </div>
       ),
     },
@@ -135,8 +135,22 @@ export function SalesListPage() {
     <div>
       <PageHeader
         title="Sales"
-        description="Record sales and generate invoices for customers."
-        action={<Button onClick={() => navigate('/sales/new')} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add sale</Button>}
+        description="Record sales and track their status for customers."
+        action={
+          <SplitAddButton
+            label="Add sale"
+            icon={<Plus className="h-4 w-4" strokeWidth={2} />}
+            onClick={() => navigate('/sales/new')}
+            options={[
+              {
+                key: 'import',
+                label: 'Import from CSV',
+                icon: <FilePlus2 className="h-4 w-4" strokeWidth={2} />,
+                onClick: () => setImportOpen(true),
+              },
+            ]}
+          />
+        }
       />
 
       {actionError && (
@@ -165,6 +179,7 @@ export function SalesListPage() {
           <option value="PAID">Paid</option>
           <option value="CANCELLED">Cancelled</option>
         </Select>
+        <WarehouseFilter warehouseId={warehouseId} setWarehouseId={handleWarehouseFilterChange} />
       </div>
 
       <Card className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
@@ -196,9 +211,17 @@ export function SalesListPage() {
         )}
       </Card>
 
-      {pdfSale && (
-        <InvoicePdfModal saleId={pdfSale.id} saleNumber={pdfSale.saleNumber} onClose={() => setPdfSale(null)} />
-      )}
+      <CsvImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import sales from CSV"
+        templateUrl="/import/sales/template"
+        templateFilename="sales-import-template.csv"
+        onUpload={importSalesCsv}
+        requiresWarehouse
+        onImported={() => queryClient.invalidateQueries({ queryKey: saleKeys.all })}
+        rowLabel={(row) => (typeof row.saleNumber === 'string' ? row.saleNumber : '')}
+      />
     </div>
   );
 }

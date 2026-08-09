@@ -43,7 +43,16 @@ export function UsersListPage() {
     {
       key: 'role',
       header: 'Role',
-      render: (u) => <Badge tone={u.role === 'ADMIN' ? 'info' : 'neutral'}>{u.role}</Badge>,
+      render: (u) => (
+        <Badge tone={u.role === 'SUPER_ADMIN' || u.role === 'COMPANY_ADMIN' ? 'info' : u.role === 'ADMIN' ? 'warning' : 'neutral'}>
+          {u.role}
+        </Badge>
+      ),
+    },
+    {
+      key: 'warehouse',
+      header: 'Warehouse',
+      render: (u) => u.warehouseName ?? <span className="text-graphite-300">—</span>,
     },
     {
       key: 'actions',
