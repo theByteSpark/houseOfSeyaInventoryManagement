@@ -40,11 +40,10 @@ export function PurchaseDetailPage() {
         </div>
       ),
     },
-    { key: 'qty', header: 'Ordered', align: 'right', render: (item) => item.quantity },
+    { key: 'qty', header: 'Ordered', render: (item) => item.quantity },
     {
       key: 'received',
       header: 'Received',
-      align: 'right',
       render: (item) => (
         <span className={item.receivedQuantity >= item.quantity ? 'font-medium text-emerald-600' : 'font-medium text-graphite-700'}>
           {item.receivedQuantity}
@@ -52,8 +51,8 @@ export function PurchaseDetailPage() {
       ),
     },
     ...(isAdmin ? [
-      { key: 'unitCost' as const, header: 'Unit cost', align: 'right' as const, render: (item: PurchaseItem) => formatCurrency(item.unitCost) },
-      { key: 'lineTotal' as const, header: 'Line total', align: 'right' as const, render: (item: PurchaseItem) => formatCurrency(item.lineTotal) },
+      { key: 'unitCost' as const, header: 'Unit cost', render: (item: PurchaseItem) => formatCurrency(item.unitCost) },
+      { key: 'lineTotal' as const, header: 'Line total', render: (item: PurchaseItem) => formatCurrency(item.lineTotal) },
     ] : []),
   ];
 
@@ -123,7 +122,7 @@ export function PurchaseDetailPage() {
           <Card>
             <CardHeader title="Actions" />
             <CardBody className="flex flex-col gap-2">
-              {purchase.status === 'DRAFT' && (
+              {(purchase.status === 'DRAFT' || purchase.status === 'ORDERED' || purchase.status === 'PARTIALLY_RECEIVED') && (
                 <Button
                   variant="secondary"
                   onClick={() => navigate(`/purchases/${purchase.id}/edit`)}

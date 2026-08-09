@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Plus, Trash2, Users } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -11,7 +11,6 @@ import {
   Input,
   PageHeader,
   Pagination,
-  StatTile,
   Table,
   toast,
   type Column,
@@ -62,7 +61,6 @@ export function CustomersListPage() {
     {
       key: 'sales',
       header: 'Sales',
-      align: 'right',
       sortField: 'totalSales',
       render: (c) => <Badge tone={c.totalSales > 0 ? 'info' : 'neutral'}>{c.totalSales}</Badge>,
     },

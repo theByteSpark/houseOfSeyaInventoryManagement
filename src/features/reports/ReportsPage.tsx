@@ -130,8 +130,8 @@ function SalesReportTab() {
   const topProductColumns: Column<typeof data.topProducts[number]>[] = [
     { key: 'product', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.product}</span> },
     { key: 'sku', header: 'SKU', render: (p) => p.sku },
-    { key: 'qty', header: 'Qty sold', align: 'right', render: (p) => p.quantity },
-    ...(isAdmin ? [{ key: 'revenue' as const, header: 'Revenue', align: 'right' as const, render: (p: typeof data.topProducts[number]) => formatCurrency(p.revenue) }] : []),
+    { key: 'qty', header: 'Qty sold', render: (p) => p.quantity },
+    ...(isAdmin ? [{ key: 'revenue' as const, header: 'Revenue', render: (p: typeof data.topProducts[number]) => formatCurrency(p.revenue) }] : []),
   ];
 
   return (
@@ -240,15 +240,15 @@ function PurchasesReportTab() {
     { key: 'purchaseNumber', header: 'PO #', render: (p) => <span className="font-medium text-graphite-900">{p.purchaseNumber}</span> },
     { key: 'vendor', header: 'Vendor', render: (p) => p.vendorName },
     { key: 'status', header: 'Status', render: (p) => <PurchaseStatusBadge status={p.status as PurchaseStatus} /> },
-    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', align: 'right' as const, render: (p: typeof data.purchases[number]) => formatCurrency(p.total) }] : []),
+    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', render: (p: typeof data.purchases[number]) => formatCurrency(p.total) }] : []),
     { key: 'date', header: 'Date', render: (p) => new Date(p.createdAt).toLocaleDateString() },
   ];
 
   const topProductColumns: Column<typeof data.topProducts[number]>[] = [
     { key: 'product', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.product}</span> },
     { key: 'sku', header: 'SKU', render: (p) => p.sku },
-    { key: 'qty', header: 'Qty ordered', align: 'right', render: (p) => p.quantity },
-    ...(isAdmin ? [{ key: 'cost' as const, header: 'Cost', align: 'right' as const, render: (p: typeof data.topProducts[number]) => formatCurrency(p.cost) }] : []),
+    { key: 'qty', header: 'Qty ordered', render: (p) => p.quantity },
+    ...(isAdmin ? [{ key: 'cost' as const, header: 'Cost', render: (p: typeof data.topProducts[number]) => formatCurrency(p.cost) }] : []),
   ];
 
   return (
@@ -347,20 +347,20 @@ function InventoryReportTab() {
   const lowStockColumns: Column<typeof data.lowStockProducts[number]>[] = [
     { key: 'name', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.name}</span> },
     { key: 'sku', header: 'SKU', render: (p) => p.sku },
-    { key: 'stock', header: 'Stock', align: 'right', render: (p) => <span className="font-medium text-amber-600">{p.quantityInStock}</span> },
-    { key: 'reorder', header: 'Reorder at', align: 'right', render: (p) => p.reorderLevel },
+    { key: 'stock', header: 'Stock', render: (p) => <span className="font-medium text-amber-600">{p.quantityInStock}</span> },
+    { key: 'reorder', header: 'Reorder at', render: (p) => p.reorderLevel },
   ];
 
   const categoryColumns: Column<typeof data.categoryBreakdown[number]>[] = [
     { key: 'category', header: 'Category', render: (c) => <span className="font-medium text-graphite-900">{c.category}</span> },
-    { key: 'products', header: 'Products', align: 'right', render: (c) => c.productCount },
-    ...(isAdmin ? [{ key: 'value' as const, header: 'Stock value', align: 'right' as const, render: (c: typeof data.categoryBreakdown[number]) => formatCurrency(c.stockValue) }] : []),
+    { key: 'products', header: 'Products', render: (c) => c.productCount },
+    ...(isAdmin ? [{ key: 'value' as const, header: 'Stock value', render: (c: typeof data.categoryBreakdown[number]) => formatCurrency(c.stockValue) }] : []),
   ];
 
   const movementColumns: Column<typeof data.recentMovements[number]>[] = [
     { key: 'product', header: 'Product', render: (m) => <span className="font-medium text-graphite-900">{m.productName}</span> },
     { key: 'type', header: 'Type', render: (m) => <Badge tone={m.type === 'RESTOCK' ? 'success' : m.type === 'SALE' ? 'info' : 'warning'}>{m.type}</Badge> },
-    { key: 'qty', header: 'Qty', align: 'right', render: (m) => m.quantity },
+    { key: 'qty', header: 'Qty', render: (m) => m.quantity },
     { key: 'reason', header: 'Reason', render: (m) => m.reason ?? <span className="text-graphite-300">—</span> },
     { key: 'date', header: 'Date', render: (m) => new Date(m.createdAt).toLocaleString() },
   ];

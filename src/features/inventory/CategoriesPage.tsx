@@ -70,7 +70,6 @@ export function CategoriesPage() {
     {
       key: 'count',
       header: 'Products',
-      align: 'right',
       sortField: 'productCount',
       render: (c) => <Badge tone="neutral">{c.productCount}</Badge>,
     },

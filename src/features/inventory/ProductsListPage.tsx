@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FilePlus2, Package, PackagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { FilePlus2, PackagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -15,7 +15,6 @@ import {
   Pagination,
   Select,
   SplitAddButton,
-  StatTile,
   Table,
   toast,
   type Column,
@@ -94,7 +93,7 @@ export function ProductsListPage() {
       key: 'price' as const,
       header: 'Unit price',
       sortField: 'unitPrice',
-      render: (p) => formatCurrency(p.unitPrice),
+      render: (p: Product) => formatCurrency(p.unitPrice),
     }] : []),
     {
       key: 'stock',

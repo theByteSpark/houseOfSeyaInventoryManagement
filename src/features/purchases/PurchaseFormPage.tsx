@@ -44,8 +44,8 @@ export function PurchaseFormPage() {
 
   useEffect(() => {
     if (!isEdit || !existingPurchase || initialized) return;
-    if (existingPurchase.status !== 'DRAFT') {
-      setError('Only draft purchases can be edited.');
+    if (existingPurchase.status === 'RECEIVED' || existingPurchase.status === 'CANCELLED') {
+      setError('This purchase cannot be edited.');
       return;
     }
     setVendorId(existingPurchase.vendorId);

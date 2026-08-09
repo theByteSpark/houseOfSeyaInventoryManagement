@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Plus, Trash2, Truck } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -11,7 +11,6 @@ import {
   Input,
   PageHeader,
   Pagination,
-  StatTile,
   Table,
   toast,
   type Column,
@@ -84,7 +83,6 @@ export function VendorsListPage() {
     {
       key: 'orders',
       header: 'Orders',
-      align: 'right',
       sortField: 'totalOrders',
       render: (v) => <Badge tone={v.totalOrders > 0 ? 'info' : 'neutral'}>{v.totalOrders}</Badge>,
     },

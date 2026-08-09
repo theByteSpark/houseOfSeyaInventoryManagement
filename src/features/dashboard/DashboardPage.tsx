@@ -29,14 +29,14 @@ export function DashboardPage() {
     { key: 'number', header: 'Sale', render: (sale) => <span className="font-medium text-graphite-900">{sale.saleNumber}</span> },
     { key: 'customer', header: 'Customer', render: (sale) => sale.customerName },
     { key: 'status', header: 'Status', render: (sale) => <SaleStatusBadge status={sale.status} /> },
-    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', align: 'right' as const, render: (sale: Sale) => formatCurrency(sale.total) }] : []),
+    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', render: (sale: Sale) => formatCurrency(sale.total) }] : []),
   ];
 
   const purchaseColumns: Column<Purchase>[] = [
     { key: 'number', header: 'PO #', render: (p) => <span className="font-medium text-graphite-900">{p.purchaseNumber}</span> },
     { key: 'vendor', header: 'Vendor', render: (p) => p.vendorName },
     { key: 'status', header: 'Status', render: (p) => <PurchaseStatusBadge status={p.status} /> },
-    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', align: 'right' as const, render: (p: Purchase) => formatCurrency(p.total) }] : []),
+    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', render: (p: Purchase) => formatCurrency(p.total) }] : []),
   ];
 
   return (

@@ -39,10 +39,10 @@ export function SaleDetailPage() {
         </div>
       ),
     },
-    { key: 'qty', header: 'Qty', align: 'right', render: (item) => item.quantity },
+    { key: 'qty', header: 'Qty', render: (item) => item.quantity },
     ...(isAdmin ? [
-      { key: 'unitPrice' as const, header: 'Unit price', align: 'right' as const, render: (item: SaleItem) => formatCurrency(item.unitPrice) },
-      { key: 'lineTotal' as const, header: 'Line total', align: 'right' as const, render: (item: SaleItem) => formatCurrency(item.lineTotal) },
+      { key: 'unitPrice' as const, header: 'Unit price', render: (item: SaleItem) => formatCurrency(item.unitPrice) },
+      { key: 'lineTotal' as const, header: 'Line total', render: (item: SaleItem) => formatCurrency(item.lineTotal) },
     ] : []),
   ];
 

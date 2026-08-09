@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ClipboardCheck, ClipboardList, FilePlus2, Pencil, Plus, XCircle } from 'lucide-react';
+import { ClipboardCheck, FilePlus2, Pencil, Plus, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
 import {
@@ -16,13 +16,12 @@ import {
   Pagination,
   Select,
   SplitAddButton,
-  StatTile,
   Table,
   toast,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { purchaseKeys, useCancelPurchase, useOrderPurchase, usePurchases, usePurchasesPage } from './hooks';
+import { purchaseKeys, useCancelPurchase, useOrderPurchase, usePurchasesPage } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { importPurchasesCsv } from '@/features/import-export/api';
 import { WarehouseFilter, useIsAdmin } from '@/features/warehouses/WarehouseFilter';
@@ -58,9 +57,10 @@ export function PurchasesListPage() {
   const queryClient = useQueryClient();
   const orderPurchase = useOrderPurchase();
   const cancelPurchase = useCancelPurchase();
-  const { data: allPurchases } = usePurchases();
   const [actionError, setActionError] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
 
   const isAdmin = useIsAdmin();
 
@@ -85,7 +85,7 @@ export function PurchasesListPage() {
     },
     { key: 'vendor', header: 'Vendor', sortField: 'vendor', render: (p) => p.vendorName },
     { key: 'status', header: 'Status', sortField: 'status', render: (p) => <PurchaseStatusBadge status={p.status} /> },
-    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', align: 'right' as const, sortField: 'total', render: (p: Purchase) => formatCurrency(p.total) }] : []),
+    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', sortField: 'total', render: (p: Purchase) => formatCurrency(p.total) }] : []),
     {
       key: 'date',
       header: 'Created',
@@ -98,7 +98,7 @@ export function PurchasesListPage() {
       align: 'right',
       render: (p) => (
         <div className="flex justify-end gap-1">
-          {p.status === 'DRAFT' && (
+          {(p.status === 'DRAFT' || p.status === 'ORDERED' || p.status === 'PARTIALLY_RECEIVED') && (
             <IconButton
               label="Edit purchase"
               tone="brand"
@@ -114,16 +114,22 @@ export function PurchasesListPage() {
             <IconButton
               label="Mark as ordered"
               tone="brand"
-              disabled={orderPurchase.isPending}
+              isLoading={pendingOrderId === p.id}
+              disabled={!!pendingOrderId}
               onClick={(e) => {
                 e.stopPropagation();
                 setActionError(null);
+                setPendingOrderId(p.id);
                 orderPurchase.mutate(p.id, {
-                  onSuccess: () => toast.success('Purchase marked as ordered'),
+                  onSuccess: () => {
+                    toast.success('Purchase marked as ordered');
+                    setPendingOrderId(null);
+                  },
                   onError: (err) => {
                     const msg = extractErrorMessage(err, 'Could not order purchase.');
                     setActionError(msg);
                     toast.error(msg);
+                    setPendingOrderId(null);
                   },
                 });
               }}
@@ -135,16 +141,22 @@ export function PurchasesListPage() {
             <IconButton
               label="Cancel purchase"
               tone="danger"
-              disabled={cancelPurchase.isPending}
+              isLoading={pendingCancelId === p.id}
+              disabled={!!pendingCancelId}
               onClick={(e) => {
                 e.stopPropagation();
                 setActionError(null);
+                setPendingCancelId(p.id);
                 cancelPurchase.mutate(p.id, {
-                  onSuccess: () => toast.success('Purchase cancelled'),
+                  onSuccess: () => {
+                    toast.success('Purchase cancelled');
+                    setPendingCancelId(null);
+                  },
                   onError: (err) => {
                     const msg = extractErrorMessage(err, 'Could not cancel purchase.');
                     setActionError(msg);
                     toast.error(msg);
+                    setPendingCancelId(null);
                   },
                 });
               }}

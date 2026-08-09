@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Banknote, FilePlus2, IndianRupee, Pencil, Plus, Send, ShoppingCart } from 'lucide-react';
+import { Banknote, FilePlus2, Pencil, Plus, Send, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import {
   Button,
@@ -15,14 +15,13 @@ import {
   Pagination,
   Select,
   SplitAddButton,
-  StatTile,
   Table,
   toast,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
 import { formatCurrency } from '@/lib/format';
-import { saleKeys, useIssueSale, useMarkSalePaid, useSales, useSalesPage } from './hooks';
+import { saleKeys, useCancelSale, useIssueSale, useMarkSalePaid, useSalesPage } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
 import { importSalesCsv } from '@/features/import-export/api';
 import { WarehouseFilter, useIsAdmin } from '@/features/warehouses/WarehouseFilter';
@@ -45,11 +44,12 @@ export function SalesListPage() {
   const queryClient = useQueryClient();
   const issueSale = useIssueSale();
   const markSalePaid = useMarkSalePaid();
-  const { data: allSales } = useSales();
+  const cancelSale = useCancelSale();
   const [actionError, setActionError] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [pendingIssueId, setPendingIssueId] = useState<string | null>(null);
   const [pendingPaidId, setPendingPaidId] = useState<string | null>(null);
+  const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
   const isAdmin = useIsAdmin();
 
   const sales = data?.data ?? [];
@@ -73,7 +73,7 @@ export function SalesListPage() {
     },
     { key: 'customer', header: 'Customer', sortField: 'customer', render: (sale) => sale.customerName },
     { key: 'status', header: 'Status', sortField: 'status', render: (sale) => <SaleStatusBadge status={sale.status} /> },
-    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', align: 'right' as const, sortField: 'total', render: (sale: Sale) => formatCurrency(sale.total) }] : []),
+    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', sortField: 'total', render: (sale: Sale) => formatCurrency(sale.total) }] : []),
     {
       key: 'date',
       header: 'Created',
@@ -149,6 +149,33 @@ export function SalesListPage() {
               }}
             >
               <Banknote className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+          )}
+          {(sale.status === 'DRAFT' || sale.status === 'ISSUED') && (
+            <IconButton
+              label="Cancel sale"
+              tone="danger"
+              isLoading={pendingCancelId === sale.id}
+              disabled={!!pendingCancelId}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActionError(null);
+                setPendingCancelId(sale.id);
+                cancelSale.mutate(sale.id, {
+                  onSuccess: () => {
+                    toast.success('Sale cancelled');
+                    setPendingCancelId(null);
+                  },
+                  onError: (err) => {
+                    const msg = extractErrorMessage(err, 'Could not cancel sale.');
+                    setActionError(msg);
+                    toast.error(msg);
+                    setPendingCancelId(null);
+                  },
+                });
+              }}
+            >
+              <XCircle className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
         </div>
