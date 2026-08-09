@@ -7,6 +7,8 @@ import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconBu
 import { useVendors } from '@/features/vendors/hooks';
 import { VendorFormModal } from '@/features/vendors/VendorFormModal';
 import { useProducts } from '@/features/inventory/hooks';
+import { useAuth } from '@/features/auth/useAuth';
+import { useWarehouses } from '@/features/warehouses/hooks';
 import { useCreatePurchase, usePurchase, useUpdatePurchase } from './hooks';
 import type { Vendor } from '@/types';
 
@@ -27,7 +29,12 @@ export function PurchaseFormPage() {
   const createPurchase = useCreatePurchase();
   const updatePurchase = useUpdatePurchase();
 
+  const { user } = useAuth();
+  const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
+  const { data: warehouses } = useWarehouses();
+
   const [vendorId, setVendorId] = useState('');
+  const [warehouseId, setWarehouseId] = useState('');
   const [lines, setLines] = useState<DraftLine[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
@@ -40,6 +47,7 @@ export function PurchaseFormPage() {
       return;
     }
     setVendorId(existingPurchase.vendorId);
+    setWarehouseId(existingPurchase.warehouseId);
     setLines(
       existingPurchase.items.map((item) => ({
         productId: item.productId,
@@ -91,6 +99,10 @@ export function PurchaseFormPage() {
       setError('Select a vendor.');
       return;
     }
+    if (isCompanyLevel && !warehouseId) {
+      setError('Select a warehouse.');
+      return;
+    }
     if (lines.length === 0) {
       setError('Add at least one product line.');
       return;
@@ -102,6 +114,7 @@ export function PurchaseFormPage() {
     const input = {
       vendorId,
       items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitCost: l.unitCost })),
+      warehouseId: isCompanyLevel ? warehouseId : undefined,
     };
 
     try {
@@ -135,7 +148,7 @@ export function PurchaseFormPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader title="Vendor" />
-            <CardBody>
+            <CardBody className="flex flex-col gap-4">
               <SearchableCombobox
                 label="Vendor"
                 items={vendors ?? []}
@@ -148,6 +161,16 @@ export function PurchaseFormPage() {
                 addNewLabel="Add new vendor"
                 onAddNew={() => setVendorModalOpen(true)}
               />
+              {isCompanyLevel && (
+                <Select label="Warehouse" value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)}>
+                  <option value="">Select a warehouse</option>
+                  {warehouses?.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </Select>
+              )}
             </CardBody>
           </Card>
 

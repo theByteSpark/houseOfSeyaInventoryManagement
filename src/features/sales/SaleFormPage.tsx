@@ -7,6 +7,8 @@ import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconBu
 import { useCustomers } from '@/features/customers/hooks';
 import { CustomerFormModal } from '@/features/customers/CustomerFormModal';
 import { useProducts } from '@/features/inventory/hooks';
+import { useAuth } from '@/features/auth/useAuth';
+import { useWarehouses } from '@/features/warehouses/hooks';
 import { useCreateSale, useSale, useUpdateSale } from './hooks';
 import type { Customer } from '@/types';
 
@@ -26,7 +28,12 @@ export function SaleFormPage() {
   const createSale = useCreateSale();
   const updateSale = useUpdateSale();
 
+  const { user } = useAuth();
+  const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
+  const { data: warehouses } = useWarehouses();
+
   const [customerId, setCustomerId] = useState('');
+  const [warehouseId, setWarehouseId] = useState('');
   const [lines, setLines] = useState<DraftLine[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
@@ -39,6 +46,7 @@ export function SaleFormPage() {
       return;
     }
     setCustomerId(existingSale.customerId);
+    setWarehouseId(existingSale.warehouseId);
     setLines(existingSale.items.map((item) => ({ productId: item.productId, quantity: item.quantity })));
     setInitialized(true);
   }, [isEdit, existingSale, initialized]);
@@ -86,6 +94,10 @@ export function SaleFormPage() {
       setError('Select a customer.');
       return;
     }
+    if (isCompanyLevel && !warehouseId) {
+      setError('Select a warehouse.');
+      return;
+    }
     if (lines.length === 0) {
       setError('Add at least one product line.');
       return;
@@ -97,6 +109,7 @@ export function SaleFormPage() {
     const input = {
       customerId,
       items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
+      warehouseId: isCompanyLevel ? warehouseId : undefined,
     };
 
     try {
@@ -130,7 +143,7 @@ export function SaleFormPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader title="Customer" />
-            <CardBody>
+            <CardBody className="flex flex-col gap-4">
               <SearchableCombobox
                 label="Customer"
                 items={customers ?? []}
@@ -143,6 +156,16 @@ export function SaleFormPage() {
                 addNewLabel="Add new customer"
                 onAddNew={() => setCustomerModalOpen(true)}
               />
+              {isCompanyLevel && (
+                <Select label="Warehouse" value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)}>
+                  <option value="">Select a warehouse</option>
+                  {warehouses?.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </Select>
+              )}
             </CardBody>
           </Card>
 
