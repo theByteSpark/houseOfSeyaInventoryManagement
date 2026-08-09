@@ -3,12 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, Select, SearchableCombobox, toast } from '@/components/ui';
+import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, Select, SearchableCombobox, MultiSelectProductPicker, toast } from '@/components/ui';
 import { useCustomers } from '@/features/customers/hooks';
 import { CustomerFormModal } from '@/features/customers/CustomerFormModal';
 import { useProducts } from '@/features/inventory/hooks';
 import { useAuth } from '@/features/auth/useAuth';
 import { useWarehouses } from '@/features/warehouses/hooks';
+import { useIsAdmin } from '@/features/warehouses/WarehouseFilter';
 import { useCreateSale, useSale, useUpdateSale } from './hooks';
 import type { Customer } from '@/types';
 
@@ -22,14 +23,15 @@ export function SaleFormPage() {
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
 
-  const { data: customers } = useCustomers();
-  const { data: products } = useProducts();
+  const { data: customers, isLoading: isLoadingCustomers } = useCustomers();
+  const { data: products, isLoading: isLoadingProducts } = useProducts();
   const { data: existingSale, isLoading: isLoadingSale, isError: isSaleError, error: saleFetchError } = useSale(id);
   const createSale = useCreateSale();
   const updateSale = useUpdateSale();
 
   const { user } = useAuth();
   const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isAdmin = useIsAdmin();
   const { data: warehouses } = useWarehouses();
 
   const [customerId, setCustomerId] = useState('');
@@ -51,14 +53,14 @@ export function SaleFormPage() {
     setInitialized(true);
   }, [isEdit, existingSale, initialized]);
 
-  const availableProducts = useMemo(
-    () => products?.filter((p) => !lines.some((l) => l.productId === p.id)) ?? [],
-    [products, lines],
-  );
-
-  const addLine = () => {
-    if (availableProducts.length === 0) return;
-    setLines((prev) => [...prev, { productId: availableProducts[0].id, quantity: 1 }]);
+  const toggleProduct = (productId: string) => {
+    setLines((prev) => {
+      const existing = prev.find((l) => l.productId === productId);
+      if (existing) {
+        return prev.filter((l) => l.productId !== productId);
+      }
+      return [...prev, { productId, quantity: 1 }];
+    });
   };
 
   const updateLine = (index: number, patch: Partial<DraftLine>) => {
@@ -147,18 +149,30 @@ export function SaleFormPage() {
           <Card>
             <CardHeader title="Customer" />
             <CardBody className="flex flex-col gap-4">
-              <SearchableCombobox
-                label="Customer"
-                items={customers ?? []}
-                value={customerId || null}
-                onChange={(customer: Customer) => setCustomerId(customer.id)}
-                getOptionLabel={(c) => c.name}
-                getOptionValue={(c) => c.id}
-                getOptionSublabel={(c) => c.email ?? null}
-                placeholder="Search customer by name or email…"
-                addNewLabel="Add new customer"
-                onAddNew={() => setCustomerModalOpen(true)}
-              />
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[13px] font-medium text-graphite-700">Customer</label>
+                  <button
+                    type="button"
+                    onClick={() => setCustomerModalOpen(true)}
+                    className="flex cursor-pointer items-center gap-0.5 text-[12px] font-medium text-brand-600 hover:underline"
+                  >
+                    <Plus className="h-3 w-3" strokeWidth={2} />
+                    Add new customer
+                  </button>
+                </div>
+                <SearchableCombobox
+                  items={customers ?? []}
+                  value={customerId || null}
+                  onChange={(customer: Customer) => setCustomerId(customer.id)}
+                  onClear={() => setCustomerId('')}
+                  getOptionLabel={(c) => c.name}
+                  getOptionValue={(c) => c.id}
+                  getOptionSublabel={(c) => c.email ?? null}
+                  placeholder="Search customer by name or email…"
+                  isLoading={isLoadingCustomers}
+                />
+              </div>
               {isCompanyLevel && (
                 <Select label="Warehouse" value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)}>
                   <option value="">Select a warehouse</option>
@@ -173,42 +187,25 @@ export function SaleFormPage() {
           </Card>
 
           <Card className="mt-6">
-            <CardHeader
-              title="Line items"
-              action={
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={addLine}
-                  disabled={availableProducts.length === 0}
-                  icon={<Plus className="h-3.5 w-3.5" strokeWidth={2} />}
-                >
-                  Add product
-                </Button>
-              }
-            />
-            <CardBody>
+            <CardHeader title="Line items" />
+            <CardBody className="flex flex-col gap-4">
+              <MultiSelectProductPicker
+                products={products?.map((p) => ({ id: p.id, name: p.name, sku: p.sku, quantityInStock: p.quantityInStock, unitPrice: p.unitPrice })) ?? []}
+                selectedIds={lines.map((l) => l.productId)}
+                onToggle={toggleProduct}
+                isLoading={isLoadingProducts}
+              />
               {lines.length === 0 ? (
-                <EmptyState title="No products added" description="Use “Add product” to start building this sale." />
+                <EmptyState title="No products added" description="Search and select products above to add them to this sale." />
               ) : (
                 <div className="flex flex-col gap-3">
                   {lines.map((line, index) => {
                     const product = productById.get(line.productId);
                     return (
-                      <div key={index} className="grid grid-cols-1 items-end gap-3 rounded-lg border border-graphite-100 p-3 sm:grid-cols-12">
+                      <div key={line.productId} className="grid grid-cols-1 items-center gap-3 rounded-lg border border-graphite-100 p-3 sm:grid-cols-12">
                         <div className="sm:col-span-6">
-                          <Select
-                            label="Product"
-                            value={line.productId}
-                            onChange={(e) => updateLine(index, { productId: e.target.value })}
-                          >
-                            <option value={line.productId}>{product?.name}</option>
-                            {availableProducts.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name} ({p.sku})
-                              </option>
-                            ))}
-                          </Select>
+                          <p className="truncate text-sm font-medium text-graphite-900">{product?.name}</p>
+                          <p className="text-xs text-graphite-400">{product?.sku}</p>
                         </div>
                         <div className="sm:col-span-2">
                           <Input
@@ -225,7 +222,7 @@ export function SaleFormPage() {
                           {product && (
                             <>
                               <p className="text-xs text-graphite-400 sm:text-xs">In stock: {product.quantityInStock}</p>
-                              <p className="font-medium text-graphite-800 sm:font-medium sm:text-graphite-800">{formatCurrency(product.unitPrice * line.quantity)}</p>
+                              {isAdmin && <p className="font-medium text-graphite-800 sm:font-medium sm:text-graphite-800">{formatCurrency(product.unitPrice * line.quantity)}</p>}
                             </>
                           )}
                         </div>
@@ -244,28 +241,34 @@ export function SaleFormPage() {
         </div>
 
         <div>
-          <Card>
-            <CardHeader title="Summary" />
-            <CardBody>
-              <dl className="flex flex-col gap-2 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-graphite-500">Subtotal</dt>
-                  <dd className="font-medium text-graphite-800">{formatCurrency(subtotal)}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-graphite-500">Tax (10%)</dt>
-                  <dd className="font-medium text-graphite-800">{formatCurrency(tax)}</dd>
-                </div>
-                <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
-                  <dt className="font-semibold text-graphite-900">Total</dt>
-                  <dd className="font-semibold text-graphite-900">{formatCurrency(total)}</dd>
-                </div>
-              </dl>
+          {isAdmin && (
+            <Card>
+              <CardHeader title="Summary" />
+              <CardBody>
+                <dl className="flex flex-col gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-graphite-500">Subtotal</dt>
+                    <dd className="font-medium text-graphite-800">{formatCurrency(subtotal)}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-graphite-500">Tax (10%)</dt>
+                    <dd className="font-medium text-graphite-800">{formatCurrency(tax)}</dd>
+                  </div>
+                  <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
+                    <dt className="font-semibold text-graphite-900">Total</dt>
+                    <dd className="font-semibold text-graphite-900">{formatCurrency(total)}</dd>
+                  </div>
+                </dl>
+              </CardBody>
+            </Card>
+          )}
 
-              {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+          <Card className={isAdmin ? 'mt-6' : ''}>
+            <CardBody>
+              {error && <p className="text-sm text-red-600">{error}</p>}
 
               <Button
-                className="mt-6 w-full"
+                className="w-full"
                 onClick={handleSubmit}
                 isLoading={isEdit ? updateSale.isPending : createSale.isPending}
                 disabled={lines.length === 0 || lines.some((line) => getLineQuantityError(line) !== null)}

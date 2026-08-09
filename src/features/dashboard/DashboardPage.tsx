@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, IndianRupee, Package, Users, Truck, ClipboardList, ClipboardCheck } from 'lucide-react';
+import { AlertTriangle, IndianRupee, ClipboardCheck, ShoppingCart } from 'lucide-react';
 import {
   Card,
   CardBody,
@@ -15,11 +15,13 @@ import { formatCurrency } from '@/lib/format';
 import { useDashboardSummary } from './hooks';
 import { SaleStatusBadge } from '@/features/sales/statusBadge';
 import { PurchaseStatusBadge } from '@/features/purchases/statusBadge';
-import type { Sale, Product, Purchase } from '@/types';
+import { useIsAdmin } from '@/features/warehouses/WarehouseFilter';
+import type { Sale, Purchase } from '@/types';
 
 export function DashboardPage() {
   const { data, isLoading } = useDashboardSummary();
   const navigate = useNavigate();
+  const isAdmin = useIsAdmin();
 
   if (isLoading || !data) return <FullPageSpinner />;
 
@@ -27,20 +29,14 @@ export function DashboardPage() {
     { key: 'number', header: 'Sale', render: (sale) => <span className="font-medium text-graphite-900">{sale.saleNumber}</span> },
     { key: 'customer', header: 'Customer', render: (sale) => sale.customerName },
     { key: 'status', header: 'Status', render: (sale) => <SaleStatusBadge status={sale.status} /> },
-    { key: 'total', header: 'Total', align: 'right', render: (sale) => formatCurrency(sale.total) },
+    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', align: 'right' as const, render: (sale: Sale) => formatCurrency(sale.total) }] : []),
   ];
 
   const purchaseColumns: Column<Purchase>[] = [
     { key: 'number', header: 'PO #', render: (p) => <span className="font-medium text-graphite-900">{p.purchaseNumber}</span> },
     { key: 'vendor', header: 'Vendor', render: (p) => p.vendorName },
     { key: 'status', header: 'Status', render: (p) => <PurchaseStatusBadge status={p.status} /> },
-    { key: 'total', header: 'Total', align: 'right', render: (p) => formatCurrency(p.total) },
-  ];
-
-  const lowStockColumns: Column<Product>[] = [
-    { key: 'name', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.name}</span> },
-    { key: 'sku', header: 'SKU', render: (p) => p.sku },
-    { key: 'stock', header: 'Stock', align: 'right', render: (p) => <span className="font-medium text-amber-600">{p.quantityInStock}</span> },
+    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', align: 'right' as const, render: (p: Purchase) => formatCurrency(p.total) }] : []),
   ];
 
   return (
@@ -49,57 +45,33 @@ export function DashboardPage() {
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatTile
-          label="Total products"
-          value={data.totalProducts}
-          icon={<Package className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/inventory/products')}
-        />
-        <StatTile
           label="Low stock items"
           value={data.lowStockCount}
           icon={<AlertTriangle className="h-4 w-4" strokeWidth={2} />}
           tone={data.lowStockCount > 0 ? 'warning' : 'neutral'}
           onClick={() => navigate('/inventory/products?stockFilter=low')}
         />
+        {isAdmin && (
+          <StatTile
+            label="Revenue this month"
+            value={formatCurrency(data.revenueThisMonth)}
+            icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />}
+            onClick={() => navigate('/sales')}
+          />
+        )}
         <StatTile
-          label="Total customers"
-          value={data.totalCustomers}
-          icon={<Users className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/customers')}
-        />
-        <StatTile
-          label="Total vendors"
-          value={data.totalVendors}
-          icon={<Truck className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/vendors')}
-        />
-      </div>
-
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatTile
-          label="Sales this month"
-          value={data.salesThisMonth}
-          icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/sales')}
-        />
-        <StatTile
-          label="Revenue this month"
-          value={formatCurrency(data.revenueThisMonth)}
-          icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/sales')}
-        />
-        <StatTile
-          label="Purchases this month"
-          value={data.purchasesThisMonth}
-          icon={<ClipboardList className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/purchases')}
-        />
-        <StatTile
-          label="Pending POs"
+          label="Pending purchase orders"
           value={data.pendingPOs}
           icon={<ClipboardCheck className="h-4 w-4" strokeWidth={2} />}
           tone={data.pendingPOs > 0 ? 'warning' : 'neutral'}
           onClick={() => navigate('/purchases?status=ORDERED')}
+        />
+        <StatTile
+          label="Pending sales"
+          value={data.pendingSales}
+          icon={<ShoppingCart className="h-4 w-4" strokeWidth={2} />}
+          tone={data.pendingSales > 0 ? 'warning' : 'neutral'}
+          onClick={() => navigate('/sales?status=ISSUED')}
         />
       </div>
 
@@ -129,17 +101,6 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="mt-6">
-        <CardHeader
-          title="Low stock alerts"
-          action={<button onClick={() => navigate('/inventory/products')} className="text-sm font-medium text-brand-600 hover:underline">View all</button>}
-        />
-        {data.lowStockProducts.length === 0 ? (
-          <CardBody><EmptyState title="All stocked up" description="No products are below their reorder level." /></CardBody>
-        ) : (
-          <Table columns={lowStockColumns} rows={data.lowStockProducts} getRowKey={(p) => p.id} />
-        )}
-      </Card>
     </div>
   );
 }

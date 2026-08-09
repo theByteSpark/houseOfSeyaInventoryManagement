@@ -6,6 +6,7 @@ import { Plus, X } from 'lucide-react';
 import { Button, Input, Modal, Select, toast } from '@/components/ui';
 import { useAuth } from '@/features/auth/useAuth';
 import { useWarehouses } from '@/features/warehouses/hooks';
+import { useIsAdmin } from '@/features/warehouses/WarehouseFilter';
 import { useCategories, useCreateCategory, useCreateProduct, useUpdateProduct } from './hooks';
 import type { Product } from '@/types';
 
@@ -35,6 +36,7 @@ export function ProductFormModal({
   const isEditing = !!product;
   const { user } = useAuth();
   const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isAdmin = useIsAdmin();
   const { data: categories } = useCategories();
   const { data: warehouses } = useWarehouses();
   const createProduct = useCreateProduct();
@@ -177,7 +179,9 @@ export function ProductFormModal({
         </div>
         <Input label="Description (optional)" placeholder="Short description" error={errors.description?.message} {...register('description')} />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Input label="Unit price" type="number" step="0.01" min="0" error={errors.unitPrice?.message} {...register('unitPrice')} />
+          {isAdmin && (
+            <Input label="Unit price" type="number" step="0.01" min="0" error={errors.unitPrice?.message} {...register('unitPrice')} />
+          )}
           <Input
             label="Stock qty"
             type="number"

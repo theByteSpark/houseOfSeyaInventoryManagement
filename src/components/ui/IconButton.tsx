@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/cn';
+import { Spinner } from './Spinner';
 
 type Tone = 'neutral' | 'brand' | 'danger' | 'amber';
 
@@ -7,6 +8,7 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   tone?: Tone;
   label: string;
   children: ReactNode;
+  isLoading?: boolean;
 }
 
 const toneClasses: Record<Tone, string> = {
@@ -16,12 +18,13 @@ const toneClasses: Record<Tone, string> = {
   amber: 'text-amber-700 hover:bg-amber-50 hover:text-amber-800',
 };
 
-export function IconButton({ tone = 'neutral', label, className, children, ...rest }: IconButtonProps) {
+export function IconButton({ tone = 'neutral', label, className, children, isLoading, ...rest }: IconButtonProps) {
   return (
     <span className="group/tooltip relative inline-flex">
       <button
         type="button"
         aria-label={label}
+        disabled={isLoading || rest.disabled}
         className={cn(
           'inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md transition-colors',
           'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-graphite-400',
@@ -31,7 +34,7 @@ export function IconButton({ tone = 'neutral', label, className, children, ...re
         )}
         {...rest}
       >
-        {children}
+        {isLoading ? <Spinner className="h-4 w-4" /> : children}
       </button>
       <span
         role="tooltip"

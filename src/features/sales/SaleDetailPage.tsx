@@ -6,6 +6,7 @@ import { formatCurrency } from '@/lib/format';
 import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, toast, type Column } from '@/components/ui';
 import { useCancelSale, useSale, useIssueSale, useMarkSalePaid } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
+import { useIsAdmin } from '@/features/warehouses/WarehouseFilter';
 import type { SaleItem } from '@/types';
 
 export function SaleDetailPage() {
@@ -15,6 +16,7 @@ export function SaleDetailPage() {
   const issueSale = useIssueSale();
   const markPaid = useMarkSalePaid();
   const cancelSale = useCancelSale();
+  const isAdmin = useIsAdmin();
   const [actionError, setActionError] = useState<string | null>(null);
 
   if (isLoading) return <FullPageSpinner />;
@@ -38,8 +40,10 @@ export function SaleDetailPage() {
       ),
     },
     { key: 'qty', header: 'Qty', align: 'right', render: (item) => item.quantity },
-    { key: 'unitPrice', header: 'Unit price', align: 'right', render: (item) => formatCurrency(item.unitPrice) },
-    { key: 'lineTotal', header: 'Line total', align: 'right', render: (item) => formatCurrency(item.lineTotal) },
+    ...(isAdmin ? [
+      { key: 'unitPrice' as const, header: 'Unit price', align: 'right' as const, render: (item: SaleItem) => formatCurrency(item.unitPrice) },
+      { key: 'lineTotal' as const, header: 'Line total', align: 'right' as const, render: (item: SaleItem) => formatCurrency(item.lineTotal) },
+    ] : []),
   ];
 
   const runAction = async (action: () => Promise<unknown>, successMsg?: string) => {
@@ -83,29 +87,31 @@ export function SaleDetailPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader title="Summary" />
-            <CardBody>
-              <dl className="flex flex-col gap-2 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-graphite-500">Subtotal</dt>
-                  <dd className="font-medium text-graphite-800">{formatCurrency(sale.subtotal)}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-graphite-500">Tax</dt>
-                  <dd className="font-medium text-graphite-800">{formatCurrency(sale.tax)}</dd>
-                </div>
-                <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
-                  <dt className="font-semibold text-graphite-900">Total</dt>
-                  <dd className="font-semibold text-graphite-900">{formatCurrency(sale.total)}</dd>
-                </div>
-              </dl>
-              <p className="mt-4 text-xs text-graphite-400">
-                Created {new Date(sale.createdAt).toLocaleString()}
-                {sale.issuedAt && <> · Issued {new Date(sale.issuedAt).toLocaleString()}</>}
-              </p>
-            </CardBody>
-          </Card>
+          {isAdmin && (
+            <Card>
+              <CardHeader title="Summary" />
+              <CardBody>
+                <dl className="flex flex-col gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-graphite-500">Subtotal</dt>
+                    <dd className="font-medium text-graphite-800">{formatCurrency(sale.subtotal)}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-graphite-500">Tax</dt>
+                    <dd className="font-medium text-graphite-800">{formatCurrency(sale.tax)}</dd>
+                  </div>
+                  <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
+                    <dt className="font-semibold text-graphite-900">Total</dt>
+                    <dd className="font-semibold text-graphite-900">{formatCurrency(sale.total)}</dd>
+                  </div>
+                </dl>
+                <p className="mt-4 text-xs text-graphite-400">
+                  Created {new Date(sale.createdAt).toLocaleString()}
+                  {sale.issuedAt && <> · Issued {new Date(sale.issuedAt).toLocaleString()}</>}
+                </p>
+              </CardBody>
+            </Card>
+          )}
 
           <Card>
             <CardHeader title="Actions" />
@@ -122,7 +128,7 @@ export function SaleDetailPage() {
               {sale.status === 'DRAFT' && (
                 <Button
                   isLoading={issueSale.isPending}
-                  onClick={() => runAction(() => issueSale.mutateAsync(sale.id), 'Sale confirmed')}
+                  onClick={() => runAction(() => issueSale.mutateAsync(sale.id))}
                 >
                   Confirm sale
                 </Button>

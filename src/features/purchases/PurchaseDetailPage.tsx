@@ -7,6 +7,7 @@ import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table,
 import { useCancelPurchase, useOrderPurchase, usePurchase } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { ReceiveItemsModal } from './ReceiveItemsModal';
+import { useIsAdmin } from '@/features/warehouses/WarehouseFilter';
 import type { PurchaseItem } from '@/types';
 
 export function PurchaseDetailPage() {
@@ -17,6 +18,7 @@ export function PurchaseDetailPage() {
   const cancelPurchase = useCancelPurchase();
   const [actionError, setActionError] = useState<string | null>(null);
   const [receiveOpen, setReceiveOpen] = useState(false);
+  const isAdmin = useIsAdmin();
 
   if (isLoading) return <FullPageSpinner />;
   if (!purchase) {
@@ -49,8 +51,10 @@ export function PurchaseDetailPage() {
         </span>
       ),
     },
-    { key: 'unitCost', header: 'Unit cost', align: 'right', render: (item) => formatCurrency(item.unitCost) },
-    { key: 'lineTotal', header: 'Line total', align: 'right', render: (item) => formatCurrency(item.lineTotal) },
+    ...(isAdmin ? [
+      { key: 'unitCost' as const, header: 'Unit cost', align: 'right' as const, render: (item: PurchaseItem) => formatCurrency(item.unitCost) },
+      { key: 'lineTotal' as const, header: 'Line total', align: 'right' as const, render: (item: PurchaseItem) => formatCurrency(item.lineTotal) },
+    ] : []),
   ];
 
   const runAction = async (action: () => Promise<unknown>, successMsg?: string) => {
@@ -97,22 +101,24 @@ export function PurchaseDetailPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader title="Summary" />
-            <CardBody>
-              <dl className="flex flex-col gap-2 text-sm">
-                <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
-                  <dt className="font-semibold text-graphite-900">Total cost</dt>
-                  <dd className="font-semibold text-graphite-900">{formatCurrency(purchase.total)}</dd>
-                </div>
-              </dl>
-              <p className="mt-4 text-xs text-graphite-400">
-                Created {new Date(purchase.createdAt).toLocaleString()}
-                {purchase.orderedAt && <> · Ordered {new Date(purchase.orderedAt).toLocaleString()}</>}
-                {purchase.receivedAt && <> · Received {new Date(purchase.receivedAt).toLocaleString()}</>}
-              </p>
-            </CardBody>
-          </Card>
+          {isAdmin && (
+            <Card>
+              <CardHeader title="Summary" />
+              <CardBody>
+                <dl className="flex flex-col gap-2 text-sm">
+                  <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
+                    <dt className="font-semibold text-graphite-900">Total cost</dt>
+                    <dd className="font-semibold text-graphite-900">{formatCurrency(purchase.total)}</dd>
+                  </div>
+                </dl>
+                <p className="mt-4 text-xs text-graphite-400">
+                  Created {new Date(purchase.createdAt).toLocaleString()}
+                  {purchase.orderedAt && <> · Ordered {new Date(purchase.orderedAt).toLocaleString()}</>}
+                  {purchase.receivedAt && <> · Received {new Date(purchase.receivedAt).toLocaleString()}</>}
+                </p>
+              </CardBody>
+            </Card>
+          )}
 
           <Card>
             <CardHeader title="Actions" />

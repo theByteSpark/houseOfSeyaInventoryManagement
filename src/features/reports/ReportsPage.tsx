@@ -21,7 +21,7 @@ import {
 } from '@/components/ui';
 import { SaleStatusBadge } from '@/features/sales/statusBadge';
 import { PurchaseStatusBadge } from '@/features/purchases/statusBadge';
-import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
+import { WarehouseFilter, useIsAdmin } from '@/features/warehouses/WarehouseFilter';
 import { useSalesReport, usePurchasesReport, useInventoryReport } from './hooks';
 import type { SaleStatus, PurchaseStatus } from '@/types';
 
@@ -113,6 +113,7 @@ function SalesReportTab() {
   const [to, setTo] = useState(today);
   const [status, setStatus] = useState('ALL');
   const [warehouseId, setWarehouseId] = useState('');
+  const isAdmin = useIsAdmin();
 
   const { data, isLoading } = useSalesReport({ from, to, status, warehouseId: warehouseId || undefined });
 
@@ -122,7 +123,7 @@ function SalesReportTab() {
     { key: 'saleNumber', header: 'Sale #', render: (s) => <span className="font-medium text-graphite-900">{s.saleNumber}</span> },
     { key: 'customer', header: 'Customer', render: (s) => s.customerName },
     { key: 'status', header: 'Status', render: (s) => <SaleStatusBadge status={s.status as SaleStatus} /> },
-    { key: 'total', header: 'Total', render: (s) => formatCurrency(s.total) },
+    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', render: (s: typeof data.sales[number]) => formatCurrency(s.total) }] : []),
     { key: 'date', header: 'Date', render: (s) => new Date(s.createdAt).toLocaleDateString() },
   ];
 
@@ -130,7 +131,7 @@ function SalesReportTab() {
     { key: 'product', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.product}</span> },
     { key: 'sku', header: 'SKU', render: (p) => p.sku },
     { key: 'qty', header: 'Qty sold', align: 'right', render: (p) => p.quantity },
-    { key: 'revenue', header: 'Revenue', align: 'right', render: (p) => formatCurrency(p.revenue) },
+    ...(isAdmin ? [{ key: 'revenue' as const, header: 'Revenue', align: 'right' as const, render: (p: typeof data.topProducts[number]) => formatCurrency(p.revenue) }] : []),
   ];
 
   return (
@@ -150,8 +151,8 @@ function SalesReportTab() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatTile label="Total sales" value={data.totalCount} icon={<ShoppingCart className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Total revenue" value={formatCurrency(data.totalRevenue)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Total tax" value={formatCurrency(data.totalTax)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />
+        {isAdmin && <StatTile label="Total revenue" value={formatCurrency(data.totalRevenue)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />}
+        {isAdmin && <StatTile label="Total tax" value={formatCurrency(data.totalTax)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />}
       </div>
 
       <div className="mb-6 flex items-center justify-between">
@@ -171,19 +172,21 @@ function SalesReportTab() {
                 `From: ${from}, To: ${to}, Status: ${status}${warehouseId ? ', Warehouse: ' + warehouseId : ''}`,
                 [
                   { label: 'Total sales', value: String(data.totalCount) },
-                  { label: 'Total revenue', value: formatCurrency(data.totalRevenue) },
-                  { label: 'Total tax', value: formatCurrency(data.totalTax) },
+                  ...(isAdmin ? [
+                    { label: 'Total revenue', value: formatCurrency(data.totalRevenue) },
+                    { label: 'Total tax', value: formatCurrency(data.totalTax) },
+                  ] : []),
                 ],
                 [
                   {
                     title: 'Top selling products',
-                    head: ['Product', 'SKU', 'Qty sold', 'Revenue'],
-                    body: data.topProducts.map((p) => [p.product, p.sku, p.quantity, formatCurrency(p.revenue)]),
+                    head: isAdmin ? ['Product', 'SKU', 'Qty sold', 'Revenue'] : ['Product', 'SKU', 'Qty sold'],
+                    body: data.topProducts.map((p) => isAdmin ? [p.product, p.sku, p.quantity, formatCurrency(p.revenue)] : [p.product, p.sku, p.quantity]),
                   },
                   {
                     title: 'Sales in period',
-                    head: ['Sale #', 'Customer', 'Status', 'Total', 'Date'],
-                    body: data.sales.map((s) => [s.saleNumber, s.customerName, s.status, formatCurrency(s.total), new Date(s.createdAt).toLocaleDateString()]),
+                    head: isAdmin ? ['Sale #', 'Customer', 'Status', 'Total', 'Date'] : ['Sale #', 'Customer', 'Status', 'Date'],
+                    body: data.sales.map((s) => isAdmin ? [s.saleNumber, s.customerName, s.status, formatCurrency(s.total), new Date(s.createdAt).toLocaleDateString()] : [s.saleNumber, s.customerName, s.status, new Date(s.createdAt).toLocaleDateString()]),
                   },
                 ],
               );
@@ -227,6 +230,7 @@ function PurchasesReportTab() {
   const [to, setTo] = useState(today);
   const [status, setStatus] = useState('ALL');
   const [warehouseId, setWarehouseId] = useState('');
+  const isAdmin = useIsAdmin();
 
   const { data, isLoading } = usePurchasesReport({ from, to, status, warehouseId: warehouseId || undefined });
 
@@ -236,7 +240,7 @@ function PurchasesReportTab() {
     { key: 'purchaseNumber', header: 'PO #', render: (p) => <span className="font-medium text-graphite-900">{p.purchaseNumber}</span> },
     { key: 'vendor', header: 'Vendor', render: (p) => p.vendorName },
     { key: 'status', header: 'Status', render: (p) => <PurchaseStatusBadge status={p.status as PurchaseStatus} /> },
-    { key: 'total', header: 'Total', align: 'right', render: (p) => formatCurrency(p.total) },
+    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', align: 'right' as const, render: (p: typeof data.purchases[number]) => formatCurrency(p.total) }] : []),
     { key: 'date', header: 'Date', render: (p) => new Date(p.createdAt).toLocaleDateString() },
   ];
 
@@ -244,7 +248,7 @@ function PurchasesReportTab() {
     { key: 'product', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.product}</span> },
     { key: 'sku', header: 'SKU', render: (p) => p.sku },
     { key: 'qty', header: 'Qty ordered', align: 'right', render: (p) => p.quantity },
-    { key: 'cost', header: 'Cost', align: 'right', render: (p) => formatCurrency(p.cost) },
+    ...(isAdmin ? [{ key: 'cost' as const, header: 'Cost', align: 'right' as const, render: (p: typeof data.topProducts[number]) => formatCurrency(p.cost) }] : []),
   ];
 
   return (
@@ -265,7 +269,7 @@ function PurchasesReportTab() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <StatTile label="Total purchases" value={data.totalCount} icon={<ClipboardList className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Total cost" value={formatCurrency(data.totalCost)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />
+        {isAdmin && <StatTile label="Total cost" value={formatCurrency(data.totalCost)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />}
       </div>
 
       <div className="mb-6 flex items-center justify-between">
@@ -285,18 +289,18 @@ function PurchasesReportTab() {
                 `From: ${from}, To: ${to}, Status: ${status}${warehouseId ? ', Warehouse: ' + warehouseId : ''}`,
                 [
                   { label: 'Total purchases', value: String(data.totalCount) },
-                  { label: 'Total cost', value: formatCurrency(data.totalCost) },
+                  ...(isAdmin ? [{ label: 'Total cost', value: formatCurrency(data.totalCost) }] : []),
                 ],
                 [
                   {
                     title: 'Top ordered products',
-                    head: ['Product', 'SKU', 'Qty ordered', 'Cost'],
-                    body: data.topProducts.map((p) => [p.product, p.sku, p.quantity, formatCurrency(p.cost)]),
+                    head: isAdmin ? ['Product', 'SKU', 'Qty ordered', 'Cost'] : ['Product', 'SKU', 'Qty ordered'],
+                    body: data.topProducts.map((p) => isAdmin ? [p.product, p.sku, p.quantity, formatCurrency(p.cost)] : [p.product, p.sku, p.quantity]),
                   },
                   {
                     title: 'Purchases in period',
-                    head: ['PO #', 'Vendor', 'Status', 'Total', 'Date'],
-                    body: data.purchases.map((p) => [p.purchaseNumber, p.vendorName, p.status, formatCurrency(p.total), new Date(p.createdAt).toLocaleDateString()]),
+                    head: isAdmin ? ['PO #', 'Vendor', 'Status', 'Total', 'Date'] : ['PO #', 'Vendor', 'Status', 'Date'],
+                    body: data.purchases.map((p) => isAdmin ? [p.purchaseNumber, p.vendorName, p.status, formatCurrency(p.total), new Date(p.createdAt).toLocaleDateString()] : [p.purchaseNumber, p.vendorName, p.status, new Date(p.createdAt).toLocaleDateString()]),
                   },
                 ],
               );
@@ -335,6 +339,7 @@ function PurchasesReportTab() {
 
 function InventoryReportTab() {
   const [warehouseId, setWarehouseId] = useState('');
+  const isAdmin = useIsAdmin();
   const { data, isLoading } = useInventoryReport({ warehouseId: warehouseId || undefined });
 
   if (isLoading || !data) return <FullPageSpinner />;
@@ -349,7 +354,7 @@ function InventoryReportTab() {
   const categoryColumns: Column<typeof data.categoryBreakdown[number]>[] = [
     { key: 'category', header: 'Category', render: (c) => <span className="font-medium text-graphite-900">{c.category}</span> },
     { key: 'products', header: 'Products', align: 'right', render: (c) => c.productCount },
-    { key: 'value', header: 'Stock value', align: 'right', render: (c) => formatCurrency(c.stockValue) },
+    ...(isAdmin ? [{ key: 'value' as const, header: 'Stock value', align: 'right' as const, render: (c: typeof data.categoryBreakdown[number]) => formatCurrency(c.stockValue) }] : []),
   ];
 
   const movementColumns: Column<typeof data.recentMovements[number]>[] = [
@@ -368,7 +373,7 @@ function InventoryReportTab() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatTile label="Total products" value={data.totalProducts} icon={<Package className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Total stock value" value={formatCurrency(data.totalStockValue)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />
+        {isAdmin && <StatTile label="Total stock value" value={formatCurrency(data.totalStockValue)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />}
         <StatTile label="Low stock items" value={data.lowStockCount} icon={<Package className="h-4 w-4" strokeWidth={2} />} tone={data.lowStockCount > 0 ? 'warning' : 'neutral'} />
       </div>
 
@@ -384,7 +389,7 @@ function InventoryReportTab() {
                 `${warehouseId ? 'Warehouse: ' + warehouseId : 'All warehouses'}`,
                 [
                   { label: 'Total products', value: String(data.totalProducts) },
-                  { label: 'Total stock value', value: formatCurrency(data.totalStockValue) },
+                  ...(isAdmin ? [{ label: 'Total stock value', value: formatCurrency(data.totalStockValue) }] : []),
                   { label: 'Low stock items', value: String(data.lowStockCount) },
                 ],
                 [
@@ -395,8 +400,8 @@ function InventoryReportTab() {
                   },
                   {
                     title: 'Category-wise breakdown',
-                    head: ['Category', 'Products', 'Stock value'],
-                    body: data.categoryBreakdown.map((c) => [c.category, c.productCount, formatCurrency(c.stockValue)]),
+                    head: isAdmin ? ['Category', 'Products', 'Stock value'] : ['Category', 'Products'],
+                    body: data.categoryBreakdown.map((c) => isAdmin ? [c.category, c.productCount, formatCurrency(c.stockValue)] : [c.category, c.productCount]),
                   },
                   {
                     title: 'Recent stock movements',

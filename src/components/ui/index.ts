@@ -14,6 +14,8 @@ export { IconButton } from './IconButton';
 export { PageHeader } from './PageHeader';
 export { Pagination } from './Pagination';
 export { SearchableCombobox } from './SearchableCombobox';
+export { MultiSelectProductPicker } from './MultiSelectProductPicker';
+export type { ProductPickerItem } from './MultiSelectProductPicker';
 export { SplitAddButton } from './SplitAddButton';
 export type { SplitAddButtonOption } from './SplitAddButton';
 export { CsvImportModal } from './CsvImportModal';

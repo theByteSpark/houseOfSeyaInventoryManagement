@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Banknote, FilePlus2, Pencil, Plus, Send } from 'lucide-react';
+import { Banknote, FilePlus2, IndianRupee, Pencil, Plus, Send, ShoppingCart } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import {
   Button,
@@ -15,16 +15,17 @@ import {
   Pagination,
   Select,
   SplitAddButton,
+  StatTile,
   Table,
   toast,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
 import { formatCurrency } from '@/lib/format';
-import { saleKeys, useIssueSale, useMarkSalePaid, useSalesPage } from './hooks';
+import { saleKeys, useIssueSale, useMarkSalePaid, useSales, useSalesPage } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
 import { importSalesCsv } from '@/features/import-export/api';
-import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
+import { WarehouseFilter, useIsAdmin } from '@/features/warehouses/WarehouseFilter';
 import type { Sale, SaleStatus } from '@/types';
 
 export function SalesListPage() {
@@ -44,8 +45,12 @@ export function SalesListPage() {
   const queryClient = useQueryClient();
   const issueSale = useIssueSale();
   const markSalePaid = useMarkSalePaid();
+  const { data: allSales } = useSales();
   const [actionError, setActionError] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [pendingIssueId, setPendingIssueId] = useState<string | null>(null);
+  const [pendingPaidId, setPendingPaidId] = useState<string | null>(null);
+  const isAdmin = useIsAdmin();
 
   const sales = data?.data ?? [];
 
@@ -68,7 +73,7 @@ export function SalesListPage() {
     },
     { key: 'customer', header: 'Customer', sortField: 'customer', render: (sale) => sale.customerName },
     { key: 'status', header: 'Status', sortField: 'status', render: (sale) => <SaleStatusBadge status={sale.status} /> },
-    { key: 'total', header: 'Total', align: 'right', sortField: 'total', render: (sale) => formatCurrency(sale.total) },
+    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', align: 'right' as const, sortField: 'total', render: (sale: Sale) => formatCurrency(sale.total) }] : []),
     {
       key: 'date',
       header: 'Created',
@@ -97,16 +102,21 @@ export function SalesListPage() {
             <IconButton
               label="Confirm sale"
               tone="brand"
-              disabled={issueSale.isPending}
+              isLoading={pendingIssueId === sale.id}
+              disabled={!!pendingIssueId}
               onClick={(e) => {
                 e.stopPropagation();
                 setActionError(null);
+                setPendingIssueId(sale.id);
                 issueSale.mutate(sale.id, {
-                  onSuccess: () => toast.success('Sale confirmed'),
+                  onSuccess: () => {
+                    setPendingIssueId(null);
+                  },
                   onError: (err) => {
                     const msg = extractErrorMessage(err, 'Could not confirm sale.');
                     setActionError(msg);
                     toast.error(msg);
+                    setPendingIssueId(null);
                   },
                 });
               }}
@@ -118,16 +128,22 @@ export function SalesListPage() {
             <IconButton
               label="Mark as paid"
               tone="brand"
-              disabled={markSalePaid.isPending}
+              isLoading={pendingPaidId === sale.id}
+              disabled={!!pendingPaidId}
               onClick={(e) => {
                 e.stopPropagation();
                 setActionError(null);
+                setPendingPaidId(sale.id);
                 markSalePaid.mutate(sale.id, {
-                  onSuccess: () => toast.success('Sale marked as paid'),
+                  onSuccess: () => {
+                    toast.success('Sale marked as paid');
+                    setPendingPaidId(null);
+                  },
                   onError: (err) => {
                     const msg = extractErrorMessage(err, 'Could not mark sale as paid.');
                     setActionError(msg);
                     toast.error(msg);
+                    setPendingPaidId(null);
                   },
                 });
               }}
@@ -163,6 +179,24 @@ export function SalesListPage() {
           />
         }
       />
+
+      {/* <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <StatTile
+          label="Total sales"
+          value={data?.total ?? 0}
+          icon={<ShoppingCart className="h-4 w-4" strokeWidth={2} />}
+        />
+        <StatTile
+          label="Sales this month"
+          value={allSales ? allSales.filter((s) => { const d = new Date(s.createdAt); return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear(); }).length : '—'}
+          icon={<Banknote className="h-4 w-4" strokeWidth={2} />}
+        />
+        <StatTile
+          label="Revenue this month"
+          value={allSales ? formatCurrency(allSales.filter((s) => { const d = new Date(s.createdAt); return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear() && (s.status === 'PAID' || s.status === 'ISSUED'); }).reduce((sum, s) => sum + s.total, 0)) : '—'}
+          icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />}
+        />
+      </div> */}
 
       {actionError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">

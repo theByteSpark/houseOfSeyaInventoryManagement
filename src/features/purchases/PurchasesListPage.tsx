@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ClipboardCheck, FilePlus2, Pencil, Plus, XCircle } from 'lucide-react';
+import { ClipboardCheck, ClipboardList, FilePlus2, Pencil, Plus, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
 import {
@@ -16,15 +16,16 @@ import {
   Pagination,
   Select,
   SplitAddButton,
+  StatTile,
   Table,
   toast,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { purchaseKeys, useCancelPurchase, useOrderPurchase, usePurchasesPage } from './hooks';
+import { purchaseKeys, useCancelPurchase, useOrderPurchase, usePurchases, usePurchasesPage } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { importPurchasesCsv } from '@/features/import-export/api';
-import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
+import { WarehouseFilter, useIsAdmin } from '@/features/warehouses/WarehouseFilter';
 import type { Purchase, PurchaseStatus } from '@/types';
 
 const VALID_STATUSES: (PurchaseStatus | 'ALL')[] = [
@@ -57,8 +58,11 @@ export function PurchasesListPage() {
   const queryClient = useQueryClient();
   const orderPurchase = useOrderPurchase();
   const cancelPurchase = useCancelPurchase();
+  const { data: allPurchases } = usePurchases();
   const [actionError, setActionError] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+
+  const isAdmin = useIsAdmin();
 
   const purchases = data?.data ?? [];
 
@@ -81,7 +85,7 @@ export function PurchasesListPage() {
     },
     { key: 'vendor', header: 'Vendor', sortField: 'vendor', render: (p) => p.vendorName },
     { key: 'status', header: 'Status', sortField: 'status', render: (p) => <PurchaseStatusBadge status={p.status} /> },
-    { key: 'total', header: 'Total', align: 'right', render: (p) => formatCurrency(p.total) },
+    ...(isAdmin ? [{ key: 'total' as const, header: 'Total', align: 'right' as const, sortField: 'total', render: (p: Purchase) => formatCurrency(p.total) }] : []),
     {
       key: 'date',
       header: 'Created',
@@ -176,6 +180,19 @@ export function PurchasesListPage() {
           />
         }
       />
+
+      {/* <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <StatTile
+          label="Total purchases"
+          value={data?.total ?? 0}
+          icon={<ClipboardList className="h-4 w-4" strokeWidth={2} />}
+        />
+        <StatTile
+          label="Purchases this month"
+          value={allPurchases ? allPurchases.filter((p) => { const d = new Date(p.createdAt); return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear(); }).length : '—'}
+          icon={<ClipboardCheck className="h-4 w-4" strokeWidth={2} />}
+        />
+      </div> */}
 
       {actionError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">

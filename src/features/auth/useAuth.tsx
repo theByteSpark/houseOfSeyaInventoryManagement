@@ -32,7 +32,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     connectNotificationSocket((payload) => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
       queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount });
-      showToast({ type: payload.notificationType, title: payload.title, message: payload.message });
+      if (payload.notificationType !== 'LOW_STOCK') {
+        showToast({ type: payload.notificationType, title: payload.title, message: payload.message });
+      }
     });
 
     return () => disconnectNotificationSocket();

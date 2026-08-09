@@ -7,6 +7,11 @@ export function useIsCompanyLevel() {
   return user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
 }
 
+export function useIsAdmin() {
+  const { user } = useAuth();
+  return user?.role === 'ADMIN' || user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
+}
+
 export function WarehouseFilter({
   warehouseId,
   setWarehouseId,

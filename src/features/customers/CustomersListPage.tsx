@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2, Users } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -11,6 +11,7 @@ import {
   Input,
   PageHeader,
   Pagination,
+  StatTile,
   Table,
   toast,
   type Column,
@@ -105,6 +106,14 @@ export function CustomersListPage() {
         description="Manage the companies and contacts you sell to."
         action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add customer</Button>}
       />
+
+      {/* <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <StatTile
+          label="Total customers"
+          value={data?.total ?? 0}
+          icon={<Users className="h-4 w-4" strokeWidth={2} />}
+        />
+      </div> */}
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <div className="w-full max-w-xs flex-1 sm:w-auto">

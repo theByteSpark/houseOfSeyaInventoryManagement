@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FilePlus2, PackagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { FilePlus2, Package, PackagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -15,6 +15,7 @@ import {
   Pagination,
   Select,
   SplitAddButton,
+  StatTile,
   Table,
   toast,
   type Column,
@@ -27,6 +28,7 @@ import { ProductFormModal } from './ProductFormModal';
 import { RestockModal } from './RestockModal';
 import { importProductsCsv } from '@/features/import-export/api';
 import { formatCurrency } from '@/lib/format';
+import { useIsAdmin } from '@/features/warehouses/WarehouseFilter';
 import type { Product } from '@/types';
 
 export function ProductsListPage() {
@@ -49,6 +51,7 @@ export function ProductsListPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [restockTarget, setRestockTarget] = useState<Product | null>(null);
+  const isAdmin = useIsAdmin();
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
 
   const products = data?.data ?? [];
@@ -87,12 +90,12 @@ export function ProductsListPage() {
       render: (p) =>
         p.categoryName ? <div>{p.categoryName}</div> : <span className="text-graphite-300">—</span>,
     },
-    {
-      key: 'price',
+    ...(isAdmin ? [{
+      key: 'price' as const,
       header: 'Unit price',
       sortField: 'unitPrice',
       render: (p) => formatCurrency(p.unitPrice),
-    },
+    }] : []),
     {
       key: 'stock',
       header: 'Stock',
@@ -152,6 +155,14 @@ export function ProductsListPage() {
 
   return (
     <div>
+      {/* <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <StatTile
+          label="Total products"
+          value={data?.total ?? 0}
+          icon={<Package className="h-4 w-4" strokeWidth={2} />}
+        />
+      </div> */}
+
       <PageHeader
         title="Inventory"
         description="Track stock levels and manage your product catalog."
