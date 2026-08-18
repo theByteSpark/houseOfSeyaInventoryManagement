@@ -5,7 +5,6 @@ export interface ProductInput {
   sku: string;
   name: string;
   description?: string;
-  unitPrice: number;
   quantityInStock: number;
   reorderLevel: number;
   categoryId?: string;
@@ -25,6 +24,7 @@ export interface FetchProductsPageParams {
   sortBy?: string;
   sortDir?: SortDir;
   stockFilter?: StockFilter;
+  warehouseId?: string;
 }
 
 export interface FetchCategoriesPageParams {

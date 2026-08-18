@@ -6,6 +6,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Boxes, ShieldCheck, TrendingUp } from 'lucide-react';
 import { useAuth } from './useAuth';
 import { Button, Input } from '@/components/ui';
+import paragonLogo from '@/assets/paragon-logo.jpg';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -47,7 +48,7 @@ export function LoginPage() {
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-5">
       <div className="relative hidden flex-col justify-between bg-brand-800 p-12 text-white lg:col-span-2 lg:flex">
         <div className="flex pt-16">
-          <img src="/paragon-logo.jpg" alt="Paragon Resin" className="h-28 w-28 rounded-md object-cover ml-20 mt-24" />
+          <img src={paragonLogo} alt="Paragon Resin" className="h-28 w-28 rounded-md object-cover ml-20 mt-24" />
         </div>
 
         <div>
@@ -74,7 +75,7 @@ export function LoginPage() {
       <div className="flex items-center justify-center bg-white px-6 py-16 lg:col-span-3">
         <div className="w-full max-w-sm">
           <div className="mb-8 flex justify-center lg:hidden">
-            <img src="/paragon-logo.jpg" alt="Paragon Resin" className="h-28 w-28 -translate-x-3 rounded-md object-cover" />
+            <img src={paragonLogo} alt="Paragon Resin" className="h-28 w-28 -translate-x-3 rounded-md object-cover" />
           </div>
 
           <h2 className="text-[22px] font-semibold tracking-tight text-graphite-900">Sign in</h2>
@@ -106,10 +107,6 @@ export function LoginPage() {
               Forgot password?
             </Link>
           </form>
-
-          <p className="mt-6 text-center text-xs text-graphite-400">
-            Demo workspace — sign in with admin@paragonresin.com / password123.
-          </p>
         </div>
       </div>
     </div>

@@ -15,26 +15,25 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
+import { extractErrorMessage } from '@/lib/apiClient';
 import { useCustomersPage, useDeleteCustomer } from './hooks';
 import { CustomerFormModal } from './CustomerFormModal';
-import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
 import type { Customer } from '@/types';
 
 export function CustomersListPage() {
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
-  const [warehouseId, setWarehouseId] = useState('');
   const { data, isLoading, isPlaceholderData } = useCustomersPage({
     page: query.page,
     pageSize: query.pageSize,
     search: query.search,
     sortBy: query.sortBy,
     sortDir: query.sortDir,
-    warehouseId: warehouseId || undefined,
   });
   const deleteCustomer = useDeleteCustomer();
   const [formOpen, setFormOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const customers = data?.data ?? [];
 
@@ -85,6 +84,7 @@ export function CustomersListPage() {
             tone="danger"
             onClick={(e) => {
               e.stopPropagation();
+              setDeleteError(null);
               setDeleteTarget(c);
             }}
           >
@@ -114,13 +114,6 @@ export function CustomersListPage() {
             onKeyDown={query.handleSearchKeyDown}
           />
         </div>
-        <WarehouseFilter
-          warehouseId={warehouseId}
-          setWarehouseId={(v) => {
-            setWarehouseId(v);
-            query.setPage(1);
-          }}
-        />
       </div>
 
       <Card className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
@@ -158,7 +151,11 @@ export function CustomersListPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => {
           if (!deleteTarget) return;
-          deleteCustomer.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+          setDeleteError(null);
+          deleteCustomer.mutate(deleteTarget.id, {
+            onSuccess: () => setDeleteTarget(null),
+            onError: (err) => setDeleteError(extractErrorMessage(err, 'Could not delete customer.')),
+          });
         }}
         title="Delete customer"
         description={
@@ -168,6 +165,7 @@ export function CustomersListPage() {
         }
         confirmLabel="Delete"
         isLoading={deleteCustomer.isPending}
+        error={deleteError}
       />
     </div>
   );

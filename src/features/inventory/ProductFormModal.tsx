@@ -12,7 +12,6 @@ const schema = z.object({
   sku: z.string().min(1, 'SKU is required'),
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  unitPrice: z.coerce.number().positive('Must be greater than 0'),
   quantityInStock: z.coerce.number().int().min(0, 'Cannot be negative'),
   reorderLevel: z.coerce.number().int().min(0, 'Cannot be negative'),
   categoryId: z.string().optional(),
@@ -52,7 +51,6 @@ export function ProductFormModal({
         sku: product?.sku ?? '',
         name: product?.name ?? '',
         description: product?.description ?? '',
-        unitPrice: product?.unitPrice ?? 0,
         quantityInStock: product?.quantityInStock ?? 0,
         reorderLevel: product?.reorderLevel ?? 0,
         categoryId: product?.categoryId ?? '',
@@ -100,10 +98,9 @@ export function ProductFormModal({
           ))}
         </Select>
         <Input label="Description (optional)" placeholder="Short description" error={errors.description?.message} {...register('description')} />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Input label="Unit price" type="number" step="0.01" min="0" error={errors.unitPrice?.message} {...register('unitPrice')} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
-            label="Stock qty"
+            label="Stock qty (kgs)"
             type="number"
             min="0"
             disabled={isEditing}
@@ -111,7 +108,7 @@ export function ProductFormModal({
             error={errors.quantityInStock?.message}
             {...register('quantityInStock')}
           />
-          <Input label="Reorder level" type="number" min="0" error={errors.reorderLevel?.message} {...register('reorderLevel')} />
+          <Input label="Reorder level (kgs)" type="number" min="0" error={errors.reorderLevel?.message} {...register('reorderLevel')} />
         </div>
         {isCompanyLevel && !isEditing && (
           <div className="flex flex-col gap-1">

@@ -18,6 +18,9 @@ import { PurchaseDetailPage } from '@/features/purchases/PurchaseDetailPage';
 import { ReportsPage } from '@/features/reports/ReportsPage';
 import { UsersListPage } from '@/features/users/UsersListPage';
 import { WarehousesListPage } from '@/features/warehouses/WarehousesListPage';
+import { EnquiriesPage } from '@/features/enquiries/EnquiriesPage';
+import { StockTransfersPage } from '@/features/stock-transfers/StockTransfersPage';
+import { StockConversionsPage } from '@/features/stock-conversions/StockConversionsPage';
 
 export function AppRoutes() {
   return (
@@ -38,7 +41,6 @@ export function AppRoutes() {
         <Route path="/inventory/categories" element={<CategoriesPage />} />
         <Route path="/sales" element={<SalesListPage />} />
         <Route path="/sales/new" element={<SaleFormPage />} />
-        <Route path="/sales/:id/edit" element={<SaleFormPage />} />
         <Route path="/sales/:id" element={<SaleDetailPage />} />
         <Route path="/vendors" element={<VendorsListPage />} />
         <Route path="/purchases" element={<PurchasesListPage />} />
@@ -59,6 +61,16 @@ export function AppRoutes() {
           element={
             <RequireRole roles={['COMPANY_ADMIN', 'SUPER_ADMIN']}>
               <WarehousesListPage />
+            </RequireRole>
+          }
+        />
+        <Route path="/enquiries" element={<EnquiriesPage />} />
+        <Route path="/stock-conversions" element={<StockConversionsPage />} />
+        <Route
+          path="/stock-transfers"
+          element={
+            <RequireRole roles={['COMPANY_ADMIN', 'SUPER_ADMIN']}>
+              <StockTransfersPage />
             </RequireRole>
           }
         />

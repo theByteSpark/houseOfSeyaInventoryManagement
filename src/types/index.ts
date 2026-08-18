@@ -57,7 +57,6 @@ export interface Product {
   sku: string;
   name: string;
   description: string | null;
-  unitPrice: number;
   // Quantity at the viewer's own warehouse when scoped; total across all warehouses for company-level roles.
   quantityInStock: number;
   reorderLevel: number;
@@ -78,7 +77,7 @@ export interface StockMovement {
   createdAt: string;
 }
 
-export type SaleStatus = 'DRAFT' | 'ISSUED' | 'PAID' | 'CANCELLED';
+export type SaleStatus = 'OUTWARD_TRANSIT' | 'CANCELLED';
 
 export interface SaleItem {
   id: string;
@@ -106,18 +105,12 @@ export interface Sale {
   createdAt: string;
 }
 
-export interface DashboardSummary {
-  totalProducts: number;
-  lowStockCount: number;
-  totalCustomers: number;
-  totalVendors: number;
-  salesThisMonth: number;
-  revenueThisMonth: number;
-  purchasesThisMonth: number;
-  pendingPOs: number;
-  recentSales: Sale[];
-  recentPurchases: Purchase[];
-  lowStockProducts: Product[];
+export interface RecentSaleByProduct {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  date: string;
 }
 
 export interface Vendor {
@@ -134,7 +127,7 @@ export interface Vendor {
   createdAt: string;
 }
 
-export type PurchaseStatus = 'DRAFT' | 'ORDERED' | 'PARTIALLY_RECEIVED' | 'RECEIVED' | 'CANCELLED';
+export type PurchaseStatus = 'ORDERED' | 'INWARD_TRANSIT' | 'IN_STOCK' | 'CANCELLED';
 
 export interface PurchaseItem {
   id: string;
@@ -142,7 +135,6 @@ export interface PurchaseItem {
   productName: string;
   sku: string;
   quantity: number;
-  receivedQuantity: number;
   unitCost: number;
   lineTotal: number;
 }
@@ -160,6 +152,45 @@ export interface Purchase {
   total: number;
   orderedAt: string | null;
   receivedAt: string | null;
+  createdAt: string;
+}
+
+export type EnquiryStatus = 'OPEN' | 'FULFILLED';
+
+export interface Enquiry {
+  id: string;
+  productId: string;
+  productName: string;
+  sku: string;
+  quantity: number;
+  status: EnquiryStatus;
+  createdAt: string;
+}
+
+export interface StockTransfer {
+  id: string;
+  productId: string;
+  productName: string;
+  sku: string;
+  quantity: number;
+  fromWarehouseId: string;
+  fromWarehouseName: string;
+  toWarehouseId: string;
+  toWarehouseName: string;
+  createdAt: string;
+}
+
+export interface StockConversion {
+  id: string;
+  fromProductId: string;
+  fromProductName: string;
+  fromSku: string;
+  toProductId: string;
+  toProductName: string;
+  toSku: string;
+  warehouseId: string;
+  warehouseName: string;
+  quantity: number;
   createdAt: string;
 }
 

@@ -4,6 +4,7 @@ import type { PaginatedResult, Sale, SaleStatus, SortDir } from '@/types';
 export interface SaleLineInput {
   productId: string;
   quantity: number;
+  unitPrice: number;
 }
 
 export interface SaleInput {
@@ -40,21 +41,6 @@ export async function fetchSale(id: string): Promise<Sale> {
 
 export async function createSale(input: SaleInput): Promise<Sale> {
   const { data } = await apiClient.post<Sale>('/sales', input);
-  return data;
-}
-
-export async function updateSale(id: string, input: SaleInput): Promise<Sale> {
-  const { data } = await apiClient.patch<Sale>(`/sales/${id}`, input);
-  return data;
-}
-
-export async function issueSale(id: string): Promise<Sale> {
-  const { data } = await apiClient.patch<Sale>(`/sales/${id}/issue`);
-  return data;
-}
-
-export async function markSalePaid(id: string): Promise<Sale> {
-  const { data } = await apiClient.patch<Sale>(`/sales/${id}/pay`);
   return data;
 }
 

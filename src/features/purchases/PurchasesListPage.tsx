@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ClipboardCheck, FilePlus2, Pencil, Plus, XCircle } from 'lucide-react';
+import { FilePlus2, Plus, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
 import {
   Button,
   Card,
+  ConfirmModal,
   CsvImportModal,
   EmptyState,
   FullPageSpinner,
   IconButton,
   Input,
+  InvoiceItemsCell,
   PageHeader,
   Pagination,
   Select,
@@ -20,18 +22,17 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { purchaseKeys, useCancelPurchase, useOrderPurchase, usePurchasesPage } from './hooks';
+import { purchaseKeys, useCancelPurchase, usePurchasesPage } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { importPurchasesCsv } from '@/features/import-export/api';
-import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
+import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
 import type { Purchase, PurchaseStatus } from '@/types';
 
 const VALID_STATUSES: (PurchaseStatus | 'ALL')[] = [
   'ALL',
-  'DRAFT',
   'ORDERED',
-  'PARTIALLY_RECEIVED',
-  'RECEIVED',
+  'INWARD_TRANSIT',
+  'IN_STOCK',
   'CANCELLED',
 ];
 
@@ -42,7 +43,7 @@ export function PurchasesListPage() {
   const [statusFilter, setStatusFilter] = useState<PurchaseStatus | 'ALL'>(
     initialStatus && VALID_STATUSES.includes(initialStatus) ? initialStatus : 'ALL',
   );
-  const [warehouseId, setWarehouseId] = useState('');
+  const { selectedWarehouseId } = useWarehouseContext();
   const { data, isLoading, isPlaceholderData } = usePurchasesPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -50,24 +51,19 @@ export function PurchasesListPage() {
     sortBy: query.sortBy,
     sortDir: query.sortDir,
     status: statusFilter,
-    warehouseId: warehouseId || undefined,
+    warehouseId: selectedWarehouseId ?? undefined,
   });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const orderPurchase = useOrderPurchase();
   const cancelPurchase = useCancelPurchase();
   const [actionError, setActionError] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<Purchase | null>(null);
 
   const purchases = data?.data ?? [];
 
   const handleStatusFilterChange = (value: PurchaseStatus | 'ALL') => {
     setStatusFilter(value);
-    query.setPage(1);
-  };
-
-  const handleWarehouseFilterChange = (value: string) => {
-    setWarehouseId(value);
     query.setPage(1);
   };
 
@@ -79,6 +75,20 @@ export function PurchasesListPage() {
       render: (p) => <span className="font-medium text-graphite-900">{p.purchaseNumber}</span>,
     },
     { key: 'vendor', header: 'Vendor', sortField: 'vendor', render: (p) => p.vendorName },
+    {
+      key: 'items',
+      header: 'Items',
+      render: (p) => (
+        <InvoiceItemsCell
+          items={p.items.map((item) => ({
+            id: item.id,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitPrice: item.unitCost,
+          }))}
+        />
+      ),
+    },
     { key: 'status', header: 'Status', sortField: 'status', render: (p) => <PurchaseStatusBadge status={p.status} /> },
     { key: 'total', header: 'Total', align: 'right', render: (p) => formatCurrency(p.total) },
     {
@@ -93,35 +103,7 @@ export function PurchasesListPage() {
       align: 'right',
       render: (p) => (
         <div className="flex justify-end gap-1">
-          {p.status === 'DRAFT' && (
-            <IconButton
-              label="Edit purchase"
-              tone="brand"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/purchases/${p.id}/edit`);
-              }}
-            >
-              <Pencil className="h-4 w-4" strokeWidth={2} />
-            </IconButton>
-          )}
-          {p.status === 'DRAFT' && (
-            <IconButton
-              label="Mark as ordered"
-              tone="brand"
-              disabled={orderPurchase.isPending}
-              onClick={(e) => {
-                e.stopPropagation();
-                setActionError(null);
-                orderPurchase.mutate(p.id, {
-                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not order purchase.')),
-                });
-              }}
-            >
-              <ClipboardCheck className="h-4 w-4" strokeWidth={2} />
-            </IconButton>
-          )}
-          {(p.status === 'DRAFT' || p.status === 'ORDERED' || p.status === 'PARTIALLY_RECEIVED') && (
+          {(p.status === 'ORDERED' || p.status === 'INWARD_TRANSIT') && (
             <IconButton
               label="Cancel purchase"
               tone="danger"
@@ -129,9 +111,7 @@ export function PurchasesListPage() {
               onClick={(e) => {
                 e.stopPropagation();
                 setActionError(null);
-                cancelPurchase.mutate(p.id, {
-                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not cancel purchase.')),
-                });
+                setCancelTarget(p);
               }}
             >
               <XCircle className="h-4 w-4" strokeWidth={2} />
@@ -187,13 +167,11 @@ export function PurchasesListPage() {
           onChange={(e) => handleStatusFilterChange(e.target.value as PurchaseStatus | 'ALL')}
         >
           <option value="ALL">All statuses</option>
-          <option value="DRAFT">Draft</option>
           <option value="ORDERED">Ordered</option>
-          <option value="PARTIALLY_RECEIVED">Partially received</option>
-          <option value="RECEIVED">Received</option>
+          <option value="INWARD_TRANSIT">Inward Transit</option>
+          <option value="IN_STOCK">In Stock</option>
           <option value="CANCELLED">Cancelled</option>
         </Select>
-        <WarehouseFilter warehouseId={warehouseId} setWarehouseId={handleWarehouseFilterChange} />
       </div>
 
       <Card className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
@@ -235,6 +213,26 @@ export function PurchasesListPage() {
         requiresWarehouse
         onImported={() => queryClient.invalidateQueries({ queryKey: purchaseKeys.all })}
         rowLabel={(row) => (typeof row.purchaseNumber === 'string' ? row.purchaseNumber : '')}
+      />
+
+      <ConfirmModal
+        isOpen={!!cancelTarget}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={() => {
+          if (!cancelTarget) return;
+          cancelPurchase.mutate(cancelTarget.id, {
+            onSuccess: () => setCancelTarget(null),
+            onError: (err) => setActionError(extractErrorMessage(err, 'Could not cancel purchase.')),
+          });
+        }}
+        title="Cancel purchase"
+        description={
+          <>
+            Are you sure you want to cancel <strong>{cancelTarget?.purchaseNumber}</strong>? This cannot be undone.
+          </>
+        }
+        confirmLabel="Cancel purchase"
+        isLoading={cancelPurchase.isPending}
       />
     </div>
   );

@@ -1,55 +1,35 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, Select, SearchableCombobox } from '@/components/ui';
+import { Button, Card, CardBody, CardHeader, EmptyState, IconButton, Input, PageHeader, Select, SearchableCombobox } from '@/components/ui';
 import { useCustomers } from '@/features/customers/hooks';
 import { CustomerFormModal } from '@/features/customers/CustomerFormModal';
 import { useProducts } from '@/features/inventory/hooks';
-import { useAuth } from '@/features/auth/useAuth';
-import { useWarehouses } from '@/features/warehouses/hooks';
-import { useCreateSale, useSale, useUpdateSale } from './hooks';
+import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
+import { useCreateSale } from './hooks';
 import type { Customer } from '@/types';
 
 interface DraftLine {
   productId: string;
   quantity: number;
+  unitPrice: number;
 }
 
 export function SaleFormPage() {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
-  const isEdit = !!id;
 
   const { data: customers } = useCustomers();
   const { data: products } = useProducts();
-  const { data: existingSale, isLoading: isLoadingSale, isError: isSaleError, error: saleFetchError } = useSale(id);
   const createSale = useCreateSale();
-  const updateSale = useUpdateSale();
 
-  const { user } = useAuth();
-  const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
-  const { data: warehouses } = useWarehouses();
+  const { selectedWarehouseId } = useWarehouseContext();
 
   const [customerId, setCustomerId] = useState('');
-  const [warehouseId, setWarehouseId] = useState('');
   const [lines, setLines] = useState<DraftLine[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [initialized, setInitialized] = useState(false);
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isEdit || !existingSale || initialized) return;
-    if (existingSale.status !== 'DRAFT') {
-      setError('Only draft sales can be edited.');
-      return;
-    }
-    setCustomerId(existingSale.customerId);
-    setWarehouseId(existingSale.warehouseId);
-    setLines(existingSale.items.map((item) => ({ productId: item.productId, quantity: item.quantity })));
-    setInitialized(true);
-  }, [isEdit, existingSale, initialized]);
 
   const availableProducts = useMemo(
     () => products?.filter((p) => !lines.some((l) => l.productId === p.id)) ?? [],
@@ -58,7 +38,7 @@ export function SaleFormPage() {
 
   const addLine = () => {
     if (availableProducts.length === 0) return;
-    setLines((prev) => [...prev, { productId: availableProducts[0].id, quantity: 1 }]);
+    setLines((prev) => [...prev, { productId: availableProducts[0].id, quantity: 1, unitPrice: 0 }]);
   };
 
   const updateLine = (index: number, patch: Partial<DraftLine>) => {
@@ -81,10 +61,12 @@ export function SaleFormPage() {
     return null;
   };
 
-  const subtotal = lines.reduce((sum, l) => {
-    const product = productById.get(l.productId);
-    return sum + (product ? product.unitPrice * l.quantity : 0);
-  }, 0);
+  const getLinePriceError = (line: DraftLine): string | null => {
+    if (line.unitPrice < 0) return 'Price cannot be negative.';
+    return null;
+  };
+
+  const subtotal = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
   const tax = subtotal * 0.1;
   const total = subtotal + tax;
 
@@ -94,7 +76,7 @@ export function SaleFormPage() {
       setError('Select a customer.');
       return;
     }
-    if (isCompanyLevel && !warehouseId) {
+    if (!selectedWarehouseId) {
       setError('Select a warehouse.');
       return;
     }
@@ -102,41 +84,29 @@ export function SaleFormPage() {
       setError('Add at least one product line.');
       return;
     }
-    if (lines.some((line) => getLineQuantityError(line) !== null)) {
-      setError('Fix the highlighted quantities before saving.');
+    if (lines.some((line) => getLineQuantityError(line) !== null || getLinePriceError(line) !== null)) {
+      setError('Fix the highlighted fields before saving.');
       return;
     }
     const input = {
       customerId,
-      items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
-      warehouseId: isCompanyLevel ? warehouseId : undefined,
+      items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
+      warehouseId: selectedWarehouseId ?? undefined,
     };
 
     try {
-      const sale = isEdit
-        ? await updateSale.mutateAsync({ id: id as string, input })
-        : await createSale.mutateAsync(input);
+      const sale = await createSale.mutateAsync(input);
       navigate(`/sales/${sale.id}`, { replace: true });
     } catch (err) {
-      setError(extractErrorMessage(err, isEdit ? 'Could not update sale.' : 'Could not create sale.'));
+      setError(extractErrorMessage(err, 'Could not create sale.'));
     }
   };
-
-  if (isEdit && isLoadingSale) return <FullPageSpinner />;
-
-  if (isEdit && isSaleError) {
-    return (
-      <div className="py-16 text-center text-sm text-red-600">
-        {extractErrorMessage(saleFetchError, 'Could not load this sale.')}
-      </div>
-    );
-  }
 
   return (
     <div>
       <PageHeader
-        title={isEdit ? 'Edit sale' : 'Add sale'}
-        description="Select a customer and add the products being sold."
+        title="Add sale"
+        description="Select a customer and add the products being sold. Stock is deducted immediately."
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -156,16 +126,6 @@ export function SaleFormPage() {
                 addNewLabel="Add new customer"
                 onAddNew={() => setCustomerModalOpen(true)}
               />
-              {isCompanyLevel && (
-                <Select label="Warehouse" value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)}>
-                  <option value="">Select a warehouse</option>
-                  {warehouses?.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.name}
-                    </option>
-                  ))}
-                </Select>
-              )}
             </CardBody>
           </Card>
 
@@ -188,12 +148,12 @@ export function SaleFormPage() {
               {lines.length === 0 ? (
                 <EmptyState title="No products added" description="Use “Add product” to start building this sale." />
               ) : (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-8">
                   {lines.map((line, index) => {
                     const product = productById.get(line.productId);
                     return (
-                      <div key={index} className="grid grid-cols-1 items-end gap-3 rounded-lg border border-graphite-100 p-3 sm:grid-cols-12">
-                        <div className="sm:col-span-6">
+                      <div key={index} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-12">
+                        <div className="sm:col-span-5">
                           <Select
                             label="Product"
                             value={line.productId}
@@ -209,24 +169,35 @@ export function SaleFormPage() {
                         </div>
                         <div className="sm:col-span-2">
                           <Input
-                            label="Qty"
+                            label="Qty (kgs)"
                             type="number"
                             min="1"
                             max={product?.quantityInStock}
-                            value={line.quantity}
-                            onChange={(e) => updateLine(index, { quantity: Number(e.target.value) })}
+                            value={line.quantity === 0 ? '' : line.quantity}
+                            onChange={(e) => updateLine(index, { quantity: e.target.value === '' ? 0 : Number(e.target.value) })}
                             error={getLineQuantityError(line) ?? undefined}
                           />
                         </div>
-                        <div className="flex items-end justify-between gap-2 sm:col-span-2 sm:block sm:text-right sm:text-sm sm:text-graphite-500">
-                          {product && (
-                            <>
-                              <p className="text-xs text-graphite-400 sm:text-xs">In stock: {product.quantityInStock}</p>
-                              <p className="font-medium text-graphite-800 sm:font-medium sm:text-graphite-800">{formatCurrency(product.unitPrice * line.quantity)}</p>
-                            </>
-                          )}
+                        <div className="sm:col-span-2">
+                          <Input
+                            label="Unit price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={line.unitPrice === 0 ? '' : line.unitPrice}
+                            onChange={(e) => updateLine(index, { unitPrice: e.target.value === '' ? 0 : Number(e.target.value) })}
+                            error={getLinePriceError(line) ?? undefined}
+                          />
                         </div>
-                        <div className="flex justify-end sm:col-span-2">
+                        <div className="flex items-center justify-between gap-2 sm:col-span-3 sm:items-end">
+                          <div className="flex flex-col gap-0.5 sm:text-right sm:text-sm sm:text-graphite-500">
+                            {product && (
+                              <>
+                                <p className="text-xs text-graphite-400">In stock: {product.quantityInStock} kgs</p>
+                                <p className="font-medium text-graphite-800">{formatCurrency(line.unitPrice * line.quantity)}</p>
+                              </>
+                            )}
+                          </div>
                           <IconButton label="Remove line item" tone="danger" onClick={() => removeLine(index)}>
                             <Trash2 className="h-4 w-4" strokeWidth={2} />
                           </IconButton>
@@ -264,13 +235,13 @@ export function SaleFormPage() {
               <Button
                 className="mt-6 w-full"
                 onClick={handleSubmit}
-                isLoading={isEdit ? updateSale.isPending : createSale.isPending}
-                disabled={lines.length === 0 || lines.some((line) => getLineQuantityError(line) !== null)}
+                isLoading={createSale.isPending}
+                disabled={lines.length === 0 || lines.some((line) => getLineQuantityError(line) !== null || getLinePriceError(line) !== null)}
               >
-                {isEdit ? 'Save changes' : 'Save draft sale'}
+                Save sale
               </Button>
               <p className="mt-2 text-center text-xs text-graphite-400">
-                Stock is only deducted once the sale is confirmed.
+                Stock is deducted immediately once the sale is saved.
               </p>
             </CardBody>
           </Card>

@@ -2,18 +2,16 @@ import { Badge } from '@/components/ui';
 import type { PurchaseStatus } from '@/types';
 
 const toneByStatus: Record<PurchaseStatus, 'neutral' | 'info' | 'warning' | 'success' | 'danger'> = {
-  DRAFT: 'neutral',
-  ORDERED: 'info',
-  PARTIALLY_RECEIVED: 'warning',
-  RECEIVED: 'success',
+  ORDERED: 'neutral',
+  INWARD_TRANSIT: 'info',
+  IN_STOCK: 'success',
   CANCELLED: 'danger',
 };
 
 const labelByStatus: Record<PurchaseStatus, string> = {
-  DRAFT: 'Draft',
   ORDERED: 'Ordered',
-  PARTIALLY_RECEIVED: 'Partial',
-  RECEIVED: 'Received',
+  INWARD_TRANSIT: 'Inward Transit',
+  IN_STOCK: 'In Stock',
   CANCELLED: 'Cancelled',
 };
 

@@ -61,10 +61,10 @@ function invalidateAfterStockChange(queryClient: ReturnType<typeof useQueryClien
   queryClient.invalidateQueries({ queryKey: productKeys.all, refetchType: 'all' });
 }
 
-export function useOrderPurchase() {
+export function useMarkPurchaseInwardTransit() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: api.orderPurchase,
+    mutationFn: api.markPurchaseInwardTransit,
     onSuccess: (purchase) => {
       invalidateAll(queryClient);
       invalidateDetail(queryClient, purchase.id);
@@ -72,10 +72,10 @@ export function useOrderPurchase() {
   });
 }
 
-export function useReceivePurchaseItems() {
+export function useMarkPurchaseInStock() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: api.ReceiveInput }) => api.receivePurchaseItems(id, input),
+    mutationFn: api.markPurchaseInStock,
     onSuccess: (purchase) => invalidateAfterStockChange(queryClient, purchase.id),
   });
 }

@@ -18,7 +18,7 @@ import {
 } from '@/components/ui';
 import { SaleStatusBadge } from '@/features/sales/statusBadge';
 import { PurchaseStatusBadge } from '@/features/purchases/statusBadge';
-import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
+import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
 import { useSalesReport, usePurchasesReport, useInventoryReport } from './hooks';
 import type { SaleStatus, PurchaseStatus } from '@/types';
 
@@ -76,8 +76,6 @@ function DateRangeFilter({
   status,
   setStatus,
   statusOptions,
-  warehouseId,
-  setWarehouseId,
 }: {
   from: string;
   to: string;
@@ -86,8 +84,6 @@ function DateRangeFilter({
   status: string;
   setStatus: (v: string) => void;
   statusOptions: { value: string; label: string }[];
-  warehouseId: string;
-  setWarehouseId: (v: string) => void;
 }) {
   return (
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
@@ -98,7 +94,6 @@ function DateRangeFilter({
           <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </Select>
-      <WarehouseFilter warehouseId={warehouseId} setWarehouseId={setWarehouseId} />
     </div>
   );
 }
@@ -109,9 +104,9 @@ function SalesReportTab() {
   const [from, setFrom] = useState(firstOfMonth);
   const [to, setTo] = useState(today);
   const [status, setStatus] = useState('ALL');
-  const [warehouseId, setWarehouseId] = useState('');
+  const { selectedWarehouseId } = useWarehouseContext();
 
-  const { data, isLoading } = useSalesReport({ from, to, status, warehouseId: warehouseId || undefined });
+  const { data, isLoading } = useSalesReport({ from, to, status, warehouseId: selectedWarehouseId ?? undefined });
 
   if (isLoading || !data) return <FullPageSpinner />;
 
@@ -126,7 +121,7 @@ function SalesReportTab() {
   const topProductColumns: Column<typeof data.topProducts[number]>[] = [
     { key: 'product', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.product}</span> },
     { key: 'sku', header: 'SKU', render: (p) => p.sku },
-    { key: 'qty', header: 'Qty sold', align: 'right', render: (p) => p.quantity },
+    { key: 'qty', header: 'Qty sold (kgs)', align: 'right', render: (p) => p.quantity },
     { key: 'revenue', header: 'Revenue', align: 'right', render: (p) => formatCurrency(p.revenue) },
   ];
 
@@ -137,12 +132,9 @@ function SalesReportTab() {
         status={status} setStatus={setStatus}
         statusOptions={[
           { value: 'ALL', label: 'All statuses' },
-          { value: 'DRAFT', label: 'Draft' },
-          { value: 'ISSUED', label: 'Issued' },
-          { value: 'PAID', label: 'Paid' },
+          { value: 'OUTWARD_TRANSIT', label: 'Outward Transit' },
           { value: 'CANCELLED', label: 'Cancelled' },
         ]}
-        warehouseId={warehouseId} setWarehouseId={setWarehouseId}
       />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -186,9 +178,9 @@ function PurchasesReportTab() {
   const [from, setFrom] = useState(firstOfMonth);
   const [to, setTo] = useState(today);
   const [status, setStatus] = useState('ALL');
-  const [warehouseId, setWarehouseId] = useState('');
+  const { selectedWarehouseId } = useWarehouseContext();
 
-  const { data, isLoading } = usePurchasesReport({ from, to, status, warehouseId: warehouseId || undefined });
+  const { data, isLoading } = usePurchasesReport({ from, to, status, warehouseId: selectedWarehouseId ?? undefined });
 
   if (isLoading || !data) return <FullPageSpinner />;
 
@@ -203,7 +195,7 @@ function PurchasesReportTab() {
   const topProductColumns: Column<typeof data.topProducts[number]>[] = [
     { key: 'product', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.product}</span> },
     { key: 'sku', header: 'SKU', render: (p) => p.sku },
-    { key: 'qty', header: 'Qty ordered', align: 'right', render: (p) => p.quantity },
+    { key: 'qty', header: 'Qty ordered (kgs)', align: 'right', render: (p) => p.quantity },
     { key: 'cost', header: 'Cost', align: 'right', render: (p) => formatCurrency(p.cost) },
   ];
 
@@ -214,13 +206,11 @@ function PurchasesReportTab() {
         status={status} setStatus={setStatus}
         statusOptions={[
           { value: 'ALL', label: 'All statuses' },
-          { value: 'DRAFT', label: 'Draft' },
           { value: 'ORDERED', label: 'Ordered' },
-          { value: 'PARTIALLY_RECEIVED', label: 'Partially received' },
-          { value: 'RECEIVED', label: 'Received' },
+          { value: 'INWARD_TRANSIT', label: 'Inward Transit' },
+          { value: 'IN_STOCK', label: 'In Stock' },
           { value: 'CANCELLED', label: 'Cancelled' },
         ]}
-        warehouseId={warehouseId} setWarehouseId={setWarehouseId}
       />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -258,15 +248,15 @@ function PurchasesReportTab() {
 }
 
 function InventoryReportTab() {
-  const [warehouseId, setWarehouseId] = useState('');
-  const { data, isLoading } = useInventoryReport({ warehouseId: warehouseId || undefined });
+  const { selectedWarehouseId } = useWarehouseContext();
+  const { data, isLoading } = useInventoryReport({ warehouseId: selectedWarehouseId ?? undefined });
 
   if (isLoading || !data) return <FullPageSpinner />;
 
   const lowStockColumns: Column<typeof data.lowStockProducts[number]>[] = [
     { key: 'name', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.name}</span> },
     { key: 'sku', header: 'SKU', render: (p) => p.sku },
-    { key: 'stock', header: 'Stock', align: 'right', render: (p) => <span className="font-medium text-amber-600">{p.quantityInStock}</span> },
+    { key: 'stock', header: 'Stock (kgs)', align: 'right', render: (p) => <span className="font-medium text-amber-600">{p.quantityInStock}</span> },
     { key: 'reorder', header: 'Reorder at', align: 'right', render: (p) => p.reorderLevel },
   ];
 
@@ -279,17 +269,13 @@ function InventoryReportTab() {
   const movementColumns: Column<typeof data.recentMovements[number]>[] = [
     { key: 'product', header: 'Product', render: (m) => <span className="font-medium text-graphite-900">{m.productName}</span> },
     { key: 'type', header: 'Type', render: (m) => <Badge tone={m.type === 'RESTOCK' ? 'success' : m.type === 'SALE' ? 'info' : 'warning'}>{m.type}</Badge> },
-    { key: 'qty', header: 'Qty', align: 'right', render: (m) => m.quantity },
+    { key: 'qty', header: 'Qty (kgs)', align: 'right', render: (m) => m.quantity },
     { key: 'reason', header: 'Reason', render: (m) => m.reason ?? <span className="text-graphite-300">—</span> },
     { key: 'date', header: 'Date', render: (m) => new Date(m.createdAt).toLocaleString() },
   ];
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap sm:items-end">
-        <WarehouseFilter warehouseId={warehouseId} setWarehouseId={setWarehouseId} />
-      </div>
-
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatTile label="Total products" value={data.totalProducts} icon={<Package className="h-4 w-4" strokeWidth={2} />} />
         <StatTile label="Total stock value" value={formatCurrency(data.totalStockValue)} icon={<BarChart3 className="h-4 w-4" strokeWidth={2} />} />

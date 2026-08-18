@@ -20,3 +20,4 @@ export { CsvImportModal } from './CsvImportModal';
 export type { CsvImportResult, CsvImportRowResult } from './CsvImportModal';
 export { ToastProvider, useToast } from './ToastProvider';
 export type { ToastInput } from './ToastProvider';
+export { InvoiceItemsCell } from './InvoiceItemsCell';

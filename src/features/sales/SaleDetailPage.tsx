@@ -1,10 +1,9 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
-import { Pencil } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
-import { useCancelSale, useSale, useIssueSale, useMarkSalePaid } from './hooks';
+import { Button, Card, CardBody, CardHeader, ConfirmModal, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
+import { useCancelSale, useSale } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
 import type { SaleItem } from '@/types';
 
@@ -12,10 +11,9 @@ export function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: sale, isLoading } = useSale(id);
-  const issueSale = useIssueSale();
-  const markPaid = useMarkSalePaid();
   const cancelSale = useCancelSale();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   if (isLoading) return <FullPageSpinner />;
   if (!sale) {
@@ -37,7 +35,7 @@ export function SaleDetailPage() {
         </div>
       ),
     },
-    { key: 'qty', header: 'Qty', align: 'right', render: (item) => item.quantity },
+    { key: 'qty', header: 'Qty (kgs)', align: 'right', render: (item) => item.quantity },
     { key: 'unitPrice', header: 'Unit price', align: 'right', render: (item) => formatCurrency(item.unitPrice) },
     { key: 'lineTotal', header: 'Line total', align: 'right', render: (item) => formatCurrency(item.lineTotal) },
   ];
@@ -107,47 +105,35 @@ export function SaleDetailPage() {
           <Card>
             <CardHeader title="Actions" />
             <CardBody className="flex flex-col gap-2">
-              {sale.status === 'DRAFT' && (
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate(`/sales/${sale.id}/edit`)}
-                  icon={<Pencil className="h-4 w-4" strokeWidth={2} />}
-                >
-                  Edit sale
-                </Button>
-              )}
-              {sale.status === 'DRAFT' && (
-                <Button
-                  isLoading={issueSale.isPending}
-                  onClick={() => runAction(() => issueSale.mutateAsync(sale.id))}
-                >
-                  Confirm sale
-                </Button>
-              )}
-              {sale.status === 'ISSUED' && (
-                <Button
-                  isLoading={markPaid.isPending}
-                  onClick={() => runAction(() => markPaid.mutateAsync(sale.id))}
-                >
-                  Mark as paid
-                </Button>
-              )}
-              {(sale.status === 'DRAFT' || sale.status === 'ISSUED') && (
-                <Button
-                  variant="danger"
-                  isLoading={cancelSale.isPending}
-                  onClick={() => runAction(() => cancelSale.mutateAsync(sale.id))}
-                >
+              {sale.status === 'OUTWARD_TRANSIT' && (
+                <Button variant="danger" onClick={() => setConfirmCancel(true)}>
                   Cancel sale
                 </Button>
               )}
-              {(sale.status === 'PAID' || sale.status === 'CANCELLED') && (
+              {sale.status === 'CANCELLED' && (
                 <p className="text-sm text-graphite-400">No further actions available.</p>
               )}
             </CardBody>
           </Card>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmCancel}
+        onClose={() => setConfirmCancel(false)}
+        onConfirm={() => {
+          setConfirmCancel(false);
+          runAction(() => cancelSale.mutateAsync(sale.id));
+        }}
+        title="Cancel sale"
+        description={
+          <>
+            Are you sure you want to cancel <strong>{sale.saleNumber}</strong>? This cannot be undone.
+          </>
+        }
+        confirmLabel="Cancel sale"
+        isLoading={cancelSale.isPending}
+      />
     </div>
   );
 }

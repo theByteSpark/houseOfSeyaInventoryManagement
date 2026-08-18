@@ -1,63 +1,40 @@
-import { fetchCustomers } from '@/features/customers/api';
-import { fetchProducts } from '@/features/inventory/api';
-import { fetchSales } from '@/features/sales/api';
-import { fetchVendors } from '@/features/vendors/api';
-import { fetchPurchases } from '@/features/purchases/api';
-import type { DashboardSummary } from '@/types';
+import { apiClient } from '@/lib/apiClient';
+import { fetchPurchasesPage } from '@/features/purchases/api';
+import { fetchSalesPage } from '@/features/sales/api';
+import type { Purchase, RecentSaleByProduct, Sale } from '@/types';
 
-export async function fetchDashboardSummary(): Promise<DashboardSummary> {
-  const [customers, products, sales, vendors, purchases] = await Promise.all([
-    fetchCustomers(),
-    fetchProducts(),
-    fetchSales(),
-    fetchVendors(),
-    fetchPurchases(),
-  ]);
+const DASHBOARD_LIST_PAGE_SIZE = 50;
 
-  const now = new Date();
-  const salesThisMonth = sales.filter((sale) => {
-    const created = new Date(sale.createdAt);
-    return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+export async function fetchInwardTransitPurchases(warehouseId?: string): Promise<Purchase[]> {
+  const { data } = await fetchPurchasesPage({
+    page: 1,
+    pageSize: DASHBOARD_LIST_PAGE_SIZE,
+    sortBy: 'createdAt',
+    sortDir: 'desc',
+    status: 'INWARD_TRANSIT',
+    warehouseId,
   });
+  return data;
+}
 
-  const revenueThisMonth = salesThisMonth
-    .filter((sale) => sale.status === 'PAID' || sale.status === 'ISSUED')
-    .reduce((sum, sale) => sum + sale.total, 0);
-
-  const purchasesThisMonth = purchases.filter((purchase) => {
-    const created = new Date(purchase.createdAt);
-    return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+export async function fetchOutwardTransitSales(warehouseId?: string): Promise<Sale[]> {
+  const { data } = await fetchSalesPage({
+    page: 1,
+    pageSize: DASHBOARD_LIST_PAGE_SIZE,
+    sortBy: 'createdAt',
+    sortDir: 'desc',
+    status: 'OUTWARD_TRANSIT',
+    warehouseId,
   });
+  return data;
+}
 
-  const pendingPOs = purchases.filter(
-    (p) => p.status === 'ORDERED' || p.status === 'PARTIALLY_RECEIVED',
-  ).length;
-
-  const lowStockProducts = products
-    .filter((p) => p.quantityInStock <= p.reorderLevel)
-    .sort((a, b) => a.quantityInStock - b.quantityInStock);
-
-  const recentSales = [...sales]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 5);
-
-  const recentPurchases = [...purchases]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 5);
-
-  const summary: DashboardSummary = {
-    totalProducts: products.length,
-    lowStockCount: lowStockProducts.length,
-    totalCustomers: customers.length,
-    totalVendors: vendors.length,
-    salesThisMonth: salesThisMonth.length,
-    revenueThisMonth,
-    purchasesThisMonth: purchasesThisMonth.length,
-    pendingPOs,
-    recentSales,
-    recentPurchases,
-    lowStockProducts: lowStockProducts.slice(0, 5),
-  };
-
-  return summary;
+export async function fetchRecentSalesByProduct(params: {
+  days: number;
+  warehouseId?: string;
+}): Promise<RecentSaleByProduct[]> {
+  const { data } = await apiClient.get<RecentSaleByProduct[]>('/reports/recent-sales-by-product', {
+    params: { days: params.days, warehouseId: params.warehouseId },
+  });
+  return data;
 }

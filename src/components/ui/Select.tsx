@@ -29,7 +29,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         >
           {children}
         </select>
-        {error && <span className="text-xs text-red-600">{error}</span>}
+        <span className="min-h-[1rem] text-xs text-red-600">{error}</span>
       </div>
     );
   },

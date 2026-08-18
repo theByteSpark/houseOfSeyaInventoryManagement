@@ -29,11 +29,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
           {...rest}
         />
-        {error ? (
-          <span className="text-xs text-red-600">{error}</span>
-        ) : hint ? (
-          <span className="text-xs text-graphite-400">{hint}</span>
-        ) : null}
+        <span className="min-h-[1rem] text-xs text-red-600 empty:text-graphite-400">
+          {error || hint}
+        </span>
       </div>
     );
   },

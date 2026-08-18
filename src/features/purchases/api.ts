@@ -13,15 +13,6 @@ export interface PurchaseInput {
   warehouseId?: string; // required for COMPANY_ADMIN/SUPER_ADMIN; auto-resolved otherwise
 }
 
-export interface ReceiveItemInput {
-  productId: string;
-  receivedQty: number;
-}
-
-export interface ReceiveInput {
-  items: ReceiveItemInput[];
-}
-
 export interface FetchPurchasesPageParams {
   page: number;
   pageSize: number;
@@ -57,13 +48,13 @@ export async function updatePurchase(id: string, input: PurchaseInput): Promise<
   return data;
 }
 
-export async function orderPurchase(id: string): Promise<Purchase> {
-  const { data } = await apiClient.patch<Purchase>(`/purchases/${id}/order`);
+export async function markPurchaseInwardTransit(id: string): Promise<Purchase> {
+  const { data } = await apiClient.patch<Purchase>(`/purchases/${id}/inward-transit`);
   return data;
 }
 
-export async function receivePurchaseItems(id: string, input: ReceiveInput): Promise<Purchase> {
-  const { data } = await apiClient.patch<Purchase>(`/purchases/${id}/receive`, input);
+export async function markPurchaseInStock(id: string): Promise<Purchase> {
+  const { data } = await apiClient.patch<Purchase>(`/purchases/${id}/in-stock`);
   return data;
 }
 

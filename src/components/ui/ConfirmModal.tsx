@@ -11,6 +11,7 @@ export function ConfirmModal({
   confirmLabel = 'Confirm',
   tone = 'danger',
   isLoading,
+  error,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -20,6 +21,7 @@ export function ConfirmModal({
   confirmLabel?: string;
   tone?: 'danger' | 'primary';
   isLoading?: boolean;
+  error?: string | null;
 }) {
   return (
     <Modal
@@ -38,6 +40,7 @@ export function ConfirmModal({
       }
     >
       <p className="text-sm text-graphite-600">{description}</p>
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
     </Modal>
   );
 }

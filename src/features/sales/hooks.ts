@@ -40,42 +40,10 @@ export function useCreateSale() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: api.createSale,
-    onSuccess: () => invalidateAll(queryClient),
-  });
-}
-
-export function useUpdateSale() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: api.SaleInput }) => api.updateSale(id, input),
-    onSuccess: (sale) => {
+    onSuccess: () => {
+      // Sales are created directly in OUTWARD_TRANSIT and decrement stock immediately.
       invalidateAll(queryClient);
-      invalidateDetail(queryClient, sale.id);
-    },
-  });
-}
-
-function invalidateAfterStockChange(queryClient: ReturnType<typeof useQueryClient>, id: string) {
-  invalidateAll(queryClient);
-  invalidateDetail(queryClient, id);
-  queryClient.invalidateQueries({ queryKey: productKeys.all, refetchType: 'all' });
-}
-
-export function useIssueSale() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.issueSale,
-    onSuccess: (sale) => invalidateAfterStockChange(queryClient, sale.id),
-  });
-}
-
-export function useMarkSalePaid() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.markSalePaid,
-    onSuccess: (sale) => {
-      invalidateAll(queryClient);
-      invalidateDetail(queryClient, sale.id);
+      queryClient.invalidateQueries({ queryKey: productKeys.all, refetchType: 'all' });
     },
   });
 }
@@ -87,6 +55,7 @@ export function useCancelSale() {
     onSuccess: (sale) => {
       invalidateAll(queryClient);
       invalidateDetail(queryClient, sale.id);
+      queryClient.invalidateQueries({ queryKey: productKeys.all, refetchType: 'all' });
     },
   });
 }

@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Banknote, FilePlus2, Pencil, Plus, Send } from 'lucide-react';
-import { extractErrorMessage } from '@/lib/apiClient';
+import { FilePlus2, Plus } from 'lucide-react';
+import { formatCurrency } from '@/lib/format';
 import {
   Button,
   Card,
   CsvImportModal,
   EmptyState,
   FullPageSpinner,
-  IconButton,
   Input,
+  InvoiceItemsCell,
   PageHeader,
   Pagination,
   Select,
@@ -19,17 +19,16 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { formatCurrency } from '@/lib/format';
-import { saleKeys, useIssueSale, useMarkSalePaid, useSalesPage } from './hooks';
+import { saleKeys, useSalesPage } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
 import { importSalesCsv } from '@/features/import-export/api';
-import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
+import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
 import type { Sale, SaleStatus } from '@/types';
 
 export function SalesListPage() {
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
   const [statusFilter, setStatusFilter] = useState<SaleStatus | 'ALL'>('ALL');
-  const [warehouseId, setWarehouseId] = useState('');
+  const { selectedWarehouseId } = useWarehouseContext();
   const { data, isLoading, isPlaceholderData } = useSalesPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -37,24 +36,16 @@ export function SalesListPage() {
     sortBy: query.sortBy,
     sortDir: query.sortDir,
     status: statusFilter,
-    warehouseId: warehouseId || undefined,
+    warehouseId: selectedWarehouseId ?? undefined,
   });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const issueSale = useIssueSale();
-  const markSalePaid = useMarkSalePaid();
-  const [actionError, setActionError] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
   const sales = data?.data ?? [];
 
   const handleStatusFilterChange = (value: SaleStatus | 'ALL') => {
     setStatusFilter(value);
-    query.setPage(1);
-  };
-
-  const handleWarehouseFilterChange = (value: string) => {
-    setWarehouseId(value);
     query.setPage(1);
   };
 
@@ -66,6 +57,20 @@ export function SalesListPage() {
       render: (sale) => <span className="font-medium text-graphite-900">{sale.saleNumber}</span>,
     },
     { key: 'customer', header: 'Customer', sortField: 'customer', render: (sale) => sale.customerName },
+    {
+      key: 'items',
+      header: 'Items',
+      render: (sale) => (
+        <InvoiceItemsCell
+          items={sale.items.map((item) => ({
+            id: item.id,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+          }))}
+        />
+      ),
+    },
     { key: 'status', header: 'Status', sortField: 'status', render: (sale) => <SaleStatusBadge status={sale.status} /> },
     { key: 'total', header: 'Total', align: 'right', sortField: 'total', render: (sale) => formatCurrency(sale.total) },
     {
@@ -73,59 +78,6 @@ export function SalesListPage() {
       header: 'Created',
       sortField: 'createdAt',
       render: (sale) => new Date(sale.createdAt).toLocaleDateString(),
-    },
-    {
-      key: 'actions',
-      header: '',
-      align: 'right',
-      render: (sale) => (
-        <div className="flex justify-end gap-1">
-          {sale.status === 'DRAFT' && (
-            <IconButton
-              label="Edit sale"
-              tone="brand"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/sales/${sale.id}/edit`);
-              }}
-            >
-              <Pencil className="h-4 w-4" strokeWidth={2} />
-            </IconButton>
-          )}
-          {sale.status === 'DRAFT' && (
-            <IconButton
-              label="Confirm sale"
-              tone="brand"
-              disabled={issueSale.isPending}
-              onClick={(e) => {
-                e.stopPropagation();
-                setActionError(null);
-                issueSale.mutate(sale.id, {
-                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not confirm sale.')),
-                });
-              }}
-            >
-              <Send className="h-4 w-4" strokeWidth={2} />
-            </IconButton>
-          )}
-          {sale.status === 'ISSUED' && (
-            <IconButton
-              label="Mark as paid"
-              tone="brand"
-              disabled={markSalePaid.isPending}
-              onClick={(e) => {
-                e.stopPropagation();
-                setActionError(null);
-                markSalePaid.mutate(sale.id, {
-                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not mark sale as paid.')),
-                });
-              }}
-            >
-              <Banknote className="h-4 w-4" strokeWidth={2} />
-            </IconButton>
-          )}
-        </div>
-      ),
     },
   ];
 
@@ -153,12 +105,6 @@ export function SalesListPage() {
         }
       />
 
-      {actionError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-          {actionError}
-        </div>
-      )}
-
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <div className="w-full max-w-xs flex-1 sm:w-auto">
           <Input
@@ -174,12 +120,9 @@ export function SalesListPage() {
           onChange={(e) => handleStatusFilterChange(e.target.value as SaleStatus | 'ALL')}
         >
           <option value="ALL">All statuses</option>
-          <option value="DRAFT">Draft</option>
-          <option value="ISSUED">Issued</option>
-          <option value="PAID">Paid</option>
+          <option value="OUTWARD_TRANSIT">Outward Transit</option>
           <option value="CANCELLED">Cancelled</option>
         </Select>
-        <WarehouseFilter warehouseId={warehouseId} setWarehouseId={handleWarehouseFilterChange} />
       </div>
 
       <Card className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>

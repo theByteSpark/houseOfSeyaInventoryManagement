@@ -15,7 +15,6 @@ export interface FetchVendorsPageParams {
   search?: string;
   sortBy?: string;
   sortDir?: SortDir;
-  warehouseId?: string;
 }
 
 export async function fetchVendors(): Promise<Vendor[]> {

@@ -19,13 +19,14 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
+import { extractErrorMessage } from '@/lib/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
 import type { StockFilter } from './api';
 import { productKeys, categoryKeys, useDeleteProduct, useProductsPage } from './hooks';
 import { ProductFormModal } from './ProductFormModal';
 import { RestockModal } from './RestockModal';
 import { importProductsCsv } from '@/features/import-export/api';
-import { formatCurrency } from '@/lib/format';
+import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
 import type { Product } from '@/types';
 
 export function ProductsListPage() {
@@ -34,6 +35,7 @@ export function ProductsListPage() {
   const [stockFilter, setStockFilter] = useState<StockFilter>(
     searchParams.get('stockFilter') === 'low' ? 'low' : 'all',
   );
+  const { selectedWarehouseId } = useWarehouseContext();
   const { data, isLoading, isPlaceholderData } = useProductsPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -41,6 +43,7 @@ export function ProductsListPage() {
     sortBy: query.sortBy,
     sortDir: query.sortDir,
     stockFilter,
+    warehouseId: selectedWarehouseId ?? undefined,
   });
   const deleteProduct = useDeleteProduct();
   const queryClient = useQueryClient();
@@ -49,6 +52,7 @@ export function ProductsListPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [restockTarget, setRestockTarget] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const products = data?.data ?? [];
 
@@ -87,14 +91,8 @@ export function ProductsListPage() {
         p.categoryName ? <div>{p.categoryName}</div> : <span className="text-graphite-300">—</span>,
     },
     {
-      key: 'price',
-      header: 'Unit price',
-      sortField: 'unitPrice',
-      render: (p) => formatCurrency(p.unitPrice),
-    },
-    {
       key: 'stock',
-      header: 'Stock',
+      header: 'Stock (kgs)',
       sortField: 'quantityInStock',
       render: (p) => {
         const isLow = p.quantityInStock <= p.reorderLevel;
@@ -137,6 +135,7 @@ export function ProductsListPage() {
             tone="danger"
             onClick={(e) => {
               e.stopPropagation();
+              setDeleteError(null);
               setDeleteTarget(p);
             }}
           >
@@ -152,7 +151,7 @@ export function ProductsListPage() {
   return (
     <div>
       <PageHeader
-        title="Products"
+        title="Inventory"
         description="Track stock levels and manage your product catalog."
         action={
           <SplitAddButton
@@ -243,7 +242,11 @@ export function ProductsListPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => {
           if (!deleteTarget) return;
-          deleteProduct.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+          setDeleteError(null);
+          deleteProduct.mutate(deleteTarget.id, {
+            onSuccess: () => setDeleteTarget(null),
+            onError: (err) => setDeleteError(extractErrorMessage(err, 'Could not delete product.')),
+          });
         }}
         title="Delete product"
         description={
@@ -253,6 +256,7 @@ export function ProductsListPage() {
         }
         confirmLabel="Delete"
         isLoading={deleteProduct.isPending}
+        error={deleteError}
       />
     </div>
   );

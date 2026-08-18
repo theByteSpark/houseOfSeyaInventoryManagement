@@ -7,8 +7,7 @@ import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconBu
 import { useVendors } from '@/features/vendors/hooks';
 import { VendorFormModal } from '@/features/vendors/VendorFormModal';
 import { useProducts } from '@/features/inventory/hooks';
-import { useAuth } from '@/features/auth/useAuth';
-import { useWarehouses } from '@/features/warehouses/hooks';
+import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
 import { useCreatePurchase, usePurchase, useUpdatePurchase } from './hooks';
 import type { Vendor } from '@/types';
 
@@ -29,12 +28,9 @@ export function PurchaseFormPage() {
   const createPurchase = useCreatePurchase();
   const updatePurchase = useUpdatePurchase();
 
-  const { user } = useAuth();
-  const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
-  const { data: warehouses } = useWarehouses();
+  const { selectedWarehouseId } = useWarehouseContext();
 
   const [vendorId, setVendorId] = useState('');
-  const [warehouseId, setWarehouseId] = useState('');
   const [lines, setLines] = useState<DraftLine[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
@@ -42,12 +38,11 @@ export function PurchaseFormPage() {
 
   useEffect(() => {
     if (!isEdit || !existingPurchase || initialized) return;
-    if (existingPurchase.status !== 'DRAFT') {
-      setError('Only draft purchases can be edited.');
+    if (existingPurchase.status !== 'ORDERED') {
+      setError('Only purchases that are still ordered (not yet in transit) can be edited.');
       return;
     }
     setVendorId(existingPurchase.vendorId);
-    setWarehouseId(existingPurchase.warehouseId);
     setLines(
       existingPurchase.items.map((item) => ({
         productId: item.productId,
@@ -99,7 +94,7 @@ export function PurchaseFormPage() {
       setError('Select a vendor.');
       return;
     }
-    if (isCompanyLevel && !warehouseId) {
+    if (!isEdit && !selectedWarehouseId) {
       setError('Select a warehouse.');
       return;
     }
@@ -114,7 +109,7 @@ export function PurchaseFormPage() {
     const input = {
       vendorId,
       items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitCost: l.unitCost })),
-      warehouseId: isCompanyLevel ? warehouseId : undefined,
+      warehouseId: isEdit ? undefined : (selectedWarehouseId ?? undefined),
     };
 
     try {
@@ -161,16 +156,6 @@ export function PurchaseFormPage() {
                 addNewLabel="Add new vendor"
                 onAddNew={() => setVendorModalOpen(true)}
               />
-              {isCompanyLevel && (
-                <Select label="Warehouse" value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)}>
-                  <option value="">Select a warehouse</option>
-                  {warehouses?.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.name}
-                    </option>
-                  ))}
-                </Select>
-              )}
             </CardBody>
           </Card>
 
@@ -193,11 +178,11 @@ export function PurchaseFormPage() {
               {lines.length === 0 ? (
                 <EmptyState title="No products added" description="Use the Add product button to start building this purchase order." />
               ) : (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-8">
                   {lines.map((line, index) => {
                     const product = productById.get(line.productId);
                     return (
-                      <div key={index} className="grid grid-cols-1 items-end gap-3 rounded-lg border border-graphite-100 p-3 sm:grid-cols-12">
+                      <div key={index} className="grid grid-cols-1 items-end gap-3 sm:grid-cols-12">
                         <div className="sm:col-span-5">
                           <Select
                             label="Product"
@@ -214,11 +199,11 @@ export function PurchaseFormPage() {
                         </div>
                         <div className="sm:col-span-2">
                           <Input
-                            label="Qty"
+                            label="Qty (kgs)"
                             type="number"
                             min="1"
-                            value={line.quantity}
-                            onChange={(e) => updateLine(index, { quantity: Number(e.target.value) })}
+                            value={line.quantity === 0 ? '' : line.quantity}
+                            onChange={(e) => updateLine(index, { quantity: e.target.value === '' ? 0 : Number(e.target.value) })}
                             error={getLineQuantityError(line) ?? undefined}
                           />
                         </div>
@@ -228,17 +213,17 @@ export function PurchaseFormPage() {
                             type="number"
                             min="0"
                             step="0.01"
-                            value={line.unitCost}
-                            onChange={(e) => updateLine(index, { unitCost: Number(e.target.value) })}
+                            value={line.unitCost === 0 ? '' : line.unitCost}
+                            onChange={(e) => updateLine(index, { unitCost: e.target.value === '' ? 0 : Number(e.target.value) })}
                             error={getLineCostError(line) ?? undefined}
                           />
                         </div>
-                        <div className="flex items-end justify-between gap-2 sm:col-span-2 sm:block sm:text-right sm:text-sm sm:text-graphite-500">
-                          {product && (
-                            <p className="font-medium text-graphite-800">{formatCurrency(line.unitCost * line.quantity)}</p>
-                          )}
-                        </div>
-                        <div className="flex justify-end sm:col-span-1">
+                        <div className="flex items-center justify-between gap-2 sm:col-span-3 sm:items-end">
+                          <div className="flex flex-col gap-0.5 sm:text-right sm:text-sm sm:text-graphite-500">
+                            {product && (
+                              <p className="font-medium text-graphite-800">{formatCurrency(line.unitCost * line.quantity)}</p>
+                            )}
+                          </div>
                           <IconButton label="Remove line item" tone="danger" onClick={() => removeLine(index)}>
                             <Trash2 className="h-4 w-4" strokeWidth={2} />
                           </IconButton>
@@ -271,10 +256,10 @@ export function PurchaseFormPage() {
                 isLoading={isEdit ? updatePurchase.isPending : createPurchase.isPending}
                 disabled={lines.length === 0 || lines.some((line) => getLineQuantityError(line) !== null || getLineCostError(line) !== null)}
               >
-                {isEdit ? 'Save changes' : 'Save draft purchase'}
+                {isEdit ? 'Save changes' : 'Save purchase'}
               </Button>
               <p className="mt-2 text-center text-xs text-graphite-400">
-                Stock is only updated when items are received.
+                Stock is only updated once the purchase is marked in stock.
               </p>
             </CardBody>
           </Card>

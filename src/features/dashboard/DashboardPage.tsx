@@ -1,145 +1,237 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, IndianRupee, Package, Users, Truck, ClipboardList, ClipboardCheck } from 'lucide-react';
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  EmptyState,
-  FullPageSpinner,
-  PageHeader,
-  StatTile,
-  Table,
-  type Column,
-} from '@/components/ui';
+import { Button, Card, CardHeader, EmptyState, Input, Table, type Column } from '@/components/ui';
 import { formatCurrency } from '@/lib/format';
-import { useDashboardSummary } from './hooks';
-import { SaleStatusBadge } from '@/features/sales/statusBadge';
-import { PurchaseStatusBadge } from '@/features/purchases/statusBadge';
-import type { Sale, Product, Purchase } from '@/types';
+import { fuzzyFilter } from '@/lib/fuzzySearch';
+import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
+import { useEnquiries } from '@/features/enquiries/hooks';
+import { EnquiryFormModal } from '@/features/enquiries/EnquiryFormModal';
+import { ConfirmEnquiryModal } from '@/features/enquiries/ConfirmEnquiryModal';
+import { useProducts } from '@/features/inventory/hooks';
+import { useInwardTransitPurchases, useOutwardTransitSales, useRecentSalesByProduct } from './hooks';
+import type { Enquiry, Product, RecentSaleByProduct } from '@/types';
+
+interface ProductStockRow {
+  id: string;
+  name: string;
+  sku: string;
+  quantity: number;
+}
+
+interface TransitProductRow {
+  rowKey: string;
+  parentId: string;
+  productName: string;
+  quantity: number;
+  price: number;
+}
 
 export function DashboardPage() {
-  const { data, isLoading } = useDashboardSummary();
   const navigate = useNavigate();
+  const { selectedWarehouseId } = useWarehouseContext();
+  const warehouseId = selectedWarehouseId ?? undefined;
 
-  if (isLoading || !data) return <FullPageSpinner />;
+  const { data: inwardTransitPurchases, isLoading: isLoadingInward } = useInwardTransitPurchases(warehouseId);
+  const { data: outwardTransitSales, isLoading: isLoadingOutward } = useOutwardTransitSales(warehouseId);
+  const { data: recentSalesByProduct, isLoading: isLoadingRecent } = useRecentSalesByProduct(3, warehouseId);
+  const { data: enquiries, isLoading: isLoadingEnquiries } = useEnquiries();
+  const { data: allProducts, isLoading: isLoadingProducts } = useProducts();
 
-  const saleColumns: Column<Sale>[] = [
-    { key: 'number', header: 'Sale', render: (sale) => <span className="font-medium text-graphite-900">{sale.saleNumber}</span> },
-    { key: 'customer', header: 'Customer', render: (sale) => sale.customerName },
-    { key: 'status', header: 'Status', render: (sale) => <SaleStatusBadge status={sale.status} /> },
-    { key: 'total', header: 'Total', align: 'right', render: (sale) => formatCurrency(sale.total) },
+  const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState<Enquiry | null>(null);
+  const [productSearch, setProductSearch] = useState('');
+
+  const sortedRecentSales = useMemo(
+    () => [...(recentSalesByProduct ?? [])].sort((a, b) => b.date.localeCompare(a.date)),
+    [recentSalesByProduct],
+  );
+
+  const inwardTransitRows: TransitProductRow[] = useMemo(
+    () =>
+      (inwardTransitPurchases ?? []).flatMap((p) =>
+        p.items.map((item) => ({
+          rowKey: item.id,
+          parentId: p.id,
+          productName: item.productName,
+          quantity: item.quantity,
+          price: item.unitCost,
+        })),
+      ),
+    [inwardTransitPurchases],
+  );
+
+  const outwardTransitRows: TransitProductRow[] = useMemo(
+    () =>
+      (outwardTransitSales ?? []).flatMap((s) =>
+        s.items.map((item) => ({
+          rowKey: item.id,
+          parentId: s.id,
+          productName: item.productName,
+          quantity: item.quantity,
+          price: item.unitPrice,
+        })),
+      ),
+    [outwardTransitSales],
+  );
+
+  const transitColumns: Column<TransitProductRow>[] = [
+    { key: 'productName', header: 'Product Name', render: (r) => <span className="font-medium text-graphite-900">{r.productName}</span> },
+    { key: 'quantity', header: 'Quantity (kgs)', align: 'right', render: (r) => r.quantity },
+    { key: 'price', header: 'Price per kg', align: 'right', render: (r) => formatCurrency(r.price) },
   ];
 
-  const purchaseColumns: Column<Purchase>[] = [
-    { key: 'number', header: 'PO #', render: (p) => <span className="font-medium text-graphite-900">{p.purchaseNumber}</span> },
-    { key: 'vendor', header: 'Vendor', render: (p) => p.vendorName },
-    { key: 'status', header: 'Status', render: (p) => <PurchaseStatusBadge status={p.status} /> },
-    { key: 'total', header: 'Total', align: 'right', render: (p) => formatCurrency(p.total) },
+  const recentSalesColumns: Column<RecentSaleByProduct & { rowKey: string }>[] = [
+    { key: 'productName', header: 'Product Name', render: (r) => <span className="font-medium text-graphite-900">{r.productName}</span> },
+    { key: 'quantity', header: 'Quantity (kgs)', align: 'right', render: (r) => r.quantity },
+    { key: 'unitPrice', header: 'Price per kg', align: 'right', render: (r) => formatCurrency(r.unitPrice) },
   ];
 
-  const lowStockColumns: Column<Product>[] = [
-    { key: 'name', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.name}</span> },
-    { key: 'sku', header: 'SKU', render: (p) => p.sku },
-    { key: 'stock', header: 'Stock', align: 'right', render: (p) => <span className="font-medium text-amber-600">{p.quantityInStock}</span> },
+  const recentSalesRows = sortedRecentSales.map((r, i) => ({ ...r, rowKey: `${r.productId}-${r.date}-${i}` }));
+
+  const enquiryColumns: Column<Enquiry>[] = [
+    { key: 'productName', header: 'Product Name', render: (r) => <span className="font-medium text-graphite-900">{r.productName}</span> },
+    { key: 'quantity', header: 'Quantity (kgs)', align: 'right', render: (r) => r.quantity },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      render: (r) => (
+        <Button size="sm" variant="secondary" onClick={() => setConfirmTarget(r)}>
+          Confirm
+        </Button>
+      ),
+    },
+  ];
+
+  const productStockRows: ProductStockRow[] = useMemo(() => {
+    function quantityForSelectedWarehouse(product: Product): number {
+      if (!selectedWarehouseId) return product.quantityInStock;
+      return product.stockByWarehouse.find((s) => s.warehouseId === selectedWarehouseId)?.quantity ?? 0;
+    }
+    const rows = [...(allProducts ?? [])]
+      .map((p) => ({ id: p.id, name: p.name, sku: p.sku, quantity: quantityForSelectedWarehouse(p) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return fuzzyFilter(rows, productSearch, (r) => `${r.name} ${r.sku}`);
+  }, [allProducts, selectedWarehouseId, productSearch]);
+
+  const productStockColumns: Column<ProductStockRow>[] = [
+    { key: 'name', header: 'Product Name', render: (r) => <span className="font-medium text-graphite-900">{r.name}</span> },
+    { key: 'quantity', header: 'Quantity (kgs)', align: 'right', render: (r) => r.quantity },
   ];
 
   return (
-    <div>
-      <PageHeader title="Dashboard" description="Overview of your inventory, sales, and purchases." />
-
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatTile
-          label="Total products"
-          value={data.totalProducts}
-          icon={<Package className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/inventory/products')}
-        />
-        <StatTile
-          label="Low stock items"
-          value={data.lowStockCount}
-          icon={<AlertTriangle className="h-4 w-4" strokeWidth={2} />}
-          tone={data.lowStockCount > 0 ? 'warning' : 'neutral'}
-          onClick={() => navigate('/inventory/products?stockFilter=low')}
-        />
-        <StatTile
-          label="Total customers"
-          value={data.totalCustomers}
-          icon={<Users className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/customers')}
-        />
-        <StatTile
-          label="Total vendors"
-          value={data.totalVendors}
-          icon={<Truck className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/vendors')}
-        />
-      </div>
-
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatTile
-          label="Sales this month"
-          value={data.salesThisMonth}
-          icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/sales')}
-        />
-        <StatTile
-          label="Revenue this month"
-          value={formatCurrency(data.revenueThisMonth)}
-          icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/sales')}
-        />
-        <StatTile
-          label="Purchases this month"
-          value={data.purchasesThisMonth}
-          icon={<ClipboardList className="h-4 w-4" strokeWidth={2} />}
-          onClick={() => navigate('/purchases')}
-        />
-        <StatTile
-          label="Pending POs"
-          value={data.pendingPOs}
-          icon={<ClipboardCheck className="h-4 w-4" strokeWidth={2} />}
-          tone={data.pendingPOs > 0 ? 'warning' : 'neutral'}
-          onClick={() => navigate('/purchases?status=ORDERED')}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
+    <div className="flex flex-col gap-4 lg:h-[calc(100vh-theme(spacing.16))] lg:min-h-0 lg:flex-row">
+      <div className="flex min-h-0 w-full flex-col gap-4 lg:w-1/2">
+        <Card className="flex h-64 flex-col overflow-hidden lg:h-[33vh]">
           <CardHeader
-            title="Recent sales"
-            action={<button onClick={() => navigate('/sales')} className="text-sm font-medium text-brand-600 hover:underline">View all</button>}
+            title="Inward Transit"
+            action={<button onClick={() => navigate('/purchases?status=INWARD_TRANSIT')} className="text-sm font-medium text-brand-600 hover:underline">View all</button>}
           />
-          {data.recentSales.length === 0 ? (
-            <CardBody><EmptyState title="No sales yet" description="Sales will appear here once created." /></CardBody>
-          ) : (
-            <Table columns={saleColumns} rows={data.recentSales} getRowKey={(s) => s.id} onRowClick={(s) => navigate(`/sales/${s.id}`)} />
-          )}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {isLoadingInward ? (
+              <div className="p-6 text-sm text-graphite-400">Loading…</div>
+            ) : inwardTransitRows.length === 0 ? (
+              <EmptyState title="No purchases in transit" description="Purchases marked inward transit will appear here." />
+            ) : (
+              <Table
+                columns={transitColumns}
+                rows={inwardTransitRows}
+                getRowKey={(r) => r.rowKey}
+                onRowClick={(r) => navigate(`/purchases/${r.parentId}`)}
+              />
+            )}
+          </div>
         </Card>
 
-        <Card>
+        <Card className="flex h-64 flex-col overflow-hidden lg:h-[33vh]">
           <CardHeader
-            title="Recent purchases"
-            action={<button onClick={() => navigate('/purchases')} className="text-sm font-medium text-brand-600 hover:underline">View all</button>}
+            title="Outward Transit"
+            action={<button onClick={() => navigate('/sales?status=OUTWARD_TRANSIT')} className="text-sm font-medium text-brand-600 hover:underline">View all</button>}
           />
-          {data.recentPurchases.length === 0 ? (
-            <CardBody><EmptyState title="No purchases yet" description="Purchases will appear here once created." /></CardBody>
-          ) : (
-            <Table columns={purchaseColumns} rows={data.recentPurchases} getRowKey={(p) => p.id} onRowClick={(p) => navigate(`/purchases/${p.id}`)} />
-          )}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {isLoadingOutward ? (
+              <div className="p-6 text-sm text-graphite-400">Loading…</div>
+            ) : outwardTransitRows.length === 0 ? (
+              <EmptyState title="No sales in transit" description="Sales that are outward transit will appear here." />
+            ) : (
+              <Table
+                columns={transitColumns}
+                rows={outwardTransitRows}
+                getRowKey={(r) => r.rowKey}
+                onRowClick={(r) => navigate(`/sales/${r.parentId}`)}
+              />
+            )}
+          </div>
+        </Card>
+
+        <Card className="flex h-72 flex-col overflow-hidden lg:h-[22rem]">
+          <CardHeader title="Last 3 Days Sales" />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {isLoadingRecent ? (
+              <div className="p-6 text-sm text-graphite-400">Loading…</div>
+            ) : recentSalesRows.length === 0 ? (
+              <EmptyState title="No recent sales" description="Sales from the last 3 days will appear here." />
+            ) : (
+              <Table columns={recentSalesColumns} rows={recentSalesRows} getRowKey={(r) => r.rowKey} />
+            )}
+          </div>
         </Card>
       </div>
 
-      <Card className="mt-6">
-        <CardHeader
-          title="Low stock alerts"
-          action={<button onClick={() => navigate('/inventory/products')} className="text-sm font-medium text-brand-600 hover:underline">View all</button>}
-        />
-        {data.lowStockProducts.length === 0 ? (
-          <CardBody><EmptyState title="All stocked up" description="No products are below their reorder level." /></CardBody>
-        ) : (
-          <Table columns={lowStockColumns} rows={data.lowStockProducts} getRowKey={(p) => p.id} />
-        )}
-      </Card>
+      <div className="flex min-h-0 w-full flex-col gap-4 lg:w-1/2">
+        <Card className="flex h-64 flex-col overflow-hidden lg:h-[17rem]">
+          <CardHeader
+            title="Enquiries"
+            action={
+              <Button size="sm" onClick={() => setEnquiryModalOpen(true)}>
+                Add Enquiry
+              </Button>
+            }
+          />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {isLoadingEnquiries ? (
+              <div className="p-6 text-sm text-graphite-400">Loading…</div>
+            ) : (enquiries ?? []).length === 0 ? (
+              <EmptyState title="No open enquiries" description="Add an enquiry to track a product request." />
+            ) : (
+              <Table columns={enquiryColumns} rows={enquiries ?? []} getRowKey={(r) => r.id} />
+            )}
+          </div>
+        </Card>
+
+        <Card className="flex h-[26rem] flex-col overflow-hidden lg:h-auto lg:min-h-0 lg:flex-1">
+          <CardHeader
+            title="All Products"
+            action={
+              <Input
+                placeholder="Search products…"
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                className="w-40 sm:w-56"
+              />
+            }
+          />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {isLoadingProducts ? (
+              <div className="p-6 text-sm text-graphite-400">Loading…</div>
+            ) : productStockRows.length === 0 ? (
+              <EmptyState
+                title={productSearch ? 'No matching products' : 'No products'}
+                description={
+                  productSearch
+                    ? 'Try a different search term.'
+                    : 'Products will appear here once added to inventory.'
+                }
+              />
+            ) : (
+              <Table columns={productStockColumns} rows={productStockRows} getRowKey={(r) => r.id} />
+            )}
+          </div>
+        </Card>
+      </div>
+
+      <EnquiryFormModal isOpen={enquiryModalOpen} onClose={() => setEnquiryModalOpen(false)} />
+      <ConfirmEnquiryModal isOpen={!!confirmTarget} enquiry={confirmTarget} onClose={() => setConfirmTarget(null)} />
     </div>
   );
 }

@@ -15,26 +15,25 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
+import { extractErrorMessage } from '@/lib/apiClient';
 import { useVendorsPage, useDeleteVendor } from './hooks';
 import { VendorFormModal } from './VendorFormModal';
-import { WarehouseFilter } from '@/features/warehouses/WarehouseFilter';
 import type { Vendor } from '@/types';
 
 export function VendorsListPage() {
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
-  const [warehouseId, setWarehouseId] = useState('');
   const { data, isLoading, isPlaceholderData } = useVendorsPage({
     page: query.page,
     pageSize: query.pageSize,
     search: query.search,
     sortBy: query.sortBy,
     sortDir: query.sortDir,
-    warehouseId: warehouseId || undefined,
   });
   const deleteVendor = useDeleteVendor();
   const [formOpen, setFormOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Vendor | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const vendors = data?.data ?? [];
 
@@ -107,6 +106,7 @@ export function VendorsListPage() {
             tone="danger"
             onClick={(e) => {
               e.stopPropagation();
+              setDeleteError(null);
               setDeleteTarget(v);
             }}
           >
@@ -136,13 +136,6 @@ export function VendorsListPage() {
             onKeyDown={query.handleSearchKeyDown}
           />
         </div>
-        <WarehouseFilter
-          warehouseId={warehouseId}
-          setWarehouseId={(v) => {
-            setWarehouseId(v);
-            query.setPage(1);
-          }}
-        />
       </div>
 
       <Card className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
@@ -180,7 +173,11 @@ export function VendorsListPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => {
           if (!deleteTarget) return;
-          deleteVendor.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+          setDeleteError(null);
+          deleteVendor.mutate(deleteTarget.id, {
+            onSuccess: () => setDeleteTarget(null),
+            onError: (err) => setDeleteError(extractErrorMessage(err, 'Could not delete vendor.')),
+          });
         }}
         title="Delete vendor"
         description={
@@ -190,6 +187,7 @@ export function VendorsListPage() {
         }
         confirmLabel="Delete"
         isLoading={deleteVendor.isPending}
+        error={deleteError}
       />
     </div>
   );
