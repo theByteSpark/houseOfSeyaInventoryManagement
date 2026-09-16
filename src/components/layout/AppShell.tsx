@@ -121,7 +121,6 @@ function DesktopWarehouseBadge() {
   if (!isCompanyLevel) return null;
 
   const selectedWarehouse = warehouses?.find((w) => w.id === selectedWarehouseId);
-  const initials = selectedWarehouse?.name.slice(0, 2).toUpperCase();
 
   return (
     <div className="relative">
@@ -131,13 +130,12 @@ function DesktopWarehouseBadge() {
         aria-label="Select warehouse"
         className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 hover:bg-graphite-50"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700">
-          {initials ?? <WarehouseIcon className="h-4 w-4" strokeWidth={2} />}
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+          <WarehouseIcon className="h-4 w-4" strokeWidth={2} />
         </span>
         <span className="text-[13px] font-medium text-graphite-800">
           {selectedWarehouse?.name ?? 'Select warehouse'}
         </span>
-        <ChevronDown className="h-3.5 w-3.5 text-graphite-400" strokeWidth={2} />
       </button>
 
       {open && (
@@ -281,9 +279,9 @@ export function AppShell() {
   return (
     <div className="flex min-h-screen flex-col bg-graphite-50 lg:h-screen lg:flex-row lg:overflow-hidden">
       {/* Desktop sidebar (lg+) */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-graphite-200 bg-white lg:flex lg:h-screen">
-        <div className="flex items-center gap-2.5 px-5 py-5">
-          <img src={paragonLogo} alt="Paragon Resin" className="h-8 w-8 rounded-md object-cover" />
+      <aside className="hidden w-60 shrink-0 flex-col bg-brand-600 lg:flex lg:h-screen">
+        <div className="flex items-center px-5 py-6">
+          <img src={paragonLogo} alt="Paragon Resin" className="h-10 w-auto max-w-[150px] rounded object-contain" />
         </div>
 
         <nav className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-2">
@@ -295,7 +293,7 @@ export function AppShell() {
                   <button
                     type="button"
                     onClick={() => toggleGroup(group.key)}
-                    className="flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-graphite-400 hover:text-graphite-600"
+                    className="flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-white/50 hover:text-white/80"
                   >
                     {group.label}
                     <ChevronDown
@@ -317,12 +315,12 @@ export function AppShell() {
                             cn(
                               'flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
                               isActive
-                                ? 'bg-brand-50 text-brand-700'
-                                : 'text-graphite-600 hover:bg-graphite-50 hover:text-graphite-900',
+                                ? 'bg-white/15 text-white'
+                                : 'text-white/70 hover:bg-white/5 hover:text-white',
                             )
                           }
                         >
-                          <Icon className="h-[17px] w-[17px] shrink-0" strokeWidth={2} />
+                          <Icon className="h-[17px] w-[17px] shrink-0" fill="currentColor" strokeWidth={1.5} />
                           {item.label}
                         </NavLink>
                       );
@@ -334,23 +332,23 @@ export function AppShell() {
           })}
         </nav>
 
-        <div className="border-t border-graphite-100 px-3 py-3">
+        <div className="border-t border-white/10 px-3 py-3">
           <div className="mb-1 flex items-center gap-2.5 rounded-md px-3 py-2">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-graphite-200 text-[11px] font-semibold text-graphite-700">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 text-[11px] font-semibold text-white">
               {user?.name?.charAt(0) ?? '?'}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-medium text-graphite-800">{user?.name}</p>
-              <p className="truncate text-[11px] uppercase tracking-wide text-graphite-400">
+              <p className="truncate text-[13px] font-medium text-white">{user?.name}</p>
+              <p className="truncate text-[11px] uppercase tracking-wide text-white/70">
                 {user?.role}
                 {user?.warehouse && ` · ${user.warehouse.name}`}
               </p>
             </div>
-            <NotificationBell />
+            <NotificationBell variant="dark" />
           </div>
           <button
             onClick={() => setLogoutConfirmOpen(true)}
-            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium text-graphite-500 hover:bg-graphite-50 hover:text-graphite-800"
+            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium text-white hover:bg-white/5 hover:text-white/80"
           >
             <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />
             Sign out
@@ -383,9 +381,9 @@ export function AppShell() {
       {/* Main content */}
       <main className="flex min-h-0 min-w-0 flex-1 flex-col lg:h-screen">
         {/* Desktop top bar (lg+): consistent top-right location for the warehouse selector */}
-        <div className="hidden shrink-0 items-center justify-between border-b border-graphite-200 bg-white px-4 py-3 lg:flex lg:px-8">
+        <div className="hidden shrink-0 items-center justify-between border-b border-graphite-200 bg-white px-4 py-2 lg:flex lg:px-8">
           <div className="flex items-center gap-3">
-            <img src={paragonLogo} alt="Paragon Resin" className="h-9 w-9 rounded-md object-cover" />
+            <img src={paragonLogo} alt="Paragon Resin" className="h-14 w-14 rounded-md object-cover" />
             <p className="text-base font-semibold leading-tight text-graphite-900">Paragon Resin</p>
           </div>
           <DesktopWarehouseBadge />

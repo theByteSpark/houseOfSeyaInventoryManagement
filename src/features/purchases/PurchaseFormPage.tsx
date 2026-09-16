@@ -209,7 +209,7 @@ export function PurchaseFormPage() {
                         </div>
                         <div className="sm:col-span-2">
                           <Input
-                            label="Unit cost"
+                            label="Price (per kg)"
                             type="number"
                             min="0"
                             step="0.01"

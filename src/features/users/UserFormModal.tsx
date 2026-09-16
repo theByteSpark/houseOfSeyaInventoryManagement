@@ -95,9 +95,7 @@ export function UserFormModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
         />
         <Select label="Role" error={errors.role?.message} {...register('role')}>
           <option value="USER">User</option>
-          <option value="ADMIN">Warehouse Admin</option>
           <option value="COMPANY_ADMIN">Company Admin</option>
-          <option value="SUPER_ADMIN">Super Admin</option>
         </Select>
         {isWarehouseScoped && (
           <Select label="Warehouse" error={errors.warehouseId?.message} {...register('warehouseId')}>

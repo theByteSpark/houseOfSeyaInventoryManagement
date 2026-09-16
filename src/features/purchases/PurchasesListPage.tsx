@@ -26,6 +26,7 @@ import { purchaseKeys, useCancelPurchase, usePurchasesPage } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { importPurchasesCsv } from '@/features/import-export/api';
 import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
+import { useWarehouses } from '@/features/warehouses/hooks';
 import type { Purchase, PurchaseStatus } from '@/types';
 
 const VALID_STATUSES: (PurchaseStatus | 'ALL')[] = [
@@ -44,6 +45,8 @@ export function PurchasesListPage() {
     initialStatus && VALID_STATUSES.includes(initialStatus) ? initialStatus : 'ALL',
   );
   const { selectedWarehouseId } = useWarehouseContext();
+  const { data: warehouses } = useWarehouses();
+  const selectedWarehouseName = warehouses?.find((w) => w.id === selectedWarehouseId)?.name;
   const { data, isLoading, isPlaceholderData } = usePurchasesPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -211,6 +214,8 @@ export function PurchasesListPage() {
         templateFilename="purchases-import-template.csv"
         onUpload={importPurchasesCsv}
         requiresWarehouse
+        selectedWarehouseId={selectedWarehouseId}
+        selectedWarehouseName={selectedWarehouseName}
         onImported={() => queryClient.invalidateQueries({ queryKey: purchaseKeys.all })}
         rowLabel={(row) => (typeof row.purchaseNumber === 'string' ? row.purchaseNumber : '')}
       />

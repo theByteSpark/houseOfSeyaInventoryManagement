@@ -2,7 +2,6 @@ import { apiClient } from '@/lib/apiClient';
 import type { Category, PaginatedResult, Product, SortDir, StockMovement } from '@/types';
 
 export interface ProductInput {
-  sku: string;
   name: string;
   description?: string;
   quantityInStock: number;

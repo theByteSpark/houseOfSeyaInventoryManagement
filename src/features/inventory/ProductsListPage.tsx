@@ -27,6 +27,7 @@ import { ProductFormModal } from './ProductFormModal';
 import { RestockModal } from './RestockModal';
 import { importProductsCsv } from '@/features/import-export/api';
 import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
+import { useWarehouses } from '@/features/warehouses/hooks';
 import type { Product } from '@/types';
 
 export function ProductsListPage() {
@@ -36,6 +37,8 @@ export function ProductsListPage() {
     searchParams.get('stockFilter') === 'low' ? 'low' : 'all',
   );
   const { selectedWarehouseId } = useWarehouseContext();
+  const { data: warehouses } = useWarehouses();
+  const selectedWarehouseName = warehouses?.find((w) => w.id === selectedWarehouseId)?.name;
   const { data, isLoading, isPlaceholderData } = useProductsPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -230,6 +233,8 @@ export function ProductsListPage() {
         templateFilename="products-import-template.csv"
         onUpload={importProductsCsv}
         requiresWarehouse
+        selectedWarehouseId={selectedWarehouseId}
+        selectedWarehouseName={selectedWarehouseName}
         onImported={() => {
           queryClient.invalidateQueries({ queryKey: productKeys.all });
           queryClient.invalidateQueries({ queryKey: categoryKeys.all });

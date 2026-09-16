@@ -2,10 +2,8 @@ import { useRef, useState } from 'react';
 import { Download, Upload } from 'lucide-react';
 import { Button } from './Button';
 import { Modal } from './Modal';
-import { Select } from './Select';
 import { apiClient, extractErrorMessage } from '@/lib/apiClient';
 import { useAuth } from '@/features/auth/useAuth';
-import { useWarehouses } from '@/features/warehouses/hooks';
 
 export interface CsvImportRowResult {
   row: number;
@@ -31,6 +29,8 @@ export function CsvImportModal({
   onImported,
   rowLabel,
   requiresWarehouse = false,
+  selectedWarehouseId,
+  selectedWarehouseName,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -40,25 +40,24 @@ export function CsvImportModal({
   onUpload: (file: File, warehouseId?: string) => Promise<CsvImportResult>;
   onImported?: () => void;
   rowLabel: (row: CsvImportRowResult) => string;
-  // When true, company-level roles (who have no warehouse of their own) must
-  // pick one before uploading — the import applies to that whole file.
+  // When true, the import is scoped to a warehouse — applied using the
+  // globally-selected warehouse from the header, no separate picker shown.
   requiresWarehouse?: boolean;
+  selectedWarehouseId?: string | null;
+  selectedWarehouseName?: string | null;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [warehouseId, setWarehouseId] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [result, setResult] = useState<CsvImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const { user } = useAuth();
   const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
-  const { data: warehouses } = useWarehouses();
-  const needsWarehousePicker = requiresWarehouse && isCompanyLevel;
+  const needsWarehouse = requiresWarehouse && isCompanyLevel;
 
   const handleClose = () => {
     setSelectedFile(null);
-    setWarehouseId('');
     setResult(null);
     setError(null);
     onClose();
@@ -76,11 +75,11 @@ export function CsvImportModal({
 
   const handleUpload = async () => {
     if (!selectedFile) return;
-    if (needsWarehousePicker && !warehouseId) return;
+    if (needsWarehouse && !selectedWarehouseId) return;
     setIsUploading(true);
     setError(null);
     try {
-      const res = await onUpload(selectedFile, needsWarehousePicker ? warehouseId : undefined);
+      const res = await onUpload(selectedFile, needsWarehouse ? (selectedWarehouseId ?? undefined) : undefined);
       setResult(res);
       if (res.errorCount === 0) {
         onImported?.();
@@ -106,7 +105,7 @@ export function CsvImportModal({
             <Button
               type="button"
               onClick={handleUpload}
-              disabled={!selectedFile || (needsWarehousePicker && !warehouseId)}
+              disabled={!selectedFile || (needsWarehouse && !selectedWarehouseId)}
               isLoading={isUploading}
               icon={<Upload className="h-4 w-4" strokeWidth={2} />}
             >
@@ -132,18 +131,14 @@ export function CsvImportModal({
           </Button>
         </div>
 
-        {!result && needsWarehousePicker && (
-          <div className="flex flex-col gap-1">
-            <Select label="Warehouse" value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)}>
-              <option value="">Select a warehouse</option>
-              {warehouses?.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))}
-            </Select>
-            <p className="text-xs text-graphite-400">Which warehouse this import applies to</p>
-          </div>
+        {!result && needsWarehouse && (
+          <p className="text-sm text-graphite-600">
+            This import will apply to{' '}
+            <span className="font-medium text-graphite-900">
+              {selectedWarehouseName ?? 'the selected warehouse'}
+            </span>
+            . Switch warehouses from the header if you meant a different one.
+          </p>
         )}
 
         {!result && (

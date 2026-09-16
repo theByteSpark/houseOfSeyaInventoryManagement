@@ -2,25 +2,28 @@
 @import "tailwindcss";
 
 @theme {
-  /* Deep navy — primary brand/action color, matches Paragon Resin logo */
+  /* Deep navy — primary brand/action color, exact match to Paragon Resin
+     logo (#1C415B) at shade 600, the app's most-used shade. */
   --color-brand-50: #eef2f6;
   --color-brand-100: #dbe3ec;
   --color-brand-200: #b0c1d3;
   --color-brand-300: #7f9ab6;
   --color-brand-400: #4c6f92;
-  --color-brand-500: #2b5170;
-  --color-brand-600: #1c3a52;
-  --color-brand-700: #16304a;
+  --color-brand-500: #285573;
+  --color-brand-600: #1c415b;
+  --color-brand-700: #163449;
   --color-brand-800: #10233a;
   --color-brand-900: #0a1826;
 
-  /* Warm orange — secondary accent color, matches Paragon Resin logo */
+  /* Warm orange — secondary accent color, exact match to Paragon Resin
+     logo (#F58634) at shade 500. Used sparingly (tags, small highlights),
+     not as a general-purpose action color. */
   --color-accent-50: #fff3ea;
   --color-accent-100: #ffe2c9;
   --color-accent-200: #ffc493;
   --color-accent-300: #ffa25d;
-  --color-accent-400: #f9862f;
-  --color-accent-500: #f0791d;
+  --color-accent-400: #f7972f;
+  --color-accent-500: #f58634;
   --color-accent-600: #d3630f;
   --color-accent-700: #a94e0d;
   --color-accent-800: #813c0f;

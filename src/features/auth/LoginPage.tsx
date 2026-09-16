@@ -60,8 +60,8 @@ export function LoginPage() {
           <div className="mt-10 flex flex-col gap-5">
             {highlights.map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/10">
-                  <Icon className="h-4 w-4" strokeWidth={2} />
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent-500/15">
+                  <Icon className="h-4 w-4 text-accent-400" strokeWidth={2} />
                 </span>
                 <p className="text-sm leading-relaxed text-brand-100">{text}</p>
               </div>

@@ -36,7 +36,7 @@ export function SaleDetailPage() {
       ),
     },
     { key: 'qty', header: 'Qty (kgs)', align: 'right', render: (item) => item.quantity },
-    { key: 'unitPrice', header: 'Unit price', align: 'right', render: (item) => formatCurrency(item.unitPrice) },
+    { key: 'unitPrice', header: 'Price (per kg)', align: 'right', render: (item) => formatCurrency(item.unitPrice) },
     { key: 'lineTotal', header: 'Line total', align: 'right', render: (item) => formatCurrency(item.lineTotal) },
   ];
 

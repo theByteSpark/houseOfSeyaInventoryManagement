@@ -23,12 +23,15 @@ import { saleKeys, useSalesPage } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
 import { importSalesCsv } from '@/features/import-export/api';
 import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
+import { useWarehouses } from '@/features/warehouses/hooks';
 import type { Sale, SaleStatus } from '@/types';
 
 export function SalesListPage() {
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
   const [statusFilter, setStatusFilter] = useState<SaleStatus | 'ALL'>('ALL');
   const { selectedWarehouseId } = useWarehouseContext();
+  const { data: warehouses } = useWarehouses();
+  const selectedWarehouseName = warehouses?.find((w) => w.id === selectedWarehouseId)?.name;
   const { data, isLoading, isPlaceholderData } = useSalesPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -162,6 +165,8 @@ export function SalesListPage() {
         templateFilename="sales-import-template.csv"
         onUpload={importSalesCsv}
         requiresWarehouse
+        selectedWarehouseId={selectedWarehouseId}
+        selectedWarehouseName={selectedWarehouseName}
         onImported={() => queryClient.invalidateQueries({ queryKey: saleKeys.all })}
         rowLabel={(row) => (typeof row.saleNumber === 'string' ? row.saleNumber : '')}
       />

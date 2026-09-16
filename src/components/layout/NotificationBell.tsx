@@ -67,7 +67,7 @@ const PANEL_WIDTH = 384; // sm:w-96
 const PANEL_MARGIN = 16;
 const PANEL_MAX_HEIGHT = 420; // header + list, roughly
 
-export function NotificationBell() {
+export function NotificationBell({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
   const [open, setOpen] = useState(false);
   const [panelPos, setPanelPos] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -123,11 +123,16 @@ export function NotificationBell() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Notifications"
-        className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-graphite-500 hover:bg-graphite-100 hover:text-graphite-800"
+        className={cn(
+          'relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-md',
+          variant === 'dark'
+            ? 'text-white hover:bg-white/10 hover:text-white/80'
+            : 'text-graphite-500 hover:bg-graphite-100 hover:text-graphite-800',
+        )}
       >
-        <Bell className="h-[17px] w-[17px]" strokeWidth={2} />
+        <Bell className="h-[17px] w-[17px]" fill="currentColor" strokeWidth={1.5} />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold leading-none text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-500 px-1 text-[10px] font-semibold leading-none text-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}

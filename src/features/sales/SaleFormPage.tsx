@@ -67,7 +67,7 @@ export function SaleFormPage() {
   };
 
   const subtotal = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
-  const tax = subtotal * 0.1;
+  const tax = subtotal * 0.18;
   const total = subtotal + tax;
 
   const handleSubmit = async () => {
@@ -180,7 +180,7 @@ export function SaleFormPage() {
                         </div>
                         <div className="sm:col-span-2">
                           <Input
-                            label="Unit price"
+                            label="Price (per kg)"
                             type="number"
                             min="0"
                             step="0.01"
@@ -221,7 +221,7 @@ export function SaleFormPage() {
                   <dd className="font-medium text-graphite-800">{formatCurrency(subtotal)}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-graphite-500">Tax (10%)</dt>
+                  <dt className="text-graphite-500">Tax (18%)</dt>
                   <dd className="font-medium text-graphite-800">{formatCurrency(tax)}</dd>
                 </div>
                 <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
