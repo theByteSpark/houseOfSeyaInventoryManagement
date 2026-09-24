@@ -106,16 +106,20 @@ export function AppShell() {
   const mobileMoreItems = allItems.filter((item) => !mobilePrimaryPaths.includes(item.to));
 
   return (
-    <div className="flex min-h-screen flex-col bg-graphite-50 lg:flex-row">
+    <div className="flex h-screen min-h-0 flex-col bg-graphite-50 lg:flex-row">
       {/* Desktop sidebar (lg+) */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-graphite-200 bg-white lg:flex">
+      <aside className="hidden w-60 shrink-0 flex-col bg-brand-mallard-green lg:flex">
         <div className="flex items-center gap-2.5 px-5 py-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-700 text-[13px] font-bold tracking-tight text-white">
-            HS
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10">
+            <img
+              src="/hos-icon-fluid.png"
+              alt="House of Seya"
+              className="h-[78%] w-[78%] object-contain brightness-0 invert"
+            />
           </div>
           <div>
-            <p className="text-[13px] font-semibold leading-tight text-graphite-900">House of Seya</p>
-            <p className="text-[11px] leading-tight text-graphite-400">Inventory &amp; Invoicing</p>
+            <p className="text-[13px] font-semibold leading-tight text-white">House of Seya</p>
+            <p className="text-[11px] leading-tight text-white/60">Inventory &amp; Invoicing</p>
           </div>
         </div>
 
@@ -128,7 +132,7 @@ export function AppShell() {
                   <button
                     type="button"
                     onClick={() => toggleGroup(group.key)}
-                    className="flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-graphite-400 hover:text-graphite-600"
+                    className="flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-white/50 hover:text-white/80"
                   >
                     {group.label}
                     <ChevronDown
@@ -150,8 +154,8 @@ export function AppShell() {
                             cn(
                               'flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
                               isActive
-                                ? 'bg-brand-50 text-brand-700'
-                                : 'text-graphite-600 hover:bg-graphite-50 hover:text-graphite-900',
+                                ? 'bg-white/15 text-white'
+                                : 'text-white/70 hover:bg-white/10 hover:text-white',
                             )
                           }
                         >
@@ -167,19 +171,19 @@ export function AppShell() {
           })}
         </nav>
 
-        <div className="border-t border-graphite-100 px-3 py-3">
+        <div className="border-t border-white/10 px-3 py-3">
           <div className="mb-1 flex items-center gap-2.5 rounded-md px-3 py-2">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-graphite-200 text-[11px] font-semibold text-graphite-700">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 text-[11px] font-semibold text-white">
               {user?.name?.charAt(0) ?? '?'}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-medium text-graphite-800">{user?.name}</p>
-              <p className="truncate text-[11px] uppercase tracking-wide text-graphite-400">{user?.role}</p>
+              <p className="truncate text-[13px] font-medium text-white">{user?.name}</p>
+              <p className="truncate text-[11px] uppercase tracking-wide text-white/50">{user?.role}</p>
             </div>
           </div>
           <button
             onClick={() => logout()}
-            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium text-graphite-500 hover:bg-graphite-50 hover:text-graphite-800"
+            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium text-white/70 hover:bg-white/10 hover:text-white"
           >
             <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />
             Sign out
@@ -190,8 +194,8 @@ export function AppShell() {
       {/* Mobile top bar (< lg) */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-graphite-200 bg-white px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-700 text-[13px] font-bold tracking-tight text-white">
-            HS
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-mallard-green">
+            <img src="/hos-icon-fluid.png" alt="House of Seya" className="h-[78%] w-[78%] object-contain" />
           </div>
           <div className="min-w-0">
             <p className="truncate text-[13px] font-semibold leading-tight text-graphite-900">House of Seya</p>
@@ -208,7 +212,7 @@ export function AppShell() {
       </header>
 
       {/* Main content */}
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
         <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <Outlet />
         </div>

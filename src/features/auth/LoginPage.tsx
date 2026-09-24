@@ -46,11 +46,11 @@ export function LoginPage() {
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-5">
       <div className="relative hidden flex-col justify-between bg-brand-800 p-12 text-white lg:col-span-2 lg:flex">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 text-[13px] font-bold tracking-tight">
-            HS
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10">
+            <img src="/hos-icon-fluid.png" alt="House of Seya" className="h-[78%] w-[78%] object-contain" />
           </div>
-          <span className="text-[15px] font-semibold tracking-tight">House of Seya</span>
+          <span className="text-xl font-semibold tracking-tight">House of Seya</span>
         </div>
 
         <div>
@@ -77,10 +77,10 @@ export function LoginPage() {
       <div className="flex items-center justify-center bg-white px-6 py-16 lg:col-span-3">
         <div className="w-full max-w-sm">
           <div className="mb-8 lg:hidden">
-            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-md bg-brand-700 text-[13px] font-bold text-white">
-              HS
+            <div className="mb-3 flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-brand-mallard-green">
+              <img src="/hos-icon-fluid.png" alt="House of Seya" className="h-[78%] w-[78%] object-contain" />
             </div>
-            <p className="text-[15px] font-semibold text-graphite-900">House of Seya</p>
+            <p className="text-xl font-semibold text-graphite-900">House of Seya</p>
           </div>
 
           <h2 className="text-[22px] font-semibold tracking-tight text-graphite-900">Sign in</h2>
@@ -113,9 +113,9 @@ export function LoginPage() {
             </Link>
           </form>
 
-          <p className="mt-6 text-center text-xs text-graphite-400">
+          {/* <p className="mt-6 text-center text-xs text-graphite-400">
             Demo workspace — sign in with admin@houseofseya.com / password123.
-          </p>
+          </p> */}
         </div>
       </div>
     </div>
