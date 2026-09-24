@@ -174,6 +174,8 @@ export interface Purchase {
   items: PurchaseItem[];
   subtotal: number;
   total: number;
+  vendorInvoiceNumber: string | null;
+  vendorInvoiceDate: string | null;
   orderedAt: string | null;
   receivedAt: string | null;
   createdAt: string;
