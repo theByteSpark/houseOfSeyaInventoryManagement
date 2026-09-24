@@ -118,7 +118,7 @@ function SalesReportTab() {
 
   const topProductColumns: Column<typeof data.topProducts[number]>[] = [
     { key: 'product', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.product}</span> },
-    { key: 'sku', header: 'SKU', render: (p) => p.sku },
+    { key: 'designNumber', header: 'Design #', render: (p) => p.designNumber },
     { key: 'qty', header: 'Qty sold', align: 'right', render: (p) => p.quantity },
     { key: 'revenue', header: 'Revenue', align: 'right', render: (p) => formatCurrency(p.revenue) },
   ];
@@ -155,7 +155,7 @@ function SalesReportTab() {
           {data.topProducts.length === 0 ? (
             <CardBody><EmptyState title="No data" description="No sales in this period." /></CardBody>
           ) : (
-            <Table columns={topProductColumns} rows={data.topProducts} getRowKey={(p) => p.sku} />
+            <Table columns={topProductColumns} rows={data.topProducts} getRowKey={(p) => p.designNumber} />
           )}
         </Card>
 
@@ -193,7 +193,7 @@ function PurchasesReportTab() {
 
   const topProductColumns: Column<typeof data.topProducts[number]>[] = [
     { key: 'product', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.product}</span> },
-    { key: 'sku', header: 'SKU', render: (p) => p.sku },
+    { key: 'designNumber', header: 'Design #', render: (p) => p.designNumber },
     { key: 'qty', header: 'Qty ordered', align: 'right', render: (p) => p.quantity },
     { key: 'cost', header: 'Cost', align: 'right', render: (p) => formatCurrency(p.cost) },
   ];
@@ -230,7 +230,7 @@ function PurchasesReportTab() {
           {data.topProducts.length === 0 ? (
             <CardBody><EmptyState title="No data" description="No purchases in this period." /></CardBody>
           ) : (
-            <Table columns={topProductColumns} rows={data.topProducts} getRowKey={(p) => p.sku} />
+            <Table columns={topProductColumns} rows={data.topProducts} getRowKey={(p) => p.designNumber} />
           )}
         </Card>
 
@@ -254,7 +254,7 @@ function InventoryReportTab() {
 
   const lowStockColumns: Column<typeof data.lowStockProducts[number]>[] = [
     { key: 'name', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.name}</span> },
-    { key: 'sku', header: 'SKU', render: (p) => p.sku },
+    { key: 'designNumber', header: 'Design #', render: (p) => p.designNumber },
     { key: 'stock', header: 'Stock', align: 'right', render: (p) => <span className="font-medium text-amber-600">{p.quantityInStock}</span> },
     { key: 'reorder', header: 'Reorder at', align: 'right', render: (p) => p.reorderLevel },
   ];

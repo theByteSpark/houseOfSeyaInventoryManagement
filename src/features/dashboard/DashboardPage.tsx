@@ -39,7 +39,7 @@ export function DashboardPage() {
 
   const lowStockColumns: Column<Product>[] = [
     { key: 'name', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.name}</span> },
-    { key: 'sku', header: 'SKU', render: (p) => p.sku },
+    { key: 'designNumber', header: 'Design #', render: (p) => p.designNumber },
     { key: 'stock', header: 'Stock', align: 'right', render: (p) => <span className="font-medium text-amber-600">{p.quantityInStock}</span> },
   ];
 

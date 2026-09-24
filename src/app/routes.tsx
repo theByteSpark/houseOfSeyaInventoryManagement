@@ -7,8 +7,10 @@ import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { CustomersListPage } from '@/features/customers/CustomersListPage';
 import { ProductsListPage } from '@/features/inventory/ProductsListPage';
+import { ProductFormPage } from '@/features/inventory/ProductFormPage';
 import { CategoriesPage } from '@/features/inventory/CategoriesPage';
 import { SubcategoriesPage } from '@/features/inventory/SubcategoriesPage';
+import { AttributeOptionsPage } from '@/features/attributes/AttributeOptionsPage';
 import { SalesListPage } from '@/features/sales/SalesListPage';
 import { SaleFormPage } from '@/features/sales/SaleFormPage';
 import { SaleDetailPage } from '@/features/sales/SaleDetailPage';
@@ -35,6 +37,8 @@ export function AppRoutes() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/customers" element={<CustomersListPage />} />
         <Route path="/inventory/products" element={<ProductsListPage />} />
+        <Route path="/inventory/products/new" element={<ProductFormPage />} />
+        <Route path="/inventory/products/:id/edit" element={<ProductFormPage />} />
         <Route path="/inventory/categories" element={<CategoriesPage />} />
         <Route path="/inventory/subcategories" element={<SubcategoriesPage />} />
         <Route path="/sales" element={<SalesListPage />} />
@@ -52,6 +56,14 @@ export function AppRoutes() {
           element={
             <AdminRoute>
               <UsersListPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/settings/attributes"
+          element={
+            <AdminRoute>
+              <AttributeOptionsPage />
             </AdminRoute>
           }
         />

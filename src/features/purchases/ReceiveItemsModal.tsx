@@ -7,7 +7,7 @@ import type { Purchase } from '@/types';
 interface ReceiveLine {
   productId: string;
   productName: string;
-  sku: string;
+  designNumber: string;
   orderedQty: number;
   receivedQty: number;
   receivingNow: number;
@@ -29,7 +29,7 @@ export function ReceiveItemsModal({
     purchase.items.map((item) => ({
       productId: item.productId,
       productName: item.productName,
-      sku: item.sku,
+      designNumber: item.designNumber,
       orderedQty: item.quantity,
       receivedQty: item.receivedQuantity,
       receivingNow: 0,
@@ -94,7 +94,7 @@ export function ReceiveItemsModal({
             >
               <div className="sm:col-span-5">
                 <p className="font-medium text-graphite-900">{line.productName}</p>
-                <p className="text-xs text-graphite-400">{line.sku}</p>
+                <p className="text-xs text-graphite-400">{line.designNumber}</p>
               </div>
               <div className="sm:col-span-2">
                 <p className="text-xs text-graphite-400">Ordered</p>

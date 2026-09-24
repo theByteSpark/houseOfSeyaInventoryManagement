@@ -11,6 +11,7 @@ import {
   ClipboardList,
   BarChart3,
   UserCog,
+  Settings,
   LogOut,
   ChevronDown,
   MoreHorizontal,
@@ -70,7 +71,10 @@ const baseNavGroups: NavGroup[] = [
 const adminNavGroup: NavGroup = {
   key: 'admin',
   label: 'Admin',
-  items: [{ to: '/users', label: 'Users', icon: UserCog }],
+  items: [
+    { to: '/users', label: 'Users', icon: UserCog },
+    { to: '/settings/attributes', label: 'Attribute options', icon: Settings },
+  ],
 };
 
 const mobilePrimaryPaths = ['/', '/sales', '/purchases', '/inventory/products'];

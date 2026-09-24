@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PackagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   Badge,
@@ -18,12 +19,12 @@ import {
 import { useTableQuery } from '@/lib/useTableQuery';
 import type { StockFilter } from './api';
 import { useDeleteProduct, useProductsPage } from './hooks';
-import { ProductFormModal } from './ProductFormModal';
 import { RestockModal } from './RestockModal';
 import { formatCurrency } from '@/lib/format';
 import type { Product } from '@/types';
 
 export function ProductsListPage() {
+  const navigate = useNavigate();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
   const [stockFilter, setStockFilter] = useState<StockFilter>('all');
   const { data, isLoading, isPlaceholderData } = useProductsPage({
@@ -35,8 +36,6 @@ export function ProductsListPage() {
     stockFilter,
   });
   const deleteProduct = useDeleteProduct();
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [restockTarget, setRestockTarget] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
 
@@ -47,15 +46,9 @@ export function ProductsListPage() {
     query.setPage(1);
   };
 
-  const openCreate = () => {
-    setEditingProduct(null);
-    setFormOpen(true);
-  };
+  const openCreate = () => navigate('/inventory/products/new');
 
-  const openEdit = (product: Product) => {
-    setEditingProduct(product);
-    setFormOpen(true);
-  };
+  const openEdit = (product: Product) => navigate(`/inventory/products/${product.id}/edit`);
 
   const columns: Column<Product>[] = [
     {
@@ -65,7 +58,7 @@ export function ProductsListPage() {
       render: (p) => (
         <div>
           <p className="font-medium text-graphite-900">{p.name}</p>
-          <p className="text-xs text-graphite-400">{p.sku}</p>
+          <p className="text-xs text-graphite-400">{p.designNumber}</p>
         </div>
       ),
     },
@@ -85,9 +78,9 @@ export function ProductsListPage() {
     },
     {
       key: 'price',
-      header: 'Unit price',
-      sortField: 'unitPrice',
-      render: (p) => formatCurrency(p.unitPrice),
+      header: 'Selling price',
+      sortField: 'sellingPrice',
+      render: (p) => formatCurrency(p.sellingPrice),
     },
     {
       key: 'stock',
@@ -203,7 +196,6 @@ export function ProductsListPage() {
         )}
       </Card>
 
-      <ProductFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} product={editingProduct} />
       <RestockModal isOpen={!!restockTarget} onClose={() => setRestockTarget(null)} product={restockTarget} />
 
       <ConfirmModal
