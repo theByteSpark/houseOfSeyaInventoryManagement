@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from './api';
 
@@ -136,6 +137,19 @@ export function useSubcategories(categoryId?: string) {
     queryKey: subcategoryKeys.list(categoryId),
     queryFn: () => api.fetchSubcategories(categoryId),
   });
+}
+
+/** Every subcategory, grouped by its parent category — the shape a `<Select>` with `<optgroup>`s needs. */
+export function useSubcategoryGroups() {
+  const { data: subcategories } = useSubcategories();
+  return useMemo(() => {
+    const groups = new Map<string, { categoryName: string; items: typeof subcategories }>();
+    for (const s of subcategories ?? []) {
+      if (!groups.has(s.categoryId)) groups.set(s.categoryId, { categoryName: s.categoryName, items: [] });
+      groups.get(s.categoryId)!.items!.push(s);
+    }
+    return [...groups.values()];
+  }, [subcategories]);
 }
 
 export function useSubcategoriesPage(params: api.FetchSubcategoriesPageParams) {

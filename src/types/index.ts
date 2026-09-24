@@ -206,3 +206,25 @@ export interface InventoryReport {
   categoryBreakdown: { category: string; productCount: number; stockValue: number }[];
   recentMovements: { id: string; productName: string; designNumber: string; type: StockMovementType; quantity: number; reason: string | null; createdAt: string }[];
 }
+
+export interface EnquiryDiamond {
+  id?: string;
+  shape: string;
+  quality: string;
+  pieces: number;
+  caratWeight: number;
+}
+
+export interface Enquiry {
+  id: string;
+  customerId: string;
+  customerName: string;
+  subcategoryId: string | null;
+  subcategoryName: string | null;
+  categoryId: string | null;
+  categoryName: string | null;
+  metalType: string;
+  grossWeight: number;
+  diamonds: EnquiryDiamond[];
+  createdAt: string;
+}

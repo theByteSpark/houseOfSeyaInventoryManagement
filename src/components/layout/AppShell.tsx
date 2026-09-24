@@ -12,6 +12,7 @@ import {
   BarChart3,
   UserCog,
   Settings,
+  MessageCircleQuestion,
   LogOut,
   ChevronDown,
   MoreHorizontal,
@@ -64,6 +65,7 @@ const baseNavGroups: NavGroup[] = [
       { to: '/inventory/products', label: 'Products', icon: Package },
       { to: '/inventory/categories', label: 'Categories', icon: Tags },
       { to: '/inventory/subcategories', label: 'Subcategories', icon: Layers },
+      { to: '/enquiries', label: 'Enquiries', icon: MessageCircleQuestion },
     ],
   },
 ];

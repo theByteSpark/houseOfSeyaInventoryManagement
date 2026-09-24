@@ -1,10 +1,9 @@
-import { useMemo } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button, Card, CardBody, CardHeader, IconButton, Input, Select } from '@/components/ui';
 import { formatCurrency } from '@/lib/format';
 import { useAttributeOptions } from '@/features/attributes/hooks';
-import { useSubcategories } from './hooks';
+import { useSubcategoryGroups } from './hooks';
 import { computeCosts, emptyDiamondRow, withCurrentValue } from './productCostSheet';
 
 // register/control/errors are typed loosely on purpose: this section is shared by two different
@@ -26,21 +25,12 @@ interface ProductCostSheetSectionsProps {
 }
 
 export function ProductCostSheetSections({ register, control, errors, watched }: ProductCostSheetSectionsProps) {
-  const { data: subcategories } = useSubcategories();
+  const subcategoriesByCategory = useSubcategoryGroups();
   const { data: metalOptions } = useAttributeOptions('METAL');
   const { data: shapeOptions } = useAttributeOptions('DIAMOND_SHAPE');
   const { data: qualityOptions } = useAttributeOptions('DIAMOND_QUALITY');
   const { fields, append, remove } = useFieldArray({ control, name: 'diamonds' });
   const costs = computeCosts(watched);
-
-  const subcategoriesByCategory = useMemo(() => {
-    const groups = new Map<string, { categoryName: string; items: typeof subcategories }>();
-    for (const s of subcategories ?? []) {
-      if (!groups.has(s.categoryId)) groups.set(s.categoryId, { categoryName: s.categoryName, items: [] });
-      groups.get(s.categoryId)!.items!.push(s);
-    }
-    return [...groups.values()];
-  }, [subcategories]);
 
   return (
     <>

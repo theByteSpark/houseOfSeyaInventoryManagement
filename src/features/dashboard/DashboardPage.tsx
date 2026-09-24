@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, IndianRupee, Package, Users, Truck, ClipboardList, ClipboardCheck } from 'lucide-react';
+import { AlertTriangle, IndianRupee, Package, Users, Truck, ClipboardList, ClipboardCheck, Plus } from 'lucide-react';
 import {
+  Button,
   Card,
   CardBody,
   CardHeader,
@@ -15,11 +17,13 @@ import { formatCurrency } from '@/lib/format';
 import { useDashboardSummary } from './hooks';
 import { SaleStatusBadge } from '@/features/sales/statusBadge';
 import { PurchaseStatusBadge } from '@/features/purchases/statusBadge';
+import { EnquiryFormModal } from '@/features/enquiries/EnquiryFormModal';
 import type { Sale, Product, Purchase } from '@/types';
 
 export function DashboardPage() {
   const { data, isLoading } = useDashboardSummary();
   const navigate = useNavigate();
+  const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
 
   if (isLoading || !data) return <FullPageSpinner />;
 
@@ -45,7 +49,15 @@ export function DashboardPage() {
 
   return (
     <div>
-      <PageHeader title="Dashboard" description="Overview of your inventory, sales, and purchases." />
+      <PageHeader
+        title="Dashboard"
+        description="Overview of your inventory, sales, and purchases."
+        action={
+          <Button onClick={() => setEnquiryModalOpen(true)} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>
+            Add enquiry
+          </Button>
+        }
+      />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Total products" value={data.totalProducts} icon={<Package className="h-4 w-4" strokeWidth={2} />} />
@@ -98,6 +110,8 @@ export function DashboardPage() {
           <Table columns={lowStockColumns} rows={data.lowStockProducts} getRowKey={(p) => p.id} />
         )}
       </Card>
+
+      <EnquiryFormModal isOpen={enquiryModalOpen} onClose={() => setEnquiryModalOpen(false)} />
     </div>
   );
 }

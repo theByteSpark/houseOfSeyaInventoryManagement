@@ -48,7 +48,7 @@ src/
     └── index.ts                    Every DTO shape the API returns, hand-kept in sync with the backend
 ```
 
-Ten feature folders exist today: `attributes`, `auth`, `customers`, `dashboard`, `inventory`, `purchases`, `reports`, `sales`, `users`, `vendors` — every list-oriented one follows the exact `api.ts`/`hooks.ts` shape, see `architecture/feature-conventions.md`.
+Eleven feature folders exist today: `attributes`, `auth`, `customers`, `dashboard`, `enquiries`, `inventory`, `purchases`, `reports`, `sales`, `users`, `vendors` — every list-oriented one follows the exact `api.ts`/`hooks.ts` shape, see `architecture/feature-conventions.md`.
 
 ## Provider Tree (`src/app/providers.tsx`)
 

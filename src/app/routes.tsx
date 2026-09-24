@@ -11,6 +11,7 @@ import { ProductFormPage } from '@/features/inventory/ProductFormPage';
 import { CategoriesPage } from '@/features/inventory/CategoriesPage';
 import { SubcategoriesPage } from '@/features/inventory/SubcategoriesPage';
 import { AttributeOptionsPage } from '@/features/attributes/AttributeOptionsPage';
+import { EnquiriesListPage } from '@/features/enquiries/EnquiriesListPage';
 import { SalesListPage } from '@/features/sales/SalesListPage';
 import { SaleFormPage } from '@/features/sales/SaleFormPage';
 import { SaleDetailPage } from '@/features/sales/SaleDetailPage';
@@ -39,6 +40,7 @@ export function AppRoutes() {
         <Route path="/inventory/products" element={<ProductsListPage />} />
         <Route path="/inventory/products/new" element={<ProductFormPage />} />
         <Route path="/inventory/products/:id/edit" element={<ProductFormPage />} />
+        <Route path="/enquiries" element={<EnquiriesListPage />} />
         <Route path="/inventory/categories" element={<CategoriesPage />} />
         <Route path="/inventory/subcategories" element={<SubcategoriesPage />} />
         <Route path="/sales" element={<SalesListPage />} />

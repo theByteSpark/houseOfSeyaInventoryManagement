@@ -40,6 +40,7 @@ State exposed via `useAuth()`: `user`, `isAuthenticated`, `isInitializing`, `log
 | `/inventory/products` | `ProductsListPage` | Protected |
 | `/inventory/products/new` | `ProductFormPage` | Protected |
 | `/inventory/products/:id/edit` | `ProductFormPage` | Protected |
+| `/enquiries` | `EnquiriesListPage` | Protected |
 | `/inventory/categories` | `CategoriesPage` | Protected |
 | `/inventory/subcategories` | `SubcategoriesPage` | Protected |
 | `/sales` | `SalesListPage` | Protected |
