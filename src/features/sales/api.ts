@@ -9,7 +9,6 @@ export interface SaleLineInput {
 export interface SaleInput {
   customerId: string;
   items: SaleLineInput[];
-  taxRate?: number; // e.g. 0.1 for 10%
 }
 
 export interface FetchSalesPageParams {
