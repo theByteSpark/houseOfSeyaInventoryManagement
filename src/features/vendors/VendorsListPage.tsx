@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Pencil, Plus, Trash2, Upload } from 'lucide-react';
 import {
   Badge,
   Button,
   Card,
   ConfirmModal,
+  CsvImportModal,
   EmptyState,
   FullPageSpinner,
   IconButton,
@@ -15,12 +17,15 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { useVendorsPage, useDeleteVendor } from './hooks';
+import { importVendorsCsv } from '@/features/import-export/api';
+import { vendorKeys, useVendorsPage, useDeleteVendor } from './hooks';
 import { VendorFormModal } from './VendorFormModal';
 import type { Vendor } from '@/types';
 
 export function VendorsListPage() {
+  const queryClient = useQueryClient();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
+  const [importOpen, setImportOpen] = useState(false);
   const { data, isLoading, isPlaceholderData } = useVendorsPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -121,7 +126,14 @@ export function VendorsListPage() {
       <PageHeader
         title="Vendors"
         description="Manage the suppliers you purchase from."
-        action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add vendor</Button>}
+        action={
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<Upload className="h-4 w-4" strokeWidth={2} />}>
+              Import
+            </Button>
+            <Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add vendor</Button>
+          </div>
+        }
       />
 
       <div className="mb-4 w-full max-w-xs">
@@ -162,6 +174,17 @@ export function VendorsListPage() {
       </Card>
 
       <VendorFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} vendor={editingVendor} />
+
+      <CsvImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import vendors"
+        templateUrl="/import/vendors/template"
+        templateFilename="vendors-import-template.csv"
+        onUpload={importVendorsCsv}
+        onImported={() => queryClient.invalidateQueries({ queryKey: vendorKeys.all })}
+        rowLabel={(r) => String(r.companyName ?? r.row)}
+      />
 
       <ConfirmModal
         isOpen={!!deleteTarget}

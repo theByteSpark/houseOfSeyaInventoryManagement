@@ -10,7 +10,7 @@
 
 | Component | Route | Purpose |
 |---|---|---|
-| `ProductsListPage` | `/inventory/products` | Paginated product table, search, low-stock filter toggle, sort by name/design number/subcategory/selling price/stock/created |
+| `ProductsListPage` | `/inventory/products` | Paginated product table, search, low-stock filter toggle, sort by name/design number/subcategory/selling price/stock/created; "Import" button opens the shared `CsvImportModal` for bulk product import via `/import/products` — see `../architecture/feature-conventions.md`'s bulk-import note |
 | `ProductFormPage` | `/inventory/products/new`, `/inventory/products/:id/edit` | Full-page jewelry cost sheet — Design Number/Name/Subcategory, a Metal section, a single Diamond section, a Labour section, Fixed Expense, a computed cost summary, and the Selling Price input. See "The Jewelry Cost Sheet Form" below. |
 | `RestockModal` | (modal on `ProductsListPage`) | Add quantity + optional reason to an existing product |
 | `CategoriesPage` | `/inventory/categories` | Paginated category table with subcategory counts |

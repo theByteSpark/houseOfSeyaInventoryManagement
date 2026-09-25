@@ -10,9 +10,9 @@
 
 | Component | Route | Purpose |
 |---|---|---|
-| `VendorsListPage` | `/vendors` | Paginated vendor table with derived order stats |
+| `VendorsListPage` | `/vendors` | Paginated vendor table with derived order stats; "Import" button opens the shared `CsvImportModal` for bulk vendor import via `/import/vendors` — see `../architecture/feature-conventions.md`'s bulk-import note. Also the closest home for the Customer equivalent (`CustomersListPage` at `/customers`, `src/features/customers/`) — it has no dedicated domain doc yet, but its own "Import" button works identically against `/import/customers` |
 | `VendorFormModal` | (modal on `VendorsListPage`) | Create/edit a vendor |
-| `PurchasesListPage` | `/purchases` | Paginated table, search, status filter |
+| `PurchasesListPage` | `/purchases` | Paginated table, search, status filter; "Import" button opens the shared `CsvImportModal` for bulk purchase import via `/import/purchases` — see `../architecture/feature-conventions.md`'s bulk-import note |
 | `PurchaseFormPage` | `/purchases/new`, `/purchases/:id/edit` | Vendor picker + vendor invoice number/date + a repeatable list of newly-created products |
 | `AddPurchaseProductModal` | (modal on `PurchaseFormPage`, `size="xl"`) | The full jewelry cost sheet (reused from `inventory`) plus Quantity/Unit Cost for this line — see "Adding a Product" below |
 | `PurchaseDetailPage` | `/purchases/:id` | Read-only view + vendor invoice number/date + status action buttons + receiving |

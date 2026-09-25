@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PackagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { PackagePlus, Pencil, Plus, Trash2, Upload } from 'lucide-react';
 import {
   Badge,
   Button,
   Card,
   ConfirmModal,
+  CsvImportModal,
   EmptyState,
   FullPageSpinner,
   IconButton,
@@ -18,15 +20,18 @@ import {
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
 import type { StockFilter } from './api';
-import { useDeleteProduct, useProductsPage } from './hooks';
+import { importProductsCsv } from '@/features/import-export/api';
+import { productKeys, useDeleteProduct, useProductsPage } from './hooks';
 import { RestockModal } from './RestockModal';
 import { formatCurrency } from '@/lib/format';
 import type { Product } from '@/types';
 
 export function ProductsListPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
   const [stockFilter, setStockFilter] = useState<StockFilter>('all');
+  const [importOpen, setImportOpen] = useState(false);
   const { data, isLoading, isPlaceholderData } = useProductsPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -144,7 +149,14 @@ export function ProductsListPage() {
       <PageHeader
         title="Products"
         description="Track stock levels and manage your product catalog."
-        action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add product</Button>}
+        action={
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<Upload className="h-4 w-4" strokeWidth={2} />}>
+              Import
+            </Button>
+            <Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add product</Button>
+          </div>
+        }
       />
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
@@ -197,6 +209,17 @@ export function ProductsListPage() {
       </Card>
 
       <RestockModal isOpen={!!restockTarget} onClose={() => setRestockTarget(null)} product={restockTarget} />
+
+      <CsvImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import products"
+        templateUrl="/import/products/template"
+        templateFilename="products-import-template.csv"
+        onUpload={importProductsCsv}
+        onImported={() => queryClient.invalidateQueries({ queryKey: productKeys.all })}
+        rowLabel={(r) => String(r.designNumber ?? r.row)}
+      />
 
       <ConfirmModal
         isOpen={!!deleteTarget}

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Banknote, FileText, Pencil, Plus, Send } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Banknote, FileText, Pencil, Plus, Send, Upload } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import {
   Button,
   Card,
+  CsvImportModal,
   EmptyState,
   FullPageSpinner,
   IconButton,
@@ -17,14 +19,17 @@ import {
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
 import { formatCurrency } from '@/lib/format';
-import { useIssueSale, useMarkSalePaid, useSalesPage } from './hooks';
+import { importSalesCsv } from '@/features/import-export/api';
+import { saleKeys, useIssueSale, useMarkSalePaid, useSalesPage } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
 import { InvoicePdfModal } from './InvoicePdfModal';
 import type { Sale, SaleStatus } from '@/types';
 
 export function SalesListPage() {
+  const queryClient = useQueryClient();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
   const [statusFilter, setStatusFilter] = useState<SaleStatus | 'ALL'>('ALL');
+  const [importOpen, setImportOpen] = useState(false);
   const { data, isLoading, isPlaceholderData } = useSalesPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -136,7 +141,14 @@ export function SalesListPage() {
       <PageHeader
         title="Sales"
         description="Record sales and generate invoices for customers."
-        action={<Button onClick={() => navigate('/sales/new')} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add sale</Button>}
+        action={
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<Upload className="h-4 w-4" strokeWidth={2} />}>
+              Import
+            </Button>
+            <Button onClick={() => navigate('/sales/new')} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add sale</Button>
+          </div>
+        }
       />
 
       {actionError && (
@@ -199,6 +211,17 @@ export function SalesListPage() {
       {pdfSale && (
         <InvoicePdfModal saleId={pdfSale.id} saleNumber={pdfSale.saleNumber} onClose={() => setPdfSale(null)} />
       )}
+
+      <CsvImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import sales"
+        templateUrl="/import/sales/template"
+        templateFilename="sales-import-template.csv"
+        onUpload={importSalesCsv}
+        onImported={() => queryClient.invalidateQueries({ queryKey: saleKeys.all })}
+        rowLabel={(r) => String(r.saleNumber ?? r.row)}
+      />
     </div>
   );
 }

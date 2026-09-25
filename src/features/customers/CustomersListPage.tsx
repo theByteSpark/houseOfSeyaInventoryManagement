@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Pencil, Plus, Trash2, Upload } from 'lucide-react';
 import {
   Badge,
   Button,
   Card,
   ConfirmModal,
+  CsvImportModal,
   EmptyState,
   FullPageSpinner,
   IconButton,
@@ -15,12 +17,15 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { useCustomersPage, useDeleteCustomer } from './hooks';
+import { importCustomersCsv } from '@/features/import-export/api';
+import { customerKeys, useCustomersPage, useDeleteCustomer } from './hooks';
 import { CustomerFormModal } from './CustomerFormModal';
 import type { Customer } from '@/types';
 
 export function CustomersListPage() {
+  const queryClient = useQueryClient();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
+  const [importOpen, setImportOpen] = useState(false);
   const { data, isLoading, isPlaceholderData } = useCustomersPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -99,7 +104,14 @@ export function CustomersListPage() {
       <PageHeader
         title="Customers"
         description="Manage the companies and contacts you sell to."
-        action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add customer</Button>}
+        action={
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<Upload className="h-4 w-4" strokeWidth={2} />}>
+              Import
+            </Button>
+            <Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add customer</Button>
+          </div>
+        }
       />
 
       <div className="mb-4 w-full max-w-xs">
@@ -140,6 +152,17 @@ export function CustomersListPage() {
       </Card>
 
       <CustomerFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} customer={editingCustomer} />
+
+      <CsvImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import customers"
+        templateUrl="/import/customers/template"
+        templateFilename="customers-import-template.csv"
+        onUpload={importCustomersCsv}
+        onImported={() => queryClient.invalidateQueries({ queryKey: customerKeys.all })}
+        rowLabel={(r) => String(r.name ?? r.email ?? r.row)}
+      />
 
       <ConfirmModal
         isOpen={!!deleteTarget}

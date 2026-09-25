@@ -17,6 +17,7 @@ A React 19 + TypeScript + Vite single-page app for House of Seya's inventory, sa
 | Understand the stack, folder layout, and how routing/providers wire together | `foundation/overview.md` |
 | Run this locally, set env vars, build/lint | `foundation/setup.md` |
 | Understand the feature-folder shape (`api.ts` / `hooks.ts` / `*Page.tsx` / `*Modal.tsx`) | `architecture/feature-conventions.md` |
+| Understand bulk CSV/Excel import (Products/Customers/Vendors/Sales/Purchases) — the shared `CsvImportModal` and `src/features/import-export/` | `architecture/feature-conventions.md`'s bulk-import note |
 | Understand React Query usage, query keys, cache invalidation, `useTableQuery` | `architecture/data-fetching-and-state.md` |
 | Understand login, token refresh, protected/admin routes | `architecture/auth-and-routing.md` |
 | Know which shared component to reuse instead of building a new one | `ui/component-library.md` |

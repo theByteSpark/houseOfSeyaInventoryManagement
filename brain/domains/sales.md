@@ -10,7 +10,7 @@
 
 | Component | Route | Purpose |
 |---|---|---|
-| `SalesListPage` | `/sales` | Paginated table, search, status filter, sort by sale number/customer/status/total/created |
+| `SalesListPage` | `/sales` | Paginated table, search, status filter, sort by sale number/customer/status/total/created; "Import" button opens the shared `CsvImportModal` for bulk sale import via `/import/sales` — see `../architecture/feature-conventions.md`'s bulk-import note |
 | `SaleFormPage` | `/sales/new`, `/sales/:id/edit` | Multi-line item form (customer picker + line items with product/qty) — a full page, not a modal, because it's multi-line |
 | `SaleDetailPage` | `/sales/:id` | Read-only view + status action buttons (issue/mark paid/cancel) + "view invoice" |
 | `InvoicePdfModal` | (modal on `SaleDetailPage`) | Renders/downloads the backend-generated invoice PDF |

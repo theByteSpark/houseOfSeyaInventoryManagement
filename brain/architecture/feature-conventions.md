@@ -49,6 +49,15 @@ When the same form needs to appear in two different contexts with different surr
 - The shared piece lives in whichever feature **owns** the concept (`inventory`, since a cost sheet is fundamentally a product concern) — the other feature (`purchases`) imports from it, never the reverse.
 - Not every shared piece needs a whole file split — `useSubcategoryGroups()` (category→subcategory grouping for a `<Select>` with `<optgroup>`s) is a single small hook added straight to `inventory/hooks.ts` once a second caller (`enquiries/EnquiryFormModal.tsx`) needed the identical grouping `ProductCostSheetSections.tsx` already computed inline. Extract at the point a second real caller appears, not before — same "extract on the second use" instinct, scaled to the size of the thing being extracted.
 
+## Bulk CSV/Excel Import — `CsvImportModal`
+
+Products, Customers, Vendors, Sales, and Purchases each expose a bulk-import action from their `*ListPage.tsx`'s `PageHeader` `action` slot (a second `Button` — icon `Upload`, label "Import" — alongside the existing "Add X" button, both wrapped in `<div className="flex gap-2">`). This is one shared, generic modal, not five bespoke ones:
+
+- `src/components/ui/CsvImportModal.tsx` — the shared modal (exported from `components/ui/index.ts` alongside its `CsvImportRowResult`/`CsvImportResult` types). Shows template-download buttons (CSV + Excel, hitting `GET <templateUrl>` / `GET <templateUrl>?format=xlsx`), a file input, an "Upload" button, and — once uploaded — an inline results view (created/updated/error count badges plus an error-detail table for failed rows). No toast — this app has no notification system, so the modal's own inline results view is the only feedback; it isn't wired to any query invalidation itself, callers do that via `onImported`.
+- `src/features/import-export/api.ts` — a shared `uploadCsv(url, file)` helper (multipart `FormData`, no other params) plus one thin per-entity wrapper each (`importProductsCsv`, `importCustomersCsv`, `importVendorsCsv`, `importSalesCsv`, `importPurchasesCsv`) calling `uploadCsv('/import/<entity>', file)`.
+- Each list page owns local `isOpen` state for the modal (same pattern as any other modal-triggering list page) and passes `templateUrl`/`templateFilename`/`onUpload`/`rowLabel`, plus `onImported` that invalidates that entity's `<x>Keys.all` query key so the table refreshes — the same invalidation convention every mutation already follows (`data-fetching-and-state.md`).
+- `rowLabel(row)` picks whichever field off the backend's per-row result identifies that row in the error table (e.g. Products uses `designNumber`, Sales `saleNumber`) — falls back to `String(row.row)` (the row number) when that field is absent.
+
 ## Naming Conventions
 
 - Feature folder names: lowercase, matching the backend module name where one exists 1:1 (`inventory`, `sales`, `vendors`, `purchases`, `customers`, `users`) — this makes "which frontend feature talks to which backend module" obvious without cross-referencing anything.
