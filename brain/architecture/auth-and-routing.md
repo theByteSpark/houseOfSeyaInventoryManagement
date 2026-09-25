@@ -53,6 +53,7 @@ State exposed via `useAuth()`: `user`, `isAuthenticated`, `isInitializing`, `log
 | `/purchases/:id/edit` | `PurchaseFormPage` | Protected |
 | `/purchases/:id` | `PurchaseDetailPage` | Protected |
 | `/reports` | `ReportsPage` | Protected |
+| `/help` | `HelpPage` | Protected — the route itself has no admin gate; two of its sections self-filter by role instead (see `feature-conventions.md`'s Role-Based Partial Content note) |
 | `/users` | `UsersListPage` | Protected + Admin |
 | `/settings/attributes` | `AttributeOptionsPage` | Protected + Admin |
 | `*` (anything else) | Redirect to `/` | — |

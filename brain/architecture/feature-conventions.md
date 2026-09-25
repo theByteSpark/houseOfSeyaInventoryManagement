@@ -58,6 +58,10 @@ Products, Customers, Vendors, Sales, and Purchases each expose a bulk-import act
 - Each list page owns local `isOpen` state for the modal (same pattern as any other modal-triggering list page) and passes `templateUrl`/`templateFilename`/`onUpload`/`rowLabel`, plus `onImported` that invalidates that entity's `<x>Keys.all` query key so the table refreshes — the same invalidation convention every mutation already follows (`data-fetching-and-state.md`).
 - `rowLabel(row)` picks whichever field off the backend's per-row result identifies that row in the error table (e.g. Products uses `designNumber`, Sales `saleNumber`) — falls back to `String(row.row)` (the row number) when that field is absent.
 
+## Role-Based Partial Content — the `/help` Page
+
+`AdminRoute` (see `auth-and-routing.md`) gates a whole *route* by role. `src/features/help/HelpPage.tsx` needed something finer — one page, visible to everyone, where two of its sections (Users, Attribute Options) should only render for an admin. The pattern: a plain `GuideSection[]` data array with an optional `adminOnly` flag per entry, filtered once with `useAuth()`'s `user.role === 'ADMIN'` before rendering (`SECTIONS.filter((s) => !s.adminOnly || isAdmin)`), rather than duplicating the page per role or hiding sections with CSS. Use this same filter-the-data-not-the-markup approach for any future page that mixes admin-only and general content in one place — `AdminRoute` stays reserved for gating an entire route.
+
 ## Naming Conventions
 
 - Feature folder names: lowercase, matching the backend module name where one exists 1:1 (`inventory`, `sales`, `vendors`, `purchases`, `customers`, `users`) — this makes "which frontend feature talks to which backend module" obvious without cross-referencing anything.

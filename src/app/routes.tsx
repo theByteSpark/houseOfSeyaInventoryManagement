@@ -21,6 +21,7 @@ import { PurchaseFormPage } from '@/features/purchases/PurchaseFormPage';
 import { PurchaseDetailPage } from '@/features/purchases/PurchaseDetailPage';
 import { ReportsPage } from '@/features/reports/ReportsPage';
 import { UsersListPage } from '@/features/users/UsersListPage';
+import { HelpPage } from '@/features/help/HelpPage';
 
 export function AppRoutes() {
   return (
@@ -53,6 +54,7 @@ export function AppRoutes() {
         <Route path="/purchases/:id/edit" element={<PurchaseFormPage />} />
         <Route path="/purchases/:id" element={<PurchaseDetailPage />} />
         <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/help" element={<HelpPage />} />
         <Route
           path="/users"
           element={

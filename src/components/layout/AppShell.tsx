@@ -13,6 +13,7 @@ import {
   UserCog,
   Settings,
   MessageCircleQuestion,
+  HelpCircle,
   LogOut,
   ChevronDown,
   MoreHorizontal,
@@ -40,6 +41,7 @@ const baseNavGroups: NavGroup[] = [
     items: [
       { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
       { to: '/reports', label: 'Reports', icon: BarChart3 },
+      { to: '/help', label: 'Help', icon: HelpCircle },
     ],
   },
   {
