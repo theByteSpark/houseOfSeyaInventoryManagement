@@ -6,13 +6,15 @@ import { z } from 'zod';
 import { Button, Card, CardBody, CardHeader, FullPageSpinner, Input, PageHeader } from '@/components/ui';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { ProductCostSheetSections, ProductCostSummary } from './ProductCostSheetSections';
-import { productCostSheetSchema } from './productCostSheet';
+import { diamondPairRefinement, productCostSheetSchema } from './productCostSheet';
 import { useCreateProduct, useProduct, useUpdateProduct } from './hooks';
 
-const schema = productCostSheetSchema.extend({
-  quantityInStock: z.coerce.number().int().min(0, 'Cannot be negative'),
-  reorderLevel: z.coerce.number().int().min(0, 'Cannot be negative'),
-});
+const schema = productCostSheetSchema
+  .extend({
+    quantityInStock: z.coerce.number().int().min(0, 'Cannot be negative'),
+    reorderLevel: z.coerce.number().int().min(0, 'Cannot be negative'),
+  })
+  .refine(diamondPairRefinement.check, { message: diamondPairRefinement.message, path: ['diamondRate'] });
 
 type FormValues = z.input<typeof schema>;
 type FormOutput = z.output<typeof schema>;
