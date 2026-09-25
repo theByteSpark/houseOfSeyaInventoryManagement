@@ -50,17 +50,6 @@ export interface AttributeOption {
   sortOrder: number;
 }
 
-export interface ProductDiamond {
-  id?: string;
-  shape: string;
-  quality: string;
-  pieces: number;
-  caratWeight: number;
-  weight: number;
-  rate: number;
-  amount?: number;
-}
-
 export interface Product {
   id: string;
   designNumber: string;
@@ -69,8 +58,13 @@ export interface Product {
   grossWeight: number | null;
   metalRatePerGram: number | null;
   metalCost: number;
-  diamonds: ProductDiamond[];
-  totalDiamondCost: number;
+  diamondShape: string | null;
+  diamondQuality: string | null;
+  diamondPieces: number | null;
+  diamondCaratWeight: number | null;
+  diamondWeight: number | null;
+  diamondRate: number | null;
+  diamondCost: number;
   makingChargePerGram: number | null;
   labourCost: number;
   fixedExpense: number;

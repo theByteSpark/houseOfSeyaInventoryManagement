@@ -28,14 +28,12 @@ export function ProductFormPage() {
 
   const {
     register,
-    control,
     handleSubmit,
     reset,
     watch,
     formState: { errors },
   } = useForm<FormValues, unknown, FormOutput>({
     resolver: zodResolver(schema),
-    defaultValues: { diamonds: [] },
   });
 
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -49,14 +47,12 @@ export function ProductFormPage() {
       metalType: product?.metalType ?? '',
       grossWeight: product?.grossWeight ?? 0,
       metalRatePerGram: product?.metalRatePerGram ?? 0,
-      diamonds: product?.diamonds.map((d) => ({
-        shape: d.shape,
-        quality: d.quality,
-        pieces: d.pieces,
-        caratWeight: d.caratWeight,
-        weight: d.weight,
-        rate: d.rate,
-      })) ?? [],
+      diamondShape: product?.diamondShape ?? '',
+      diamondQuality: product?.diamondQuality ?? '',
+      diamondPieces: product?.diamondPieces ?? undefined,
+      diamondCaratWeight: product?.diamondCaratWeight ?? undefined,
+      diamondWeight: product?.diamondWeight ?? undefined,
+      diamondRate: product?.diamondRate ?? undefined,
       makingChargePerGram: product?.makingChargePerGram ?? 0,
       fixedExpense: product?.fixedExpense ?? 0,
       sellingPrice: product?.sellingPrice ?? 0,
@@ -93,7 +89,7 @@ export function ProductFormPage() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="flex flex-col gap-6 lg:col-span-2">
-            <ProductCostSheetSections register={register} control={control} errors={errors} watched={watched} />
+            <ProductCostSheetSections register={register} errors={errors} watched={watched} />
 
             <Card>
               <CardHeader title="Stock" />

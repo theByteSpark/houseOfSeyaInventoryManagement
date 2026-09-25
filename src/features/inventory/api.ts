@@ -1,22 +1,18 @@
 import { apiClient } from '@/lib/apiClient';
 import type { Category, PaginatedResult, Product, SortDir, StockMovement, Subcategory } from '@/types';
 
-export interface DiamondInput {
-  shape: string;
-  quality: string;
-  pieces: number;
-  caratWeight: number;
-  weight: number;
-  rate: number;
-}
-
 export interface ProductInput {
   designNumber: string;
   name: string;
   metalType: string;
   grossWeight: number;
   metalRatePerGram: number;
-  diamonds: DiamondInput[];
+  diamondShape?: string;
+  diamondQuality?: string;
+  diamondPieces?: number;
+  diamondCaratWeight?: number;
+  diamondWeight?: number;
+  diamondRate?: number;
   makingChargePerGram: number;
   fixedExpense: number;
   sellingPrice: number;

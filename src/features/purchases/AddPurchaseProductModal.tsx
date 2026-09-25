@@ -38,20 +38,19 @@ export function AddPurchaseProductModal({
 
   const {
     register,
-    control,
     handleSubmit,
     reset,
     watch,
     formState: { errors },
   } = useForm<FormValues, unknown, FormOutput>({
     resolver: zodResolver(schema),
-    defaultValues: { diamonds: [], quantity: 1, unitCost: 0 },
+    defaultValues: { quantity: 1, unitCost: 0 },
   });
 
   const watched = watch();
 
   const handleClose = () => {
-    reset({ diamonds: [], quantity: 1, unitCost: 0 });
+    reset({ quantity: 1, unitCost: 0 });
     setSubmitError(null);
     onClose();
   };
@@ -66,7 +65,7 @@ export function AddPurchaseProductModal({
         reorderLevel: 0,
       });
       onAdded({ productId: product.id, productName: product.name, designNumber: product.designNumber, quantity, unitCost });
-      reset({ diamonds: [], quantity: 1, unitCost: 0 });
+      reset({ quantity: 1, unitCost: 0 });
     } catch (err) {
       setSubmitError(extractErrorMessage(err, 'Could not create this product.'));
     }
@@ -90,7 +89,7 @@ export function AddPurchaseProductModal({
       }
     >
       <form id="add-purchase-product-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-        <ProductCostSheetSections register={register} control={control} errors={errors} watched={watched} />
+        <ProductCostSheetSections register={register} errors={errors} watched={watched} />
 
         <Card>
           <CardHeader title="This purchase line" />

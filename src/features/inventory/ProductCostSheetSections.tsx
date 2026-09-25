@@ -1,18 +1,15 @@
-import { useFieldArray } from 'react-hook-form';
-import { Plus, Trash2 } from 'lucide-react';
-import { Button, Card, CardBody, CardHeader, IconButton, Input, Select } from '@/components/ui';
+import { Card, CardBody, CardHeader, Input, Select } from '@/components/ui';
 import { formatCurrency } from '@/lib/format';
 import { useAttributeOptions } from '@/features/attributes/hooks';
 import { useSubcategoryGroups } from './hooks';
-import { computeCosts, emptyDiamondRow, withCurrentValue } from './productCostSheet';
+import { computeCosts, withCurrentValue } from './productCostSheet';
 
-// register/control/errors are typed loosely on purpose: this section is shared by two different
+// register/errors are typed loosely on purpose: this section is shared by two different
 // form shapes (ProductFormPage's own fields + this shared core, and the purchase quick-create
 // modal's own fields + this shared core) that only agree on the field NAMES used below, not on
 // react-hook-form's exact generic FieldValues type.
 interface ProductCostSheetSectionsProps {
   register: any;
-  control: any;
   errors: any;
   watched: {
     metalType?: string;
@@ -20,16 +17,18 @@ interface ProductCostSheetSectionsProps {
     metalRatePerGram?: unknown;
     makingChargePerGram?: unknown;
     fixedExpense?: unknown;
-    diamonds?: { shape?: string; quality?: string; caratWeight?: unknown; rate?: unknown }[];
+    diamondShape?: string;
+    diamondQuality?: string;
+    diamondCaratWeight?: unknown;
+    diamondRate?: unknown;
   };
 }
 
-export function ProductCostSheetSections({ register, control, errors, watched }: ProductCostSheetSectionsProps) {
+export function ProductCostSheetSections({ register, errors, watched }: ProductCostSheetSectionsProps) {
   const subcategoriesByCategory = useSubcategoryGroups();
   const { data: metalOptions } = useAttributeOptions('METAL');
   const { data: shapeOptions } = useAttributeOptions('DIAMOND_SHAPE');
   const { data: qualityOptions } = useAttributeOptions('DIAMOND_QUALITY');
-  const { fields, append, remove } = useFieldArray({ control, name: 'diamonds' });
   const costs = computeCosts(watched);
 
   return (
@@ -93,86 +92,48 @@ export function ProductCostSheetSections({ register, control, errors, watched }:
       </Card>
 
       <Card>
-        <CardHeader
-          title="Diamond"
-          action={
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => append(emptyDiamondRow)}
-              icon={<Plus className="h-3.5 w-3.5" strokeWidth={2} />}
-            >
-              Add diamond
-            </Button>
-          }
-        />
-        <CardBody className="flex flex-col gap-3">
-          {fields.length === 0 && (
-            <p className="text-sm text-graphite-400">No diamonds on this design. Use "Add diamond" if it has one or more.</p>
-          )}
-          {fields.map((field: { id: string }, index: number) => (
-            <div key={field.id} className="grid grid-cols-1 items-end gap-3 rounded-lg border border-graphite-100 p-3 sm:grid-cols-12">
-              <div className="sm:col-span-2">
-                <Select label="Shape" error={errors.diamonds?.[index]?.shape?.message} {...register(`diamonds.${index}.shape`)}>
-                  <option value="">Select</option>
-                  {withCurrentValue(shapeOptions, watched.diamonds?.[index]?.shape).map((opt) => (
-                    <option key={opt.id} value={opt.label}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="sm:col-span-2">
-                <Select label="Quality" error={errors.diamonds?.[index]?.quality?.message} {...register(`diamonds.${index}.quality`)}>
-                  <option value="">Select</option>
-                  {withCurrentValue(qualityOptions, watched.diamonds?.[index]?.quality).map((opt) => (
-                    <option key={opt.id} value={opt.label}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="sm:col-span-1">
-                <Input label="Pcs" type="number" min="1" error={errors.diamonds?.[index]?.pieces?.message} {...register(`diamonds.${index}.pieces`)} />
-              </div>
-              <div className="sm:col-span-2">
-                <Input
-                  label="Ct.Wt"
-                  type="number"
-                  step="0.001"
-                  min="0"
-                  error={errors.diamonds?.[index]?.caratWeight?.message}
-                  {...register(`diamonds.${index}.caratWeight`)}
-                />
-              </div>
-              <div className="sm:col-span-1">
-                <Input
-                  label="Wt"
-                  type="number"
-                  step="0.001"
-                  min="0"
-                  error={errors.diamonds?.[index]?.weight?.message}
-                  {...register(`diamonds.${index}.weight`)}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Input label="Rate" type="number" step="0.01" min="0" error={errors.diamonds?.[index]?.rate?.message} {...register(`diamonds.${index}.rate`)} />
-              </div>
-              <div className="flex items-end justify-between gap-2 sm:col-span-1 sm:block sm:text-right">
-                <p className="text-xs text-graphite-400">Amount</p>
-                <p className="text-sm font-medium text-graphite-800">{formatCurrency(costs.diamondAmounts[index] ?? 0)}</p>
-              </div>
-              <div className="flex justify-end sm:col-span-1">
-                <IconButton label="Remove diamond" tone="danger" onClick={() => remove(index)}>
-                  <Trash2 className="h-4 w-4" strokeWidth={2} />
-                </IconButton>
-              </div>
-            </div>
-          ))}
-          <div className="flex justify-end border-t border-graphite-100 pt-3 text-sm">
-            <span className="text-graphite-500">Total diamond cost:&nbsp;</span>
-            <span className="font-semibold text-graphite-900">{formatCurrency(costs.totalDiamondCost)}</span>
+        <CardHeader title="Diamond" />
+        <CardBody className="flex flex-col gap-4">
+          <p className="text-xs text-graphite-400">Leave blank if this design has no diamond.</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Select label="Shape" error={errors.diamondShape?.message} {...register('diamondShape')}>
+              <option value="">Select</option>
+              {withCurrentValue(shapeOptions, watched.diamondShape).map((opt) => (
+                <option key={opt.id} value={opt.label}>
+                  {opt.label}
+                </option>
+              ))}
+            </Select>
+            <Select label="Quality" error={errors.diamondQuality?.message} {...register('diamondQuality')}>
+              <option value="">Select</option>
+              {withCurrentValue(qualityOptions, watched.diamondQuality).map((opt) => (
+                <option key={opt.id} value={opt.label}>
+                  {opt.label}
+                </option>
+              ))}
+            </Select>
+            <Input label="Pcs" type="number" min="1" error={errors.diamondPieces?.message} {...register('diamondPieces')} />
+            <Input
+              label="Ct.Wt"
+              type="number"
+              step="0.001"
+              min="0"
+              error={errors.diamondCaratWeight?.message}
+              {...register('diamondCaratWeight')}
+            />
+            <Input
+              label="Wt"
+              type="number"
+              step="0.001"
+              min="0"
+              error={errors.diamondWeight?.message}
+              {...register('diamondWeight')}
+            />
+            <Input label="Rate" type="number" step="0.01" min="0" error={errors.diamondRate?.message} {...register('diamondRate')} />
+          </div>
+          <div className="flex justify-end text-sm">
+            <span className="text-graphite-500">Diamond cost:&nbsp;</span>
+            <span className="font-semibold text-graphite-900">{formatCurrency(costs.diamondCost)}</span>
           </div>
         </CardBody>
       </Card>
@@ -212,12 +173,12 @@ interface ProductCostSummaryProps {
   register: any;
   errors: any;
   watched: {
-    metalType?: string;
     grossWeight?: unknown;
     metalRatePerGram?: unknown;
     makingChargePerGram?: unknown;
     fixedExpense?: unknown;
-    diamonds?: { shape?: string; quality?: string; caratWeight?: unknown; rate?: unknown }[];
+    diamondCaratWeight?: unknown;
+    diamondRate?: unknown;
   };
 }
 
