@@ -1,22 +1,26 @@
 import { useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { FilePlus2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Badge,
   Button,
   Card,
   ConfirmModal,
+  CsvImportModal,
   EmptyState,
   FullPageSpinner,
   IconButton,
   Input,
   PageHeader,
   Pagination,
+  SplitAddButton,
   Table,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
 import { extractErrorMessage } from '@/lib/apiClient';
-import { useVendorsPage, useDeleteVendor } from './hooks';
+import { importVendorsCsv } from '@/features/import-export/api';
+import { vendorKeys, useVendorsPage, useDeleteVendor } from './hooks';
 import { VendorFormModal } from './VendorFormModal';
 import type { Vendor } from '@/types';
 
@@ -29,8 +33,10 @@ export function VendorsListPage() {
     sortBy: query.sortBy,
     sortDir: query.sortDir,
   });
+  const queryClient = useQueryClient();
   const deleteVendor = useDeleteVendor();
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Vendor | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -124,7 +130,21 @@ export function VendorsListPage() {
       <PageHeader
         title="Vendors"
         description="Manage the suppliers you purchase from."
-        action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add vendor</Button>}
+        action={
+          <SplitAddButton
+            label="Add vendor"
+            icon={<Plus className="h-4 w-4" strokeWidth={2} />}
+            onClick={openCreate}
+            options={[
+              {
+                key: 'import',
+                label: 'Import from CSV',
+                icon: <FilePlus2 className="h-4 w-4" strokeWidth={2} />,
+                onClick: () => setImportOpen(true),
+              },
+            ]}
+          />
+        }
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -167,6 +187,17 @@ export function VendorsListPage() {
       </Card>
 
       <VendorFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} vendor={editingVendor} />
+
+      <CsvImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import vendors from CSV"
+        templateUrl="/import/vendors/template"
+        templateFilename="vendors-import-template.csv"
+        onUpload={importVendorsCsv}
+        onImported={() => queryClient.invalidateQueries({ queryKey: vendorKeys.all })}
+        rowLabel={(row) => (typeof row.companyName === 'string' ? row.companyName : '')}
+      />
 
       <ConfirmModal
         isOpen={!!deleteTarget}

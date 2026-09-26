@@ -25,6 +25,7 @@ import type { StockFilter } from './api';
 import { productKeys, categoryKeys, useDeleteProduct, useProductsPage } from './hooks';
 import { ProductFormModal } from './ProductFormModal';
 import { RestockModal } from './RestockModal';
+import { BlockedQuantityCell } from './BlockedQuantityCell';
 import { importProductsCsv } from '@/features/import-export/api';
 import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
 import { useWarehouses } from '@/features/warehouses/hooks';
@@ -106,6 +107,12 @@ export function ProductsListPage() {
           </div>
         );
       },
+    },
+    {
+      key: 'blockedQuantity',
+      header: 'Blocked (kgs)',
+      align: 'right',
+      render: (p) => <BlockedQuantityCell product={p} />,
     },
     {
       key: 'actions',

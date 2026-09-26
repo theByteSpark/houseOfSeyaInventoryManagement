@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -18,6 +18,7 @@ import {
   ArrowLeftRight,
   Repeat,
   Check,
+  Lock,
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/useAuth';
 import { cn } from '@/lib/cn';
@@ -26,6 +27,8 @@ import { NotificationBell } from './NotificationBell';
 import { useIsCompanyLevel } from '@/features/warehouses/WarehouseFilter';
 import { useWarehouses } from '@/features/warehouses/hooks';
 import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
+import { ROLE_LABELS } from '@/features/users/roleBadge';
+import { BlockQuantityFormModal } from '@/features/blocked-quantity/BlockQuantityFormModal';
 import paragonLogo from '@/assets/paragon-logo.jpg';
 
 interface NavItem {
@@ -106,9 +109,24 @@ function loadCollapsedGroups(): Record<string, boolean> {
   }
 }
 
+const WAREHOUSE_ORDER = ['prime bengaluru', 'hyderabad', 'mangalore', 'kalor', 'hubli', 'guntur'];
+
+function sortWarehouses<T extends { name: string }>(warehouses: T[] | undefined): T[] | undefined {
+  if (!warehouses) return warehouses;
+  return [...warehouses].sort((a, b) => {
+    const aIndex = WAREHOUSE_ORDER.indexOf(a.name.trim().toLowerCase());
+    const bIndex = WAREHOUSE_ORDER.indexOf(b.name.trim().toLowerCase());
+    if (aIndex === -1 && bIndex === -1) return a.name.localeCompare(b.name);
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+}
+
 function DesktopWarehouseBadge() {
   const isCompanyLevel = useIsCompanyLevel();
-  const { data: warehouses } = useWarehouses();
+  const { data: warehousesData } = useWarehouses();
+  const warehouses = sortWarehouses(warehousesData);
   const { selectedWarehouseId, setSelectedWarehouseId } = useWarehouseContext();
   const [open, setOpen] = useState(false);
 
@@ -171,7 +189,8 @@ function DesktopWarehouseBadge() {
 
 function MobileWarehouseBadge() {
   const isCompanyLevel = useIsCompanyLevel();
-  const { data: warehouses } = useWarehouses();
+  const { data: warehousesData } = useWarehouses();
+  const warehouses = sortWarehouses(warehousesData);
   const { selectedWarehouseId, setSelectedWarehouseId } = useWarehouseContext();
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -237,7 +256,37 @@ function MobileWarehouseBadge() {
   );
 }
 
+function BlockQuantityButton({ compact = false }: { compact?: boolean }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  return (
+    <>
+      {compact ? (
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          aria-label="Block quantity"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-graphite-500 hover:bg-graphite-100 hover:text-graphite-800"
+        >
+          <Lock className="h-[17px] w-[17px]" strokeWidth={2} />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-1.5 rounded-full border border-graphite-200 px-3 py-1.5 text-[13px] font-medium text-graphite-700 hover:bg-graphite-50"
+        >
+          <Lock className="h-3.5 w-3.5" strokeWidth={2} />
+          Block quantity
+        </button>
+      )}
+      <BlockQuantityFormModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+    </>
+  );
+}
+
 export function AppShell() {
+  const location = useLocation();
+  const isFullWidthPage = location.pathname === '/';
   const { user, logout } = useAuth();
   const isWarehouseAdmin = user?.role === 'ADMIN';
   const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
@@ -340,7 +389,7 @@ export function AppShell() {
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-medium text-white">{user?.name}</p>
               <p className="truncate text-[11px] uppercase tracking-wide text-white/70">
-                {user?.role}
+                {user?.role && ROLE_LABELS[user.role]}
                 {user?.warehouse && ` · ${user.warehouse.name}`}
               </p>
             </div>
@@ -362,11 +411,12 @@ export function AppShell() {
           <img src={paragonLogo} alt="Paragon Resin" className="h-10 w-10 shrink-0 rounded-md object-cover" />
           <div className="min-w-0">
             <p className="truncate text-[15px] font-semibold leading-tight text-graphite-900">Paragon Resin</p>
-            <p className="truncate text-[11px] leading-tight text-graphite-400">{user?.name} · {user?.role}</p>
+            <p className="truncate text-[11px] leading-tight text-graphite-400">{user?.name} · {user?.role && ROLE_LABELS[user.role]}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
           <MobileWarehouseBadge />
+          <BlockQuantityButton compact />
           <NotificationBell />
           <button
             onClick={() => setLogoutConfirmOpen(true)}
@@ -386,10 +436,18 @@ export function AppShell() {
             <img src={paragonLogo} alt="Paragon Resin" className="h-14 w-14 rounded-md object-cover" />
             <p className="text-base font-semibold leading-tight text-graphite-900">Paragon Resin</p>
           </div>
-          <DesktopWarehouseBadge />
+          <div className="flex items-center gap-3">
+            <BlockQuantityButton />
+            <DesktopWarehouseBadge />
+          </div>
         </div>
         <div className="min-h-0 flex-1 lg:overflow-y-auto">
-          <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-20 sm:px-6 lg:px-8 lg:py-8 lg:pb-8">
+          <div
+            className={cn(
+              'mx-auto w-full px-4 py-6 pb-20 sm:px-6 lg:py-8 lg:pb-8',
+              isFullWidthPage ? 'lg:px-4' : 'max-w-6xl lg:px-8',
+            )}
+          >
             <Outlet />
           </div>
         </div>

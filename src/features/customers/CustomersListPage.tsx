@@ -1,22 +1,26 @@
 import { useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { FilePlus2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Badge,
   Button,
   Card,
   ConfirmModal,
+  CsvImportModal,
   EmptyState,
   FullPageSpinner,
   IconButton,
   Input,
   PageHeader,
   Pagination,
+  SplitAddButton,
   Table,
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
 import { extractErrorMessage } from '@/lib/apiClient';
-import { useCustomersPage, useDeleteCustomer } from './hooks';
+import { importCustomersCsv } from '@/features/import-export/api';
+import { customerKeys, useCustomersPage, useDeleteCustomer } from './hooks';
 import { CustomerFormModal } from './CustomerFormModal';
 import type { Customer } from '@/types';
 
@@ -29,8 +33,10 @@ export function CustomersListPage() {
     sortBy: query.sortBy,
     sortDir: query.sortDir,
   });
+  const queryClient = useQueryClient();
   const deleteCustomer = useDeleteCustomer();
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -102,7 +108,21 @@ export function CustomersListPage() {
       <PageHeader
         title="Customers"
         description="Manage the companies and contacts you sell to."
-        action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add customer</Button>}
+        action={
+          <SplitAddButton
+            label="Add customer"
+            icon={<Plus className="h-4 w-4" strokeWidth={2} />}
+            onClick={openCreate}
+            options={[
+              {
+                key: 'import',
+                label: 'Import from CSV',
+                icon: <FilePlus2 className="h-4 w-4" strokeWidth={2} />,
+                onClick: () => setImportOpen(true),
+              },
+            ]}
+          />
+        }
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -145,6 +165,17 @@ export function CustomersListPage() {
       </Card>
 
       <CustomerFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} customer={editingCustomer} />
+
+      <CsvImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import customers from CSV"
+        templateUrl="/import/customers/template"
+        templateFilename="customers-import-template.csv"
+        onUpload={importCustomersCsv}
+        onImported={() => queryClient.invalidateQueries({ queryKey: customerKeys.all })}
+        rowLabel={(row) => (typeof row.name === 'string' ? row.name : '')}
+      />
 
       <ConfirmModal
         isOpen={!!deleteTarget}

@@ -6,6 +6,7 @@ import { Button, Input, Modal, Select } from '@/components/ui';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { useWarehouses } from '@/features/warehouses/hooks';
 import { useCreateUser } from './hooks';
+import { ROLE_LABELS } from './roleBadge';
 
 const WAREHOUSE_SCOPED_ROLES = new Set(['USER', 'ADMIN']);
 
@@ -94,8 +95,8 @@ export function UserFormModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
           {...register('password')}
         />
         <Select label="Role" error={errors.role?.message} {...register('role')}>
-          <option value="USER">User</option>
-          <option value="COMPANY_ADMIN">Company Admin</option>
+          <option value="USER">{ROLE_LABELS.USER}</option>
+          <option value="COMPANY_ADMIN">{ROLE_LABELS.COMPANY_ADMIN}</option>
         </Select>
         {isWarehouseScoped && (
           <Select label="Warehouse" error={errors.warehouseId?.message} {...register('warehouseId')}>

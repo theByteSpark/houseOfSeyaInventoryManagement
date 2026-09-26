@@ -11,6 +11,8 @@ export interface PurchaseInput {
   vendorId: string;
   items: PurchaseLineInput[];
   warehouseId?: string; // required for COMPANY_ADMIN/SUPER_ADMIN; auto-resolved otherwise
+  status?: Extract<PurchaseStatus, 'ORDERED' | 'INWARD_TRANSIT'>; // defaults to INWARD_TRANSIT on the backend
+  completionDate?: string;
 }
 
 export interface FetchPurchasesPageParams {

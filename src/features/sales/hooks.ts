@@ -48,6 +48,18 @@ export function useCreateSale() {
   });
 }
 
+export function useUpdateSale() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: api.SaleInput }) => api.updateSale(id, input),
+    onSuccess: (sale) => {
+      invalidateAll(queryClient);
+      invalidateDetail(queryClient, sale.id);
+      queryClient.invalidateQueries({ queryKey: productKeys.all, refetchType: 'all' });
+    },
+  });
+}
+
 export function useCancelSale() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -56,6 +68,17 @@ export function useCancelSale() {
       invalidateAll(queryClient);
       invalidateDetail(queryClient, sale.id);
       queryClient.invalidateQueries({ queryKey: productKeys.all, refetchType: 'all' });
+    },
+  });
+}
+
+export function useCompleteSale() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.completeSale,
+    onSuccess: (sale) => {
+      invalidateAll(queryClient);
+      invalidateDetail(queryClient, sale.id);
     },
   });
 }

@@ -17,6 +17,8 @@ interface DraftLine {
   unitCost: number;
 }
 
+const TAX_RATE = 0.18;
+
 export function PurchaseFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -31,6 +33,7 @@ export function PurchaseFormPage() {
   const { selectedWarehouseId } = useWarehouseContext();
 
   const [vendorId, setVendorId] = useState('');
+  const [completionDate, setCompletionDate] = useState('');
   const [lines, setLines] = useState<DraftLine[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
@@ -38,11 +41,12 @@ export function PurchaseFormPage() {
 
   useEffect(() => {
     if (!isEdit || !existingPurchase || initialized) return;
-    if (existingPurchase.status !== 'ORDERED') {
-      setError('Only purchases that are still ordered (not yet in transit) can be edited.');
+    if (existingPurchase.status !== 'ORDERED' && existingPurchase.status !== 'INWARD_TRANSIT') {
+      setError('Only ordered or inward transit purchases can be edited.');
       return;
     }
     setVendorId(existingPurchase.vendorId);
+    setCompletionDate(existingPurchase.completionDate ? existingPurchase.completionDate.slice(0, 10) : '');
     setLines(
       existingPurchase.items.map((item) => ({
         productId: item.productId,
@@ -83,10 +87,12 @@ export function PurchaseFormPage() {
     return null;
   };
 
-  const total = lines.reduce((sum, l) => {
+  const subtotal = lines.reduce((sum, l) => {
     const product = productById.get(l.productId);
     return sum + (product ? l.unitCost * l.quantity : 0);
   }, 0);
+  const tax = subtotal * TAX_RATE;
+  const total = subtotal + tax;
 
   const handleSubmit = async () => {
     setError(null);
@@ -96,6 +102,10 @@ export function PurchaseFormPage() {
     }
     if (!isEdit && !selectedWarehouseId) {
       setError('Select a warehouse.');
+      return;
+    }
+    if (!completionDate) {
+      setError('Select a completion date.');
       return;
     }
     if (lines.length === 0) {
@@ -110,6 +120,7 @@ export function PurchaseFormPage() {
       vendorId,
       items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitCost: l.unitCost })),
       warehouseId: isEdit ? undefined : (selectedWarehouseId ?? undefined),
+      completionDate,
     };
 
     try {
@@ -155,6 +166,12 @@ export function PurchaseFormPage() {
                 placeholder="Search vendor by company or contact…"
                 addNewLabel="Add new vendor"
                 onAddNew={() => setVendorModalOpen(true)}
+              />
+              <Input
+                label="Completion date"
+                type="date"
+                value={completionDate}
+                onChange={(e) => setCompletionDate(e.target.value)}
               />
             </CardBody>
           </Card>
@@ -243,8 +260,16 @@ export function PurchaseFormPage() {
             <CardBody>
               <dl className="flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-graphite-500">Total cost</dt>
-                  <dd className="font-medium text-graphite-800">{formatCurrency(total)}</dd>
+                  <dt className="text-graphite-500">Subtotal</dt>
+                  <dd className="font-medium text-graphite-800">{formatCurrency(subtotal)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-graphite-500">Tax (18%)</dt>
+                  <dd className="font-medium text-graphite-800">{formatCurrency(tax)}</dd>
+                </div>
+                <div className="flex justify-between border-t border-graphite-100 pt-2">
+                  <dt className="font-medium text-graphite-700">Total</dt>
+                  <dd className="font-semibold text-graphite-900">{formatCurrency(total)}</dd>
                 </div>
               </dl>
 
@@ -254,7 +279,11 @@ export function PurchaseFormPage() {
                 className="mt-6 w-full"
                 onClick={handleSubmit}
                 isLoading={isEdit ? updatePurchase.isPending : createPurchase.isPending}
-                disabled={lines.length === 0 || lines.some((line) => getLineQuantityError(line) !== null || getLineCostError(line) !== null)}
+                disabled={
+                  lines.length === 0 ||
+                  !completionDate ||
+                  lines.some((line) => getLineQuantityError(line) !== null || getLineCostError(line) !== null)
+                }
               >
                 {isEdit ? 'Save changes' : 'Save purchase'}
               </Button>

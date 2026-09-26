@@ -87,6 +87,14 @@ export function PurchaseDetailPage() {
             <CardHeader title="Summary" />
             <CardBody>
               <dl className="flex flex-col gap-2 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-graphite-500">Subtotal</dt>
+                  <dd className="font-medium text-graphite-800">{formatCurrency(purchase.subtotal)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-graphite-500">Tax ({Math.round(purchase.taxRate * 100)}%)</dt>
+                  <dd className="font-medium text-graphite-800">{formatCurrency(purchase.tax)}</dd>
+                </div>
                 <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
                   <dt className="font-semibold text-graphite-900">Total cost</dt>
                   <dd className="font-semibold text-graphite-900">{formatCurrency(purchase.total)}</dd>
@@ -103,7 +111,7 @@ export function PurchaseDetailPage() {
           <Card>
             <CardHeader title="Actions" />
             <CardBody className="flex flex-col gap-2">
-              {purchase.status === 'ORDERED' && (
+              {(purchase.status === 'ORDERED' || purchase.status === 'INWARD_TRANSIT') && (
                 <Button
                   variant="secondary"
                   onClick={() => navigate(`/purchases/${purchase.id}/edit`)}

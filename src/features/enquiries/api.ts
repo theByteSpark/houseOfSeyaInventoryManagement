@@ -6,6 +6,10 @@ export interface EnquiryInput {
   quantity: number;
 }
 
+export interface EditEnquiryInput {
+  additionalQuantity: number;
+}
+
 export interface ConfirmEnquiryInput {
   warehouseId: string;
   vendor: { vendorId: string; quantity: number; price: number };
@@ -30,6 +34,15 @@ export async function fetchEnquiries(params?: FetchEnquiriesParams): Promise<Enq
 export async function createEnquiry(input: EnquiryInput): Promise<Enquiry> {
   const { data } = await apiClient.post<Enquiry>('/enquiries', input);
   return data;
+}
+
+export async function editEnquiry(id: string, input: EditEnquiryInput): Promise<Enquiry> {
+  const { data } = await apiClient.patch<Enquiry>(`/enquiries/${id}`, input);
+  return data;
+}
+
+export async function deleteEnquiry(id: string): Promise<void> {
+  await apiClient.delete(`/enquiries/${id}`);
 }
 
 export async function confirmEnquiry(id: string, input: ConfirmEnquiryInput): Promise<ConfirmEnquiryResult> {

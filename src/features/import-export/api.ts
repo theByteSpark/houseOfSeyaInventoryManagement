@@ -22,3 +22,11 @@ export function importSalesCsv(file: File, warehouseId?: string): Promise<CsvImp
 export function importPurchasesCsv(file: File, warehouseId?: string): Promise<CsvImportResult> {
   return uploadCsv('/import/purchases', file, warehouseId);
 }
+
+export function importCustomersCsv(file: File): Promise<CsvImportResult> {
+  return uploadCsv('/import/customers', file);
+}
+
+export function importVendorsCsv(file: File): Promise<CsvImportResult> {
+  return uploadCsv('/import/vendors', file);
+}

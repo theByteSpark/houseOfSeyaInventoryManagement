@@ -13,8 +13,11 @@ export const categoryKeys = {
   page: (params: api.FetchCategoriesPageParams) => ['categories', 'page', params] as const,
 };
 
-export function useProducts() {
-  return useQuery({ queryKey: productKeys.all, queryFn: api.fetchProducts });
+export function useProducts(warehouseId?: string) {
+  return useQuery({
+    queryKey: warehouseId ? [...productKeys.all, warehouseId] : productKeys.all,
+    queryFn: () => api.fetchProducts(warehouseId),
+  });
 }
 
 export function useProductsPage(params: api.FetchProductsPageParams) {

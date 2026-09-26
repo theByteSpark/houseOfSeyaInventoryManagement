@@ -1,9 +1,10 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
+import { CheckCircle2, Pencil } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
 import { Button, Card, CardBody, CardHeader, ConfirmModal, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
-import { useCancelSale, useSale } from './hooks';
+import { useCancelSale, useCompleteSale, useSale } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
 import type { SaleItem } from '@/types';
 
@@ -12,8 +13,10 @@ export function SaleDetailPage() {
   const navigate = useNavigate();
   const { data: sale, isLoading } = useSale(id);
   const cancelSale = useCancelSale();
+  const completeSale = useCompleteSale();
   const [actionError, setActionError] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [confirmComplete, setConfirmComplete] = useState(false);
 
   if (isLoading) return <FullPageSpinner />;
   if (!sale) {
@@ -87,7 +90,7 @@ export function SaleDetailPage() {
                   <dd className="font-medium text-graphite-800">{formatCurrency(sale.subtotal)}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-graphite-500">Tax</dt>
+                  <dt className="text-graphite-500">Tax (18%)</dt>
                   <dd className="font-medium text-graphite-800">{formatCurrency(sale.tax)}</dd>
                 </div>
                 <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
@@ -106,11 +109,25 @@ export function SaleDetailPage() {
             <CardHeader title="Actions" />
             <CardBody className="flex flex-col gap-2">
               {sale.status === 'OUTWARD_TRANSIT' && (
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate(`/sales/${sale.id}/edit`)}
+                  icon={<Pencil className="h-4 w-4" strokeWidth={2} />}
+                >
+                  Edit sale
+                </Button>
+              )}
+              {sale.status === 'OUTWARD_TRANSIT' && (
+                <Button onClick={() => setConfirmComplete(true)} icon={<CheckCircle2 className="h-4 w-4" strokeWidth={2} />}>
+                  Mark as Done
+                </Button>
+              )}
+              {sale.status === 'OUTWARD_TRANSIT' && (
                 <Button variant="danger" onClick={() => setConfirmCancel(true)}>
                   Cancel sale
                 </Button>
               )}
-              {sale.status === 'CANCELLED' && (
+              {(sale.status === 'CANCELLED' || sale.status === 'DONE') && (
                 <p className="text-sm text-graphite-400">No further actions available.</p>
               )}
             </CardBody>
@@ -133,6 +150,24 @@ export function SaleDetailPage() {
         }
         confirmLabel="Cancel sale"
         isLoading={cancelSale.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={confirmComplete}
+        onClose={() => setConfirmComplete(false)}
+        onConfirm={() => {
+          setConfirmComplete(false);
+          runAction(() => completeSale.mutateAsync(sale.id));
+        }}
+        title="Mark as done"
+        description={
+          <>
+            Mark <strong>{sale.saleNumber}</strong> as done?
+          </>
+        }
+        confirmLabel="Mark as Done"
+        tone="primary"
+        isLoading={completeSale.isPending}
       />
     </div>
   );

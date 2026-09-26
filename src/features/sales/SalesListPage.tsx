@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { FilePlus2, Plus } from 'lucide-react';
+import { CheckCircle2, FilePlus2, Pencil, Plus, XCircle } from 'lucide-react';
+import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
+import { formatDaysLeft, getDaysLeft, getDaysLeftTone } from '@/lib/date';
 import {
+  Badge,
   Button,
   Card,
+  ConfirmModal,
   CsvImportModal,
   EmptyState,
   FullPageSpinner,
+  IconButton,
   Input,
   InvoiceItemsCell,
   PageHeader,
@@ -19,7 +24,7 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { saleKeys, useSalesPage } from './hooks';
+import { saleKeys, useCancelSale, useCompleteSale, useSalesPage } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
 import { importSalesCsv } from '@/features/import-export/api';
 import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
@@ -43,7 +48,12 @@ export function SalesListPage() {
   });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const cancelSale = useCancelSale();
+  const completeSale = useCompleteSale();
   const [importOpen, setImportOpen] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<Sale | null>(null);
+  const [completeTarget, setCompleteTarget] = useState<Sale | null>(null);
 
   const sales = data?.data ?? [];
 
@@ -77,10 +87,62 @@ export function SalesListPage() {
     { key: 'status', header: 'Status', sortField: 'status', render: (sale) => <SaleStatusBadge status={sale.status} /> },
     { key: 'total', header: 'Total', align: 'right', sortField: 'total', render: (sale) => formatCurrency(sale.total) },
     {
+      key: 'daysLeft',
+      header: 'Days Left',
+      render: (sale) => {
+        const daysLeft = getDaysLeft(sale.completionDate, sale.status === 'DONE');
+        return <Badge tone={getDaysLeftTone(daysLeft)}>{formatDaysLeft(daysLeft)}</Badge>;
+      },
+    },
+    {
       key: 'date',
       header: 'Created',
       sortField: 'createdAt',
       render: (sale) => new Date(sale.createdAt).toLocaleDateString(),
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      render: (sale) =>
+        sale.status === 'OUTWARD_TRANSIT' ? (
+          <div className="flex justify-end gap-1">
+            <IconButton
+              label="Edit sale"
+              tone="brand"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/sales/${sale.id}/edit`);
+              }}
+            >
+              <Pencil className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+            <IconButton
+              label="Mark as done"
+              tone="brand"
+              disabled={completeSale.isPending}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActionError(null);
+                setCompleteTarget(sale);
+              }}
+            >
+              <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+            <IconButton
+              label="Cancel sale"
+              tone="danger"
+              disabled={cancelSale.isPending}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActionError(null);
+                setCancelTarget(sale);
+              }}
+            >
+              <XCircle className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+          </div>
+        ) : null,
     },
   ];
 
@@ -108,6 +170,12 @@ export function SalesListPage() {
         }
       />
 
+      {actionError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {actionError}
+        </div>
+      )}
+
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <div className="w-full max-w-xs flex-1 sm:w-auto">
           <Input
@@ -124,6 +192,7 @@ export function SalesListPage() {
         >
           <option value="ALL">All statuses</option>
           <option value="OUTWARD_TRANSIT">Outward Transit</option>
+          <option value="DONE">Done</option>
           <option value="CANCELLED">Cancelled</option>
         </Select>
       </div>
@@ -169,6 +238,47 @@ export function SalesListPage() {
         selectedWarehouseName={selectedWarehouseName}
         onImported={() => queryClient.invalidateQueries({ queryKey: saleKeys.all })}
         rowLabel={(row) => (typeof row.saleNumber === 'string' ? row.saleNumber : '')}
+      />
+
+      <ConfirmModal
+        isOpen={!!cancelTarget}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={() => {
+          if (!cancelTarget) return;
+          cancelSale.mutate(cancelTarget.id, {
+            onSuccess: () => setCancelTarget(null),
+            onError: (err) => setActionError(extractErrorMessage(err, 'Could not cancel sale.')),
+          });
+        }}
+        title="Cancel sale"
+        description={
+          <>
+            Are you sure you want to cancel <strong>{cancelTarget?.saleNumber}</strong>? This cannot be undone.
+          </>
+        }
+        confirmLabel="Cancel sale"
+        isLoading={cancelSale.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={!!completeTarget}
+        onClose={() => setCompleteTarget(null)}
+        onConfirm={() => {
+          if (!completeTarget) return;
+          completeSale.mutate(completeTarget.id, {
+            onSuccess: () => setCompleteTarget(null),
+            onError: (err) => setActionError(extractErrorMessage(err, 'Could not mark sale as done.')),
+          });
+        }}
+        title="Mark as done"
+        description={
+          <>
+            Mark <strong>{completeTarget?.saleNumber}</strong> as done?
+          </>
+        }
+        confirmLabel="Mark as Done"
+        tone="primary"
+        isLoading={completeSale.isPending}
       />
     </div>
   );

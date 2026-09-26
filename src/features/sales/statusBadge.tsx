@@ -3,11 +3,13 @@ import type { SaleStatus } from '@/types';
 
 const toneByStatus: Record<SaleStatus, 'neutral' | 'info' | 'success' | 'danger'> = {
   OUTWARD_TRANSIT: 'info',
+  DONE: 'success',
   CANCELLED: 'danger',
 };
 
 const labelByStatus: Record<SaleStatus, string> = {
   OUTWARD_TRANSIT: 'Outward Transit',
+  DONE: 'Done',
   CANCELLED: 'Cancelled',
 };
 

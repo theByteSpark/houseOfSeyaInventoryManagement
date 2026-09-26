@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { FilePlus2, Plus, XCircle } from 'lucide-react';
+import { CheckCircle2, FilePlus2, Pencil, Plus, Truck, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
+import { formatDaysLeft, getDaysLeft, getDaysLeftTone } from '@/lib/date';
 import {
+  Badge,
   Button,
   Card,
   ConfirmModal,
@@ -22,7 +24,13 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { purchaseKeys, useCancelPurchase, usePurchasesPage } from './hooks';
+import {
+  purchaseKeys,
+  useCancelPurchase,
+  useMarkPurchaseInStock,
+  useMarkPurchaseInwardTransit,
+  usePurchasesPage,
+} from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { importPurchasesCsv } from '@/features/import-export/api';
 import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
@@ -59,9 +67,12 @@ export function PurchasesListPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const cancelPurchase = useCancelPurchase();
+  const markInwardTransit = useMarkPurchaseInwardTransit();
+  const markInStock = useMarkPurchaseInStock();
   const [actionError, setActionError] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<Purchase | null>(null);
+  const [advanceTarget, setAdvanceTarget] = useState<Purchase | null>(null);
 
   const purchases = data?.data ?? [];
 
@@ -95,6 +106,14 @@ export function PurchasesListPage() {
     { key: 'status', header: 'Status', sortField: 'status', render: (p) => <PurchaseStatusBadge status={p.status} /> },
     { key: 'total', header: 'Total', align: 'right', render: (p) => formatCurrency(p.total) },
     {
+      key: 'daysLeft',
+      header: 'Days Left',
+      render: (p) => {
+        const daysLeft = getDaysLeft(p.completionDate, p.status === 'IN_STOCK');
+        return <Badge tone={getDaysLeftTone(daysLeft)}>{formatDaysLeft(daysLeft)}</Badge>;
+      },
+    },
+    {
       key: 'date',
       header: 'Created',
       sortField: 'createdAt',
@@ -106,6 +125,46 @@ export function PurchasesListPage() {
       align: 'right',
       render: (p) => (
         <div className="flex justify-end gap-1">
+          {(p.status === 'ORDERED' || p.status === 'INWARD_TRANSIT') && (
+            <IconButton
+              label="Edit purchase"
+              tone="brand"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/purchases/${p.id}/edit`);
+              }}
+            >
+              <Pencil className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+          )}
+          {p.status === 'ORDERED' && (
+            <IconButton
+              label="Mark inward transit"
+              tone="brand"
+              disabled={markInwardTransit.isPending}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActionError(null);
+                setAdvanceTarget(p);
+              }}
+            >
+              <Truck className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+          )}
+          {p.status === 'INWARD_TRANSIT' && (
+            <IconButton
+              label="Mark in stock"
+              tone="brand"
+              disabled={markInStock.isPending}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActionError(null);
+                setAdvanceTarget(p);
+              }}
+            >
+              <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+          )}
           {(p.status === 'ORDERED' || p.status === 'INWARD_TRANSIT') && (
             <IconButton
               label="Cancel purchase"
@@ -238,6 +297,37 @@ export function PurchasesListPage() {
         }
         confirmLabel="Cancel purchase"
         isLoading={cancelPurchase.isPending}
+      />
+
+      <ConfirmModal
+        isOpen={!!advanceTarget}
+        onClose={() => setAdvanceTarget(null)}
+        onConfirm={() => {
+          if (!advanceTarget) return;
+          const isOrdered = advanceTarget.status === 'ORDERED';
+          const mutation = isOrdered ? markInwardTransit : markInStock;
+          mutation.mutate(advanceTarget.id, {
+            onSuccess: () => setAdvanceTarget(null),
+            onError: (err) =>
+              setActionError(extractErrorMessage(err, isOrdered ? 'Could not mark inward transit.' : 'Could not mark in stock.')),
+          });
+        }}
+        title={advanceTarget?.status === 'ORDERED' ? 'Mark inward transit' : 'Mark in stock'}
+        description={
+          advanceTarget?.status === 'ORDERED' ? (
+            <>
+              Mark <strong>{advanceTarget?.purchaseNumber}</strong> as inward transit?
+            </>
+          ) : (
+            <>
+              Mark <strong>{advanceTarget?.purchaseNumber}</strong> as in stock? This will add the ordered quantities
+              to inventory.
+            </>
+          )
+        }
+        confirmLabel={advanceTarget?.status === 'ORDERED' ? 'Mark Inward Transit' : 'Mark In Stock'}
+        tone="primary"
+        isLoading={markInwardTransit.isPending || markInStock.isPending}
       />
     </div>
   );

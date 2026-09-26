@@ -11,6 +11,7 @@ export interface SaleInput {
   customerId: string;
   items: SaleLineInput[];
   warehouseId?: string; // required for COMPANY_ADMIN/SUPER_ADMIN; auto-resolved otherwise
+  completionDate?: string;
 }
 
 export interface FetchSalesPageParams {
@@ -43,7 +44,17 @@ export async function createSale(input: SaleInput): Promise<Sale> {
   return data;
 }
 
+export async function updateSale(id: string, input: SaleInput): Promise<Sale> {
+  const { data } = await apiClient.patch<Sale>(`/sales/${id}`, input);
+  return data;
+}
+
 export async function cancelSale(id: string): Promise<Sale> {
   const { data } = await apiClient.patch<Sale>(`/sales/${id}/cancel`);
+  return data;
+}
+
+export async function completeSale(id: string): Promise<Sale> {
+  const { data } = await apiClient.patch<Sale>(`/sales/${id}/complete`);
   return data;
 }

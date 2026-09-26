@@ -1,14 +1,14 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, EmptyState, IconButton, Input, PageHeader, Select, SearchableCombobox } from '@/components/ui';
+import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, Select, SearchableCombobox } from '@/components/ui';
 import { useCustomers } from '@/features/customers/hooks';
 import { CustomerFormModal } from '@/features/customers/CustomerFormModal';
 import { useProducts } from '@/features/inventory/hooks';
 import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
-import { useCreateSale } from './hooks';
+import { useCreateSale, useSale, useUpdateSale } from './hooks';
 import type { Customer } from '@/types';
 
 interface DraftLine {
@@ -19,17 +19,49 @@ interface DraftLine {
 
 export function SaleFormPage() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEdit = !!id;
 
   const { data: customers } = useCustomers();
   const { data: products } = useProducts();
+  const { data: existingSale, isLoading: isLoadingSale, isError: isSaleError, error: saleFetchError } = useSale(id);
   const createSale = useCreateSale();
+  const updateSale = useUpdateSale();
 
   const { selectedWarehouseId } = useWarehouseContext();
 
   const [customerId, setCustomerId] = useState('');
+  const [completionDate, setCompletionDate] = useState('');
   const [lines, setLines] = useState<DraftLine[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false);
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isEdit || !existingSale || initialized) return;
+    if (existingSale.status !== 'OUTWARD_TRANSIT') {
+      setError('Only sales in outward transit can be edited.');
+      return;
+    }
+    setCustomerId(existingSale.customerId);
+    setCompletionDate(existingSale.completionDate ? existingSale.completionDate.slice(0, 10) : '');
+    setLines(
+      existingSale.items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      })),
+    );
+    setInitialized(true);
+  }, [isEdit, existingSale, initialized]);
+
+  // When editing, a line's original quantity is given back to stock before
+  // the new quantities are validated server-side, so the client-side max
+  // should reflect that same headroom.
+  const originalQuantityByProduct = useMemo(() => {
+    if (!isEdit || !existingSale) return new Map<string, number>();
+    return new Map(existingSale.items.map((item) => [item.productId, item.quantity]));
+  }, [isEdit, existingSale]);
 
   const availableProducts = useMemo(
     () => products?.filter((p) => !lines.some((l) => l.productId === p.id)) ?? [],
@@ -51,12 +83,19 @@ export function SaleFormPage() {
 
   const productById = useMemo(() => new Map(products?.map((p) => [p.id, p])), [products]);
 
+  const getLineMaxQuantity = (line: DraftLine): number | undefined => {
+    const product = productById.get(line.productId);
+    if (!product) return undefined;
+    return product.quantityInStock + (originalQuantityByProduct.get(line.productId) ?? 0);
+  };
+
   const getLineQuantityError = (line: DraftLine): string | null => {
     const product = productById.get(line.productId);
     if (!product) return null;
     if (!line.quantity || line.quantity < 1) return 'Enter a quantity of at least 1.';
-    if (line.quantity > product.quantityInStock) {
-      return `Only ${product.quantityInStock} in stock.`;
+    const max = getLineMaxQuantity(line);
+    if (max !== undefined && line.quantity > max) {
+      return `Only ${max} in stock.`;
     }
     return null;
   };
@@ -76,8 +115,12 @@ export function SaleFormPage() {
       setError('Select a customer.');
       return;
     }
-    if (!selectedWarehouseId) {
+    if (!isEdit && !selectedWarehouseId) {
       setError('Select a warehouse.');
+      return;
+    }
+    if (!completionDate) {
+      setError('Select a completion date.');
       return;
     }
     if (lines.length === 0) {
@@ -91,21 +134,34 @@ export function SaleFormPage() {
     const input = {
       customerId,
       items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
-      warehouseId: selectedWarehouseId ?? undefined,
+      warehouseId: isEdit ? undefined : (selectedWarehouseId ?? undefined),
+      completionDate,
     };
 
     try {
-      const sale = await createSale.mutateAsync(input);
+      const sale = isEdit
+        ? await updateSale.mutateAsync({ id: id as string, input })
+        : await createSale.mutateAsync(input);
       navigate(`/sales/${sale.id}`, { replace: true });
     } catch (err) {
-      setError(extractErrorMessage(err, 'Could not create sale.'));
+      setError(extractErrorMessage(err, isEdit ? 'Could not update sale.' : 'Could not create sale.'));
     }
   };
+
+  if (isEdit && isLoadingSale) return <FullPageSpinner />;
+
+  if (isEdit && isSaleError) {
+    return (
+      <div className="py-16 text-center text-sm text-red-600">
+        {extractErrorMessage(saleFetchError, 'Could not load this sale.')}
+      </div>
+    );
+  }
 
   return (
     <div>
       <PageHeader
-        title="Add sale"
+        title={isEdit ? 'Edit sale' : 'Add sale'}
         description="Select a customer and add the products being sold. Stock is deducted immediately."
       />
 
@@ -125,6 +181,12 @@ export function SaleFormPage() {
                 placeholder="Search customer by name or email…"
                 addNewLabel="Add new customer"
                 onAddNew={() => setCustomerModalOpen(true)}
+              />
+              <Input
+                label="Completion date"
+                type="date"
+                value={completionDate}
+                onChange={(e) => setCompletionDate(e.target.value)}
               />
             </CardBody>
           </Card>
@@ -172,7 +234,7 @@ export function SaleFormPage() {
                             label="Qty (kgs)"
                             type="number"
                             min="1"
-                            max={product?.quantityInStock}
+                            max={getLineMaxQuantity(line)}
                             value={line.quantity === 0 ? '' : line.quantity}
                             onChange={(e) => updateLine(index, { quantity: e.target.value === '' ? 0 : Number(e.target.value) })}
                             error={getLineQuantityError(line) ?? undefined}
@@ -235,10 +297,14 @@ export function SaleFormPage() {
               <Button
                 className="mt-6 w-full"
                 onClick={handleSubmit}
-                isLoading={createSale.isPending}
-                disabled={lines.length === 0 || lines.some((line) => getLineQuantityError(line) !== null || getLinePriceError(line) !== null)}
+                isLoading={isEdit ? updateSale.isPending : createSale.isPending}
+                disabled={
+                  lines.length === 0 ||
+                  !completionDate ||
+                  lines.some((line) => getLineQuantityError(line) !== null || getLinePriceError(line) !== null)
+                }
               >
-                Save sale
+                {isEdit ? 'Save changes' : 'Save sale'}
               </Button>
               <p className="mt-2 text-center text-xs text-graphite-400">
                 Stock is deducted immediately once the sale is saved.

@@ -1,44 +1,60 @@
 import { useState } from 'react';
+import { Pencil, CheckCircle2, Trash2 } from 'lucide-react';
 import {
-  Badge,
   Button,
   Card,
+  ConfirmModal,
   EmptyState,
   FullPageSpinner,
+  IconButton,
   PageHeader,
-  Select,
   Table,
   type Column,
 } from '@/components/ui';
-import { useEnquiries } from './hooks';
+import { extractErrorMessage } from '@/lib/apiClient';
+import { useDeleteEnquiry, useEnquiries } from './hooks';
 import { EnquiryFormModal } from './EnquiryFormModal';
+import { EditEnquiryModal } from './EditEnquiryModal';
 import { ConfirmEnquiryModal } from './ConfirmEnquiryModal';
-import type { Enquiry, EnquiryStatus } from '@/types';
+import type { Enquiry } from '@/types';
 
 export function EnquiriesPage() {
-  const [statusFilter, setStatusFilter] = useState<EnquiryStatus | 'ALL'>('ALL');
-  const { data: enquiries, isLoading } = useEnquiries({ status: statusFilter });
+  const { data: enquiries, isLoading } = useEnquiries({ status: 'ALL' });
+  const deleteEnquiry = useDeleteEnquiry();
 
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Enquiry | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<Enquiry | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Enquiry | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const columns: Column<Enquiry>[] = [
     { key: 'productName', header: 'Product Name', render: (r) => <span className="font-medium text-graphite-900">{r.productName}</span> },
     { key: 'quantity', header: 'Quantity (kgs)', align: 'right', render: (r) => r.quantity },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (r) => <Badge tone={r.status === 'OPEN' ? 'info' : 'success'}>{r.status}</Badge>,
-    },
     {
       key: 'actions',
       header: '',
       align: 'right',
       render: (r) =>
         r.status === 'OPEN' ? (
-          <Button size="sm" variant="secondary" onClick={() => setConfirmTarget(r)}>
-            Confirm
-          </Button>
+          <div className="flex justify-end gap-1">
+            <IconButton label="Edit enquiry" tone="brand" onClick={() => setEditTarget(r)}>
+              <Pencil className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+            <IconButton label="Confirm enquiry" tone="brand" onClick={() => setConfirmTarget(r)}>
+              <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+            <IconButton
+              label="Delete enquiry"
+              tone="danger"
+              onClick={() => {
+                setDeleteError(null);
+                setDeleteTarget(r);
+              }}
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+          </div>
         ) : null,
     },
   ];
@@ -55,18 +71,6 @@ export function EnquiriesPage() {
         }
       />
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <Select
-          className="w-full sm:w-auto sm:max-w-[160px]"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as EnquiryStatus | 'ALL')}
-        >
-          <option value="ALL">All statuses</option>
-          <option value="OPEN">Open</option>
-          <option value="FULFILLED">Fulfilled</option>
-        </Select>
-      </div>
-
       <Card>
         {(enquiries ?? []).length === 0 ? (
           <EmptyState
@@ -80,7 +84,28 @@ export function EnquiriesPage() {
       </Card>
 
       <EnquiryFormModal isOpen={enquiryModalOpen} onClose={() => setEnquiryModalOpen(false)} />
+      <EditEnquiryModal isOpen={!!editTarget} enquiry={editTarget} onClose={() => setEditTarget(null)} />
       <ConfirmEnquiryModal isOpen={!!confirmTarget} enquiry={confirmTarget} onClose={() => setConfirmTarget(null)} />
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          deleteEnquiry.mutate(deleteTarget.id, {
+            onSuccess: () => setDeleteTarget(null),
+            onError: (err) => setDeleteError(extractErrorMessage(err, 'Could not delete enquiry.')),
+          });
+        }}
+        title="Delete enquiry"
+        description={
+          <>
+            Are you sure you want to delete the enquiry for <strong>{deleteTarget?.productName}</strong>? This cannot be undone.
+          </>
+        }
+        confirmLabel="Delete"
+        isLoading={deleteEnquiry.isPending}
+        error={deleteError}
+      />
     </div>
   );
 }

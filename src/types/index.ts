@@ -50,6 +50,7 @@ export interface ProductStockByWarehouse {
   warehouseId: string;
   warehouseName: string;
   quantity: number;
+  blockedQuantity: number;
 }
 
 export interface Product {
@@ -59,6 +60,8 @@ export interface Product {
   description: string | null;
   // Quantity at the viewer's own warehouse when scoped; total across all warehouses for company-level roles.
   quantityInStock: number;
+  // Open blocked quantity at the viewer's own warehouse when scoped; total across all warehouses for company-level roles.
+  blockedQuantity: number;
   reorderLevel: number;
   categoryId: string | null;
   categoryName: string | null;
@@ -77,7 +80,7 @@ export interface StockMovement {
   createdAt: string;
 }
 
-export type SaleStatus = 'OUTWARD_TRANSIT' | 'CANCELLED';
+export type SaleStatus = 'OUTWARD_TRANSIT' | 'DONE' | 'CANCELLED';
 
 export interface SaleItem {
   id: string;
@@ -102,6 +105,7 @@ export interface Sale {
   tax: number;
   total: number;
   issuedAt: string | null;
+  completionDate: string | null;
   createdAt: string;
 }
 
@@ -149,9 +153,12 @@ export interface Purchase {
   status: PurchaseStatus;
   items: PurchaseItem[];
   subtotal: number;
+  taxRate: number;
+  tax: number;
   total: number;
   orderedAt: string | null;
   receivedAt: string | null;
+  completionDate: string | null;
   createdAt: string;
 }
 
@@ -164,6 +171,21 @@ export interface Enquiry {
   sku: string;
   quantity: number;
   status: EnquiryStatus;
+  createdAt: string;
+}
+
+export type BlockedQuantityStatus = 'OPEN' | 'CONFIRMED' | 'CANCELLED';
+
+export interface BlockedQuantity {
+  id: string;
+  productId: string;
+  productName: string;
+  sku: string;
+  warehouseId: string;
+  warehouseName: string;
+  quantity: number;
+  status: BlockedQuantityStatus;
+  saleId: string | null;
   createdAt: string;
 }
 

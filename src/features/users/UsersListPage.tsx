@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import {
-  Badge,
   Button,
   Card,
   ConfirmModal,
@@ -16,6 +15,7 @@ import { useAuth } from '@/features/auth/useAuth';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { useDeleteUser, useUsers } from './hooks';
 import { UserFormModal } from './UserFormModal';
+import { RoleBadge } from './roleBadge';
 import type { User } from '@/types';
 
 export function UsersListPage() {
@@ -43,11 +43,7 @@ export function UsersListPage() {
     {
       key: 'role',
       header: 'Role',
-      render: (u) => (
-        <Badge tone={u.role === 'SUPER_ADMIN' || u.role === 'COMPANY_ADMIN' ? 'info' : u.role === 'ADMIN' ? 'warning' : 'neutral'}>
-          {u.role}
-        </Badge>
-      ),
+      render: (u) => <RoleBadge role={u.role} />,
     },
     {
       key: 'warehouse',

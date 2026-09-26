@@ -41,6 +41,7 @@ export function AppRoutes() {
         <Route path="/inventory/categories" element={<CategoriesPage />} />
         <Route path="/sales" element={<SalesListPage />} />
         <Route path="/sales/new" element={<SaleFormPage />} />
+        <Route path="/sales/:id/edit" element={<SaleFormPage />} />
         <Route path="/sales/:id" element={<SaleDetailPage />} />
         <Route path="/vendors" element={<VendorsListPage />} />
         <Route path="/purchases" element={<PurchasesListPage />} />

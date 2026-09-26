@@ -21,6 +21,22 @@ export function useCreateEnquiry() {
   });
 }
 
+export function useEditEnquiry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: api.EditEnquiryInput }) => api.editEnquiry(id, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: enquiryKeys.all }),
+  });
+}
+
+export function useDeleteEnquiry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.deleteEnquiry,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: enquiryKeys.all }),
+  });
+}
+
 export function useConfirmEnquiry() {
   const queryClient = useQueryClient();
   return useMutation({

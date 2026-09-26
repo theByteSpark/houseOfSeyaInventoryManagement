@@ -34,8 +34,8 @@ export interface FetchCategoriesPageParams {
   sortDir?: SortDir;
 }
 
-export async function fetchProducts(): Promise<Product[]> {
-  const { data } = await apiClient.get<Product[]>('/inventory/products');
+export async function fetchProducts(warehouseId?: string): Promise<Product[]> {
+  const { data } = await apiClient.get<Product[]>('/inventory/products', { params: { warehouseId } });
   return data;
 }
 
