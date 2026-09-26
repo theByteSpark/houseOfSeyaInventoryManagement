@@ -9,12 +9,12 @@ export const productCostSheetSchema = z.object({
   metalType: z.string().min(1, 'Select a metal type'),
   grossWeight: z.coerce.number().positive('Must be greater than 0'),
   metalRatePerGram: z.coerce.number().positive('Must be greater than 0'),
-  diamondShape: z.string().optional(),
-  diamondQuality: z.string().optional(),
-  diamondPieces: z.coerce.number().int().positive('Must be > 0').optional(),
-  diamondCaratWeight: z.coerce.number().positive('Must be > 0').optional(),
-  diamondWeight: z.coerce.number().positive('Must be > 0').optional(),
-  diamondRate: z.coerce.number().positive('Must be > 0').optional(),
+  diamondShape: z.string().min(1, 'Select a diamond shape'),
+  diamondQuality: z.string().min(1, 'Select a diamond quality'),
+  diamondPieces: z.coerce.number().int().positive('Must be > 0'),
+  diamondCaratWeight: z.coerce.number().positive('Must be > 0'),
+  diamondWeight: z.coerce.number().positive('Must be > 0'),
+  diamondRate: z.coerce.number().positive('Must be > 0'),
   makingChargePerGram: z.coerce.number().min(0, 'Cannot be negative'),
   fixedExpense: z.coerce.number().min(0, 'Cannot be negative'),
   sellingPrice: z.coerce.number().positive('Must be greater than 0'),
@@ -54,18 +54,3 @@ export function withCurrentValue(options: { id: string; label: string }[] | unde
   if (!current || list.some((o) => o.label === current)) return list;
   return [...list, { id: `current-${current}`, label: current }];
 }
-
-// `productCostSheetSchema` stays a plain ZodObject (not `.refine()`d) because two callers
-// (ProductFormPage, AddPurchaseProductModal) call `.extend()` on it, which a ZodEffects
-// (what `.refine()` returns) doesn't support. Callers apply this predicate themselves, after
-// their own `.extend()`, so both the diamond-pair rule and `.extend()` keep working everywhere.
-// An untouched RHF number input sends `''`, not `undefined`, so both count as "empty" here.
-function isEmptyDiamondField(value: unknown): boolean {
-  return value === undefined || value === null || value === '';
-}
-
-export const diamondPairRefinement = {
-  check: (data: { diamondCaratWeight?: unknown; diamondRate?: unknown }) =>
-    isEmptyDiamondField(data.diamondCaratWeight) === isEmptyDiamondField(data.diamondRate),
-  message: 'Enter both carat weight and rate to calculate diamond cost',
-};

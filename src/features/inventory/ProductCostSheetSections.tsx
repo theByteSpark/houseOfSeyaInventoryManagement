@@ -94,7 +94,6 @@ export function ProductCostSheetSections({ register, errors, watched }: ProductC
       <Card>
         <CardHeader title="Diamond" />
         <CardBody className="flex flex-col gap-4">
-          <p className="text-xs text-graphite-400">Leave blank if this design has no diamond.</p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Select label="Shape" error={errors.diamondShape?.message} {...register('diamondShape')}>
               <option value="">Select</option>

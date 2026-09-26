@@ -5,15 +5,13 @@ import { useState } from 'react';
 import { Button, Card, CardBody, CardHeader, Input, Modal } from '@/components/ui';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { ProductCostSheetSections, ProductCostSummary } from '@/features/inventory/ProductCostSheetSections';
-import { diamondPairRefinement, productCostSheetSchema } from '@/features/inventory/productCostSheet';
+import { productCostSheetSchema } from '@/features/inventory/productCostSheet';
 import { useCreateProduct } from '@/features/inventory/hooks';
 
-const schema = productCostSheetSchema
-  .extend({
-    quantity: z.coerce.number().int().positive('Enter a quantity greater than 0'),
-    unitCost: z.coerce.number().min(0, 'Cannot be negative'),
-  })
-  .refine(diamondPairRefinement.check, { message: diamondPairRefinement.message, path: ['diamondRate'] });
+const schema = productCostSheetSchema.extend({
+  quantity: z.coerce.number().int().positive('Enter a quantity greater than 0'),
+  unitCost: z.coerce.number().min(0, 'Cannot be negative'),
+});
 
 type FormValues = z.input<typeof schema>;
 type FormOutput = z.output<typeof schema>;
