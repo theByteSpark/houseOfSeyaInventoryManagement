@@ -41,12 +41,37 @@ export interface Subcategory {
   productCount: number;
 }
 
+export type AttributeType = 'METAL' | 'DIAMOND_SHAPE' | 'DIAMOND_QUALITY';
+
+export interface AttributeOption {
+  id: string;
+  type: AttributeType;
+  label: string;
+  sortOrder: number;
+}
+
 export interface Product {
   id: string;
-  sku: string;
+  designNumber: string;
   name: string;
-  description: string | null;
-  unitPrice: number;
+  metalType: string | null;
+  grossWeight: number | null;
+  metalRatePerGram: number | null;
+  metalCost: number;
+  diamondShape: string | null;
+  diamondQuality: string | null;
+  diamondPieces: number | null;
+  diamondCaratWeight: number | null;
+  diamondWeight: number | null;
+  diamondRate: number | null;
+  diamondCost: number;
+  makingChargePerGram: number | null;
+  labourCost: number;
+  fixedExpense: number;
+  totalCost: number;
+  taxAmount: number;
+  finalAmount: number;
+  sellingPrice: number;
   quantityInStock: number;
   reorderLevel: number;
   subcategoryId: string | null;
@@ -73,7 +98,7 @@ export interface SaleItem {
   id: string;
   productId: string;
   productName: string;
-  sku: string;
+  designNumber: string;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
@@ -127,7 +152,7 @@ export interface PurchaseItem {
   id: string;
   productId: string;
   productName: string;
-  sku: string;
+  designNumber: string;
   quantity: number;
   receivedQuantity: number;
   unitCost: number;
@@ -143,6 +168,8 @@ export interface Purchase {
   items: PurchaseItem[];
   subtotal: number;
   total: number;
+  vendorInvoiceNumber: string | null;
+  vendorInvoiceDate: string | null;
   orderedAt: string | null;
   receivedAt: string | null;
   createdAt: string;
@@ -153,7 +180,7 @@ export interface SalesReport {
   totalRevenue: number;
   totalTax: number;
   statusBreakdown: { status: SaleStatus; count: number }[];
-  topProducts: { product: string; sku: string; quantity: number; revenue: number }[];
+  topProducts: { product: string; designNumber: string; quantity: number; revenue: number }[];
   sales: { id: string; saleNumber: string; customerName: string; status: SaleStatus; total: number; createdAt: string }[];
 }
 
@@ -161,7 +188,7 @@ export interface PurchasesReport {
   totalCount: number;
   totalCost: number;
   statusBreakdown: { status: PurchaseStatus; count: number }[];
-  topProducts: { product: string; sku: string; quantity: number; cost: number }[];
+  topProducts: { product: string; designNumber: string; quantity: number; cost: number }[];
   purchases: { id: string; purchaseNumber: string; vendorName: string; status: PurchaseStatus; total: number; createdAt: string }[];
 }
 
@@ -169,7 +196,29 @@ export interface InventoryReport {
   totalProducts: number;
   totalStockValue: number;
   lowStockCount: number;
-  lowStockProducts: { id: string; name: string; sku: string; quantityInStock: number; reorderLevel: number }[];
+  lowStockProducts: { id: string; name: string; designNumber: string; quantityInStock: number; reorderLevel: number }[];
   categoryBreakdown: { category: string; productCount: number; stockValue: number }[];
-  recentMovements: { id: string; productName: string; sku: string; type: StockMovementType; quantity: number; reason: string | null; createdAt: string }[];
+  recentMovements: { id: string; productName: string; designNumber: string; type: StockMovementType; quantity: number; reason: string | null; createdAt: string }[];
+}
+
+export interface EnquiryDiamond {
+  id?: string;
+  shape: string;
+  quality: string;
+  pieces: number;
+  caratWeight: number;
+}
+
+export interface Enquiry {
+  id: string;
+  customerId: string;
+  customerName: string;
+  subcategoryId: string | null;
+  subcategoryName: string | null;
+  categoryId: string | null;
+  categoryName: string | null;
+  metalType: string;
+  grossWeight: number;
+  diamonds: EnquiryDiamond[];
+  createdAt: string;
 }

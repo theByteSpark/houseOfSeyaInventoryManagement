@@ -11,6 +11,9 @@ import {
   ClipboardList,
   BarChart3,
   UserCog,
+  Settings,
+  MessageCircleQuestion,
+  HelpCircle,
   LogOut,
   ChevronDown,
   MoreHorizontal,
@@ -38,6 +41,7 @@ const baseNavGroups: NavGroup[] = [
     items: [
       { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
       { to: '/reports', label: 'Reports', icon: BarChart3 },
+      { to: '/help', label: 'Help', icon: HelpCircle },
     ],
   },
   {
@@ -63,6 +67,7 @@ const baseNavGroups: NavGroup[] = [
       { to: '/inventory/products', label: 'Products', icon: Package },
       { to: '/inventory/categories', label: 'Categories', icon: Tags },
       { to: '/inventory/subcategories', label: 'Subcategories', icon: Layers },
+      { to: '/enquiries', label: 'Enquiries', icon: MessageCircleQuestion },
     ],
   },
 ];
@@ -70,7 +75,10 @@ const baseNavGroups: NavGroup[] = [
 const adminNavGroup: NavGroup = {
   key: 'admin',
   label: 'Admin',
-  items: [{ to: '/users', label: 'Users', icon: UserCog }],
+  items: [
+    { to: '/users', label: 'Users', icon: UserCog },
+    { to: '/settings/attributes', label: 'Attribute options', icon: Settings },
+  ],
 };
 
 const mobilePrimaryPaths = ['/', '/sales', '/purchases', '/inventory/products'];

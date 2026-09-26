@@ -75,9 +75,9 @@ export function SaleFormPage() {
 
   const subtotal = lines.reduce((sum, l) => {
     const product = productById.get(l.productId);
-    return sum + (product ? product.unitPrice * l.quantity : 0);
+    return sum + (product ? product.sellingPrice * l.quantity : 0);
   }, 0);
-  const tax = subtotal * 0.1;
+  const tax = subtotal * 0.03;
   const total = subtotal + tax;
 
   const handleSubmit = async () => {
@@ -179,7 +179,7 @@ export function SaleFormPage() {
                             <option value={line.productId}>{product?.name}</option>
                             {availableProducts.map((p) => (
                               <option key={p.id} value={p.id}>
-                                {p.name} ({p.sku})
+                                {p.name} ({p.designNumber})
                               </option>
                             ))}
                           </Select>
@@ -199,7 +199,7 @@ export function SaleFormPage() {
                           {product && (
                             <>
                               <p className="text-xs text-graphite-400 sm:text-xs">In stock: {product.quantityInStock}</p>
-                              <p className="font-medium text-graphite-800 sm:font-medium sm:text-graphite-800">{formatCurrency(product.unitPrice * line.quantity)}</p>
+                              <p className="font-medium text-graphite-800 sm:font-medium sm:text-graphite-800">{formatCurrency(product.sellingPrice * line.quantity)}</p>
                             </>
                           )}
                         </div>
@@ -227,7 +227,7 @@ export function SaleFormPage() {
                   <dd className="font-medium text-graphite-800">{formatCurrency(subtotal)}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-graphite-500">Tax (10%)</dt>
+                  <dt className="text-graphite-500">Tax (3%)</dt>
                   <dd className="font-medium text-graphite-800">{formatCurrency(tax)}</dd>
                 </div>
                 <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">

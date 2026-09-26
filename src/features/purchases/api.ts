@@ -9,6 +9,8 @@ export interface PurchaseLineInput {
 
 export interface PurchaseInput {
   vendorId: string;
+  vendorInvoiceNumber?: string;
+  vendorInvoiceDate?: string;
   items: PurchaseLineInput[];
 }
 

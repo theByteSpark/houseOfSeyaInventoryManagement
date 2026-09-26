@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardCheck, Pencil, Plus, XCircle } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { ClipboardCheck, Pencil, Plus, Upload, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
 import {
   Button,
   Card,
+  CsvImportModal,
   EmptyState,
   FullPageSpinner,
   IconButton,
@@ -17,13 +19,16 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { useCancelPurchase, useOrderPurchase, usePurchasesPage } from './hooks';
+import { importPurchasesCsv } from '@/features/import-export/api';
+import { purchaseKeys, useCancelPurchase, useOrderPurchase, usePurchasesPage } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import type { Purchase, PurchaseStatus } from '@/types';
 
 export function PurchasesListPage() {
+  const queryClient = useQueryClient();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
   const [statusFilter, setStatusFilter] = useState<PurchaseStatus | 'ALL'>('ALL');
+  const [importOpen, setImportOpen] = useState(false);
   const { data, isLoading, isPlaceholderData } = usePurchasesPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -122,7 +127,14 @@ export function PurchasesListPage() {
       <PageHeader
         title="Purchases"
         description="Record purchase orders and track deliveries from vendors."
-        action={<Button onClick={() => navigate('/purchases/new')} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add purchase</Button>}
+        action={
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<Upload className="h-4 w-4" strokeWidth={2} />}>
+              Import
+            </Button>
+            <Button onClick={() => navigate('/purchases/new')} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add purchase</Button>
+          </div>
+        }
       />
 
       {actionError && (
@@ -182,6 +194,17 @@ export function PurchasesListPage() {
           </>
         )}
       </Card>
+
+      <CsvImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import purchases"
+        templateUrl="/import/purchases/template"
+        templateFilename="purchases-import-template.csv"
+        onUpload={importPurchasesCsv}
+        onImported={() => queryClient.invalidateQueries({ queryKey: purchaseKeys.all })}
+        rowLabel={(r) => String(r.purchaseNumber ?? r.row)}
+      />
     </div>
   );
 }

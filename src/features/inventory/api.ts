@@ -2,10 +2,20 @@ import { apiClient } from '@/lib/apiClient';
 import type { Category, PaginatedResult, Product, SortDir, StockMovement, Subcategory } from '@/types';
 
 export interface ProductInput {
-  sku: string;
+  designNumber: string;
   name: string;
-  description?: string;
-  unitPrice: number;
+  metalType: string;
+  grossWeight: number;
+  metalRatePerGram: number;
+  diamondShape?: string;
+  diamondQuality?: string;
+  diamondPieces?: number;
+  diamondCaratWeight?: number;
+  diamondWeight?: number;
+  diamondRate?: number;
+  makingChargePerGram: number;
+  fixedExpense: number;
+  sellingPrice: number;
   quantityInStock: number;
   reorderLevel: number;
   subcategoryId?: string;

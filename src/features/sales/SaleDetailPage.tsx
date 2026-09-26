@@ -35,7 +35,7 @@ export function SaleDetailPage() {
       render: (item) => (
         <div>
           <p className="font-medium text-graphite-900">{item.productName}</p>
-          <p className="text-xs text-graphite-400">{item.sku}</p>
+          <p className="text-xs text-graphite-400">{item.designNumber}</p>
         </div>
       ),
     },

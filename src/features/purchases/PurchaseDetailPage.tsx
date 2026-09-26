@@ -34,7 +34,7 @@ export function PurchaseDetailPage() {
       render: (item) => (
         <div>
           <p className="font-medium text-graphite-900">{item.productName}</p>
-          <p className="text-xs text-graphite-400">{item.sku}</p>
+          <p className="text-xs text-graphite-400">{item.designNumber}</p>
         </div>
       ),
     },
@@ -98,6 +98,16 @@ export function PurchaseDetailPage() {
             <CardHeader title="Summary" />
             <CardBody>
               <dl className="flex flex-col gap-2 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-graphite-500">Vendor invoice #</dt>
+                  <dd className="font-medium text-graphite-800">{purchase.vendorInvoiceNumber ?? '—'}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-graphite-500">Vendor invoice date</dt>
+                  <dd className="font-medium text-graphite-800">
+                    {purchase.vendorInvoiceDate ? new Date(purchase.vendorInvoiceDate).toLocaleDateString() : '—'}
+                  </dd>
+                </div>
                 <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
                   <dt className="font-semibold text-graphite-900">Total cost</dt>
                   <dd className="font-semibold text-graphite-900">{formatCurrency(purchase.total)}</dd>

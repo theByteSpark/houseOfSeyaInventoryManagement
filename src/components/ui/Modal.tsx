@@ -2,6 +2,14 @@ import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { cn } from '@/lib/cn';
+
+type ModalSize = 'md' | 'xl';
+
+const sizeClasses: Record<ModalSize, string> = {
+  md: 'max-w-lg',
+  xl: 'max-w-4xl',
+};
 
 export function Modal({
   isOpen,
@@ -9,12 +17,14 @@ export function Modal({
   title,
   children,
   footer,
+  size = 'md',
 }: {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  size?: ModalSize;
 }) {
   useEffect(() => {
     if (!isOpen) return;
@@ -32,7 +42,7 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-lg rounded-t-lg bg-white shadow-xl sm:rounded-lg"
+        className={cn('w-full rounded-t-lg bg-white shadow-xl sm:rounded-lg', sizeClasses[size])}
       >
         <div className="flex items-center justify-between border-b border-graphite-100 px-4 py-3 sm:px-5 sm:py-4">
           <h2 className="text-[15px] font-semibold text-graphite-900">{title}</h2>
