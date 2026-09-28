@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import { useState, type ComponentType } from 'react';
 import {
   LayoutDashboard,
   MessageCircleQuestion,
@@ -11,8 +11,10 @@ import {
   BarChart3,
   UserCog,
   Settings,
+  ChevronDown,
 } from 'lucide-react';
-import { Badge, Card, CardBody, CardHeader, PageHeader } from '@/components/ui';
+import { Badge, Card, PageHeader } from '@/components/ui';
+import { cn } from '@/lib/cn';
 import { useAuth } from '@/features/auth/useAuth';
 
 interface GuideSection {
@@ -29,83 +31,71 @@ const SECTIONS: GuideSection[] = [
     id: 'dashboard',
     title: 'Dashboard',
     icon: LayoutDashboard,
-    summary: 'Your home screen — a quick snapshot of the business, plus a shortcut to record a new enquiry without leaving it.',
+    summary: 'A quick snapshot of the business when you log in.',
     points: [
-      'Stat tiles: total products, low-stock count, total customers, total vendors, sales this month, revenue this month, purchases this month, and pending purchase orders.',
-      '"Recent sales" and "Recent purchases" — click a row to jump straight to that record.',
-      '"Low stock alerts" — every product at or below its reorder level, with a link to see the full product list.',
-      '"Add enquiry" button (top right) opens the same enquiry form used on the Enquiries page.',
+      'Stat tiles for products, customers, vendors, sales, and revenue.',
+      'Recent sales and purchases — click any row to open it.',
+      'Low stock alerts, with a link to the full product list.',
     ],
   },
   {
     id: 'enquiries',
     title: 'Enquiries',
     icon: MessageCircleQuestion,
-    summary: 'Record what a customer is asking about before there’s a costed product or a sale for it. Purely descriptive — no pricing here.',
+    summary: 'Note down what a customer is asking about, before it becomes a real product or sale.',
     points: [
-      '"Add enquiry" — pick an existing customer or create a new one on the spot, then optionally note a subcategory, metal type, gross weight, and a list of diamonds (shape, quality, pieces, carat weight) if the customer mentioned stones. You can add more than one diamond line per enquiry.',
-      'Edit or delete any enquiry from the list.',
-      'Search by customer, subcategory, or metal; sort and page through the list.',
-      'An enquiry never turns into a product or sale automatically — if it goes ahead, someone builds the actual costed product for it separately.',
+      'Add an enquiry against an existing or new customer.',
+      'Optionally describe the metal, subcategory, and any diamonds involved.',
+      'Nothing here is priced or automatic — someone builds the real product later if it goes ahead.',
     ],
   },
   {
     id: 'products',
     title: 'Products',
     icon: Package,
-    summary: 'The full jewelry catalog — every design’s cost sheet lives here, along with its stock level.',
+    summary: 'Your full catalog — every design\'s cost sheet and stock level.',
     points: [
-      '"Add product" opens the full cost sheet: Design Number, Name, Subcategory, a Metal section (type/weight/rate), a single Diamond section if this design has one (shape/quality/pieces/carat weight/reference weight/rate), Making Charge, and Fixed Expense.',
-      'As you fill it in, Metal Cost, Diamond Cost, Labour Charge, Total Cost, a flat 3% Tax, and a Final Amount update live — these are guidance figures. You still set the actual Selling Price yourself.',
-      'Stock quantity is only set once, at creation. To add more stock afterward, use the "Restock" action on that product’s row (with an optional reason) — never edit the quantity directly.',
-      'The stock filter toggle shows only low-stock items; a "Low" badge flags anything at or below its reorder level.',
-      'Deleting a product is blocked if it’s ever been sold. If its only history is purchases or stock movements, it can still be deleted.',
-      '"Import" lets you bulk add or update products from a CSV/Excel file — download the template first to see the expected columns.',
+      'Add a product with its metal, diamond, and charge details — cost and price update live as you type.',
+      'To add more stock later, use "Restock" on that row — don\'t edit the quantity directly.',
+      'Import products in bulk from a spreadsheet using the template.',
     ],
   },
   {
     id: 'categories',
     title: 'Categories & Subcategories',
     icon: Tags,
-    summary: 'The two-level classification a product can optionally belong to.',
+    summary: 'The two-level grouping a product can optionally belong to.',
     points: [
-      'Categories: add, edit, or delete — a category can’t be deleted while it still has subcategories.',
-      'Subcategories: add, edit, or delete, filterable by category — a subcategory can’t be deleted while it still has products or enquiries pointing to it.',
+      'Add, rename, or remove categories and subcategories.',
+      'A category or subcategory can\'t be removed while something still uses it.',
     ],
   },
   {
     id: 'sales',
     title: 'Sales',
     icon: ShoppingCart,
-    summary: 'Track a sale from a draft through to being paid, and produce the invoice.',
+    summary: 'Take a sale from draft to paid, and get the invoice.',
     points: [
-      '"Add sale" — pick a customer (or add one inline) and add one or more product lines with a quantity each.',
-      'A sale starts as a Draft (fully editable) and can be Issued — this is the moment stock is actually deducted — then Marked as Paid. It can be Cancelled any time before it’s paid.',
-      'The detail page shows every line item, the subtotal, a flat 3% tax, the total, and a downloadable PDF invoice once the sale has been issued.',
-      '"Import" bulk-creates draft sales from a file — one row creates one sale with one product line.',
+      'Add a sale for a customer with one or more products.',
+      'A sale moves Draft → Issued (stock is deducted here) → Paid, or can be cancelled before payment.',
+      'Download the invoice as a PDF once issued.',
     ],
   },
   {
     id: 'customers',
     title: 'Customers',
     icon: Users,
-    summary: 'Everyone you’ve sold to, or who’s made an enquiry.',
-    points: [
-      'Add or edit a customer’s name, email, phone, and address.',
-      'The list shows how many sales each customer has made.',
-      '"Import" bulk adds or updates customers from a file.',
-    ],
+    summary: 'Everyone you\'ve sold to or received an enquiry from.',
+    points: ['Add or edit contact details.', 'See each customer\'s sales history at a glance.'],
   },
   {
     id: 'purchases',
     title: 'Purchases',
     icon: ClipboardList,
-    summary: 'Order new designs from a vendor — this is also how a brand-new design enters the catalog.',
+    summary: 'Order new designs from a vendor — this is how a new design enters your catalog.',
     points: [
-      '"Add purchase" — pick a vendor (or add one inline), optionally note the vendor’s own invoice number and date, then use "Add product."',
-      '"Add product" always opens the full product cost sheet to define a brand-new design right there — there’s no picker over existing products on this screen, since a purchase is how a new design gets created in the first place.',
-      'A purchase moves from Draft to Ordered, then items are received via "Receive items" — partial deliveries are supported across multiple receiving actions. It automatically becomes Received once every line is fully in. Cancel is available any time before that.',
-      '"Import" bulk-creates draft purchases from a file — one row creates one purchase with one product line.',
+      'Add a purchase and define the new product\'s cost sheet right there.',
+      'Moves Draft → Ordered → Received as items arrive — partial deliveries are fine.',
     ],
   },
   {
@@ -113,21 +103,16 @@ const SECTIONS: GuideSection[] = [
     title: 'Vendors',
     icon: Truck,
     summary: 'Everyone you buy from.',
-    points: [
-      'Add or edit a vendor’s company name, contact person, email, phone, and address.',
-      'The list shows each vendor’s total orders and their most recent order.',
-      '"Import" bulk adds or updates vendors from a file.',
-    ],
+    points: ['Add or edit vendor details.', 'See each vendor\'s order history at a glance.'],
   },
   {
     id: 'reports',
     title: 'Reports',
     icon: BarChart3,
-    summary: 'Sales, Purchases, and Inventory performance, filterable by date range and status.',
+    summary: 'Sales, purchases, and inventory performance, filtered by date and status.',
     points: [
-      'Sales tab — total sales, revenue, and tax collected; a status breakdown; top-selling products; the filtered sales list.',
-      'Purchases tab — total purchases and cost; a status breakdown; top-ordered products; the filtered purchases list.',
-      'Inventory tab — total stock value, low-stock products, a category-wise stock value breakdown, and recent stock movements.',
+      'Sales & Purchases tabs — totals, status breakdown, top products.',
+      'Inventory tab — stock value, low-stock items, and recent movements.',
     ],
   },
   {
@@ -135,22 +120,16 @@ const SECTIONS: GuideSection[] = [
     title: 'Users',
     icon: UserCog,
     adminOnly: true,
-    summary: 'Manage who can log in to House of Seya and what role they have.',
-    points: [
-      'Add, edit, or delete staff and admin accounts.',
-      'Role determines access — Staff can use every screen above; only Admins can see this page and Attribute Options below.',
-    ],
+    summary: 'Manage staff accounts and access.',
+    points: ['Add, edit, or remove accounts.', 'Only Admins can reach this page.'],
   },
   {
     id: 'attribute-options',
     title: 'Attribute Options',
     icon: Settings,
     adminOnly: true,
-    summary: 'Manage the Metal Type, Diamond Shape, and Diamond Quality dropdown lists used across Products, Purchases, and Enquiries.',
-    points: [
-      'Add or remove an option from any of the three lists.',
-      'Removing an option only affects the picker for new entries — anything already saved keeps showing exactly what was picked at the time.',
-    ],
+    summary: 'The dropdown lists used for metal type and diamond details.',
+    points: ['Add or remove options.', 'Removing one only affects new entries, not past records.'],
   },
 ];
 
@@ -158,63 +137,65 @@ export function HelpPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
   const visibleSections = SECTIONS.filter((s) => !s.adminOnly || isAdmin);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   return (
     <div>
-      <PageHeader
-        title="Help & Guide"
-        description="What each part of House of Seya does, and what you can do there."
-      />
+      <PageHeader title="Help & Guide" description="A quick tour of what each page does." />
 
-      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-graphite-200 bg-white p-4">
-        <span className="text-sm text-graphite-500">You&rsquo;re logged in as</span>
+      <div className="mb-5 flex flex-wrap items-center gap-3 rounded-lg border border-graphite-200 bg-white px-4 py-3">
+        <span className="text-sm text-graphite-500">Logged in as</span>
         <Badge tone={isAdmin ? 'info' : 'neutral'}>{user?.role ?? 'STAFF'}</Badge>
         <span className="text-sm text-graphite-500">
-          {isAdmin
-            ? '— every section below is visible to you, including the two admin-only ones at the end.'
-            : '— the sections below match what you have access to. Two admin-only sections (Users, Attribute Options) are hidden.'}
+          {isAdmin ? 'You can see every section below.' : 'Admin-only sections are hidden for your role.'}
         </span>
       </div>
 
-      <Card className="mb-6">
-        <CardBody className="flex flex-wrap gap-2">
-          {visibleSections.map((section) => (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              className="rounded-md border border-graphite-200 bg-graphite-50 px-3 py-1.5 text-[13px] font-medium text-graphite-700 hover:bg-graphite-100"
-            >
-              {section.title}
-            </a>
-          ))}
-        </CardBody>
-      </Card>
-
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
         {visibleSections.map((section) => {
           const Icon = section.icon;
+          const isOpen = openId === section.id;
           return (
-            <Card key={section.id} id={section.id} className="scroll-mt-6">
-              <CardHeader
-                title={
-                  <span className="flex items-center gap-2.5">
-                    <Icon className="h-[18px] w-[18px] text-graphite-500" strokeWidth={2} />
-                    {section.title}
+            <Card key={section.id} className="overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setOpenId(isOpen ? null : section.id)}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left sm:px-5"
+                aria-expanded={isOpen}
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-graphite-50">
+                  <Icon className="h-[18px] w-[18px] text-graphite-500" strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2">
+                    <span className="text-[15px] font-semibold text-graphite-900">{section.title}</span>
                     {section.adminOnly && <Badge tone="info">Admin only</Badge>}
                   </span>
-                }
-                description={section.summary}
-              />
-              <CardBody>
-                <ul className="flex flex-col gap-2 text-sm text-graphite-700">
-                  {section.points.map((point, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-graphite-400" />
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardBody>
+                  <span className="mt-0.5 block truncate text-sm text-graphite-500 sm:whitespace-normal">
+                    {section.summary}
+                  </span>
+                </span>
+                <ChevronDown
+                  className={cn(
+                    'h-4 w-4 shrink-0 text-graphite-400 transition-transform',
+                    isOpen && 'rotate-180',
+                  )}
+                  strokeWidth={2}
+                />
+              </button>
+
+              {isOpen && (
+                <div className="border-t border-graphite-100 px-4 py-3 sm:px-5">
+                  <ul className="flex flex-col gap-2 text-sm text-graphite-700">
+                    {section.points.map((point, i) => (
+                      <li key={i} className="flex gap-2">
+                        <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-graphite-400" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </Card>
           );
         })}
