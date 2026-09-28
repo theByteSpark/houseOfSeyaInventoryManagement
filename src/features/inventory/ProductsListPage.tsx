@@ -252,7 +252,7 @@ export function ProductsListPage() {
           queryClient.invalidateQueries({ queryKey: productKeys.all });
           queryClient.invalidateQueries({ queryKey: categoryKeys.all });
         }}
-        rowLabel={(row) => (typeof row.sku === 'string' ? row.sku : '')}
+        rowLabel={(row) => (typeof row.name === 'string' ? row.name : '')}
       />
 
       <ConfirmModal
