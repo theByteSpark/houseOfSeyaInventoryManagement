@@ -21,6 +21,7 @@ import { WarehousesListPage } from '@/features/warehouses/WarehousesListPage';
 import { EnquiriesPage } from '@/features/enquiries/EnquiriesPage';
 import { StockTransfersPage } from '@/features/stock-transfers/StockTransfersPage';
 import { StockConversionsPage } from '@/features/stock-conversions/StockConversionsPage';
+import { HelpPage } from '@/features/help/HelpPage';
 
 export function AppRoutes() {
   return (
@@ -36,6 +37,7 @@ export function AppRoutes() {
         }
       >
         <Route path="/" element={<DashboardPage />} />
+        <Route path="/help" element={<HelpPage />} />
         <Route path="/customers" element={<CustomersListPage />} />
         <Route path="/inventory/products" element={<ProductsListPage />} />
         <Route path="/inventory/categories" element={<CategoriesPage />} />

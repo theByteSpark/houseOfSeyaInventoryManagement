@@ -19,6 +19,7 @@ import {
   Repeat,
   Check,
   Lock,
+  BookOpen,
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/useAuth';
 import { cn } from '@/lib/cn';
@@ -51,6 +52,7 @@ const baseNavGroups: NavGroup[] = [
     items: [
       { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
       { to: '/reports', label: 'Reports', icon: BarChart3 },
+      { to: '/help', label: 'Help & Guide', icon: BookOpen },
     ],
   },
   {
