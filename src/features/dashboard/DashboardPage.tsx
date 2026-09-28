@@ -12,7 +12,7 @@ import { EnquiryFormModal } from '@/features/enquiries/EnquiryFormModal';
 import { EditEnquiryModal } from '@/features/enquiries/EditEnquiryModal';
 import { ConfirmEnquiryModal } from '@/features/enquiries/ConfirmEnquiryModal';
 import { useProducts } from '@/features/inventory/hooks';
-import { BlockedQuantityCell } from '@/features/inventory/BlockedQuantityCell';
+import { BlockedQuantityValue, BlockedQuantityActions } from '@/features/inventory/BlockedQuantityCell';
 import { useCancelPurchase, useMarkPurchaseInStock } from '@/features/purchases/hooks';
 import { useCancelSale, useCompleteSale } from '@/features/sales/hooks';
 import { useInwardTransitPurchases, useOutwardTransitSales, useRecentSalesByProduct } from './hooks';
@@ -107,7 +107,7 @@ export function DashboardPage() {
 
   const baseTransitColumns: Column<TransitProductRow>[] = [
     { key: 'productName', header: 'Product Name', render: (r) => <span className="font-medium text-graphite-900">{r.productName}</span> },
-    { key: 'quantity', header: 'Quantity (kgs)', align: 'right', render: (r) => r.quantity },
+    { key: 'quantity', header: 'QTY (kgs)', align: 'right', render: (r) => r.quantity },
     { key: 'price', header: 'Price per kg', align: 'right', render: (r) => formatCurrency(r.price) },
     {
       key: 'daysLeft',
@@ -120,7 +120,7 @@ export function DashboardPage() {
   ];
 
   const inwardTransitColumns: Column<TransitProductRow>[] = [
-    ...baseTransitColumns,
+    ...baseTransitColumns.filter((c) => c.key !== 'price'),
     {
       key: 'actions',
       header: '',
@@ -171,7 +171,7 @@ export function DashboardPage() {
   ];
 
   const outwardTransitColumns: Column<TransitProductRow>[] = [
-    ...baseTransitColumns,
+    ...baseTransitColumns.filter((c) => c.key !== 'price'),
     {
       key: 'actions',
       header: '',
@@ -288,7 +288,13 @@ export function DashboardPage() {
       key: 'blockedQuantity',
       header: 'Blocked (kgs)',
       align: 'right',
-      render: (r) => <BlockedQuantityCell product={r.product} />,
+      render: (r) => <BlockedQuantityValue product={r.product} />,
+    },
+    {
+      key: 'blockedActions',
+      header: 'Block Actions',
+      align: 'right',
+      render: (r) => <BlockedQuantityActions product={r.product} />,
     },
   ];
 

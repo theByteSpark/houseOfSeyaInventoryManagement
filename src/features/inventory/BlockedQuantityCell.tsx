@@ -9,7 +9,11 @@ import { EditBlockQuantityModal } from '@/features/blocked-quantity/EditBlockQua
 import { ConfirmBlockQuantityModal } from '@/features/blocked-quantity/ConfirmBlockQuantityModal';
 import type { Product } from '@/types';
 
-export function BlockedQuantityCell({ product }: { product: Product }) {
+export function BlockedQuantityValue({ product }: { product: Product }) {
+  return <span className="text-graphite-700">{product.blockedQuantity}</span>;
+}
+
+export function BlockedQuantityActions({ product }: { product: Product }) {
   const { selectedWarehouseId } = useWarehouseContext();
   const { data: openBlocks } = useBlockedQuantities({
     status: 'OPEN',
@@ -26,34 +30,31 @@ export function BlockedQuantityCell({ product }: { product: Product }) {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   return (
-    <div className="flex items-center justify-end gap-1.5">
-      <span className="text-graphite-700">{product.blockedQuantity}</span>
-      <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-        {openBlock ? (
-          <>
-            <IconButton label="Add to blocked quantity" tone="brand" onClick={() => setEditModalOpen(true)}>
-              <Pencil className="h-4 w-4" strokeWidth={2} />
-            </IconButton>
-            <IconButton label="Confirm blocked quantity" tone="brand" onClick={() => setConfirmModalOpen(true)}>
-              <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
-            </IconButton>
-            <IconButton
-              label="Delete blocked quantity"
-              tone="danger"
-              onClick={() => {
-                setDeleteError(null);
-                setDeleteConfirmOpen(true);
-              }}
-            >
-              <Trash2 className="h-4 w-4" strokeWidth={2} />
-            </IconButton>
-          </>
-        ) : (
-          <IconButton label="Block quantity" tone="brand" onClick={() => setBlockModalOpen(true)}>
-            <Lock className="h-4 w-4" strokeWidth={2} />
+    <div className="flex items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
+      {openBlock ? (
+        <>
+          <IconButton label="Add to blocked quantity" tone="brand" onClick={() => setEditModalOpen(true)}>
+            <Pencil className="h-4 w-4" strokeWidth={2} />
           </IconButton>
-        )}
-      </div>
+          <IconButton label="Confirm blocked quantity" tone="brand" onClick={() => setConfirmModalOpen(true)}>
+            <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+          </IconButton>
+          <IconButton
+            label="Delete blocked quantity"
+            tone="danger"
+            onClick={() => {
+              setDeleteError(null);
+              setDeleteConfirmOpen(true);
+            }}
+          >
+            <Trash2 className="h-4 w-4" strokeWidth={2} />
+          </IconButton>
+        </>
+      ) : (
+        <IconButton label="Block quantity" tone="brand" onClick={() => setBlockModalOpen(true)}>
+          <Lock className="h-4 w-4" strokeWidth={2} />
+        </IconButton>
+      )}
 
       <BlockQuantityFormModal isOpen={blockModalOpen} onClose={() => setBlockModalOpen(false)} product={product} />
       <EditBlockQuantityModal isOpen={editModalOpen} blockedQuantity={openBlock} onClose={() => setEditModalOpen(false)} />
