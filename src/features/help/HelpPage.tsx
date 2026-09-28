@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import { useState, type ComponentType } from 'react';
 import {
   LayoutDashboard,
   BarChart3,
@@ -13,8 +13,10 @@ import {
   Warehouse as WarehouseIcon,
   HelpCircle,
   ArrowLeftRight,
+  ChevronDown,
 } from 'lucide-react';
-import { Badge, Card, CardBody, CardHeader, PageHeader } from '@/components/ui';
+import { Badge, Card, PageHeader } from '@/components/ui';
+import { cn } from '@/lib/cn';
 import { useAuth } from '@/features/auth/useAuth';
 import { ROLE_LABELS } from '@/features/users/roleBadge';
 
@@ -184,66 +186,70 @@ export function HelpPage() {
   });
 
   const roleLabel = user?.role ? ROLE_LABELS[user.role] : 'Warehouse Manager';
+  const [openId, setOpenId] = useState<string | null>(null);
 
   return (
     <div>
-      <PageHeader
-        title="Help & Guide"
-        description="What each part of Paragon Resin does, and what you can do there."
-      />
+      <PageHeader title="Help & Guide" description="A quick tour of what each page does." />
 
-      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-graphite-200 bg-white p-4">
-        <span className="text-sm text-graphite-500">You&rsquo;re logged in as</span>
+      <div className="mb-5 flex flex-wrap items-center gap-3 rounded-lg border border-graphite-200 bg-white px-4 py-3">
+        <span className="text-sm text-graphite-500">Logged in as</span>
         <Badge tone={isCompanyLevel ? 'info' : isWarehouseAdmin ? 'warning' : 'neutral'}>{roleLabel}</Badge>
         <span className="text-sm text-graphite-500">
           {isCompanyLevel
-            ? '— every section below is visible to you, including the company-only ones at the end.'
+            ? 'You can see every section below.'
             : isWarehouseAdmin
-              ? '— the sections below match what you have access to. The company-only sections (Warehouses, Enquiries, Warehouse Transfer) are hidden.'
-              : '— the sections below match what you have access to. Users, Warehouses, Enquiries, and Warehouse Transfer are hidden.'}
+              ? 'Company-only sections are hidden for your role.'
+              : 'Users and company-only sections are hidden for your role.'}
         </span>
       </div>
 
-      <Card className="mb-6">
-        <CardBody className="flex flex-wrap gap-2">
-          {visibleSections.map((section) => (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              className="rounded-md border border-graphite-200 bg-graphite-50 px-3 py-1.5 text-[13px] font-medium text-graphite-700 hover:bg-graphite-100"
-            >
-              {section.title}
-            </a>
-          ))}
-        </CardBody>
-      </Card>
-
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
         {visibleSections.map((section) => {
           const Icon = section.icon;
+          const isOpen = openId === section.id;
           return (
-            <Card key={section.id} id={section.id} className="scroll-mt-6">
-              <CardHeader
-                title={
-                  <span className="flex items-center gap-2.5">
-                    <Icon className="h-[18px] w-[18px] text-graphite-500" strokeWidth={2} />
-                    {section.title}
+            <Card key={section.id} className="overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setOpenId(isOpen ? null : section.id)}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left sm:px-5"
+                aria-expanded={isOpen}
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-graphite-50">
+                  <Icon className="h-[18px] w-[18px] text-graphite-500" strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2">
+                    <span className="text-[15px] font-semibold text-graphite-900">{section.title}</span>
                     {section.companyOnly && <Badge tone="info">Admin only</Badge>}
                     {section.warehouseAdminOnly && !section.companyOnly && <Badge tone="warning">Warehouse Admin+</Badge>}
                   </span>
-                }
-                description={section.summary}
-              />
-              <CardBody>
-                <ul className="flex flex-col gap-2 text-sm text-graphite-700">
-                  {section.points.map((point, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-graphite-400" />
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardBody>
+                  <span className="mt-0.5 block truncate text-sm text-graphite-500 sm:whitespace-normal">
+                    {section.summary}
+                  </span>
+                </span>
+                <ChevronDown
+                  className={cn(
+                    'h-4 w-4 shrink-0 text-graphite-400 transition-transform',
+                    isOpen && 'rotate-180',
+                  )}
+                  strokeWidth={2}
+                />
+              </button>
+
+              {isOpen && (
+                <div className="border-t border-graphite-100 px-4 py-3 sm:px-5">
+                  <ul className="flex flex-col gap-2 text-sm text-graphite-700">
+                    {section.points.map((point, i) => (
+                      <li key={i} className="flex gap-2">
+                        <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-graphite-400" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </Card>
           );
         })}
