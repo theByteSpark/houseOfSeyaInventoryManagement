@@ -39,9 +39,7 @@ export function SaleDetailPage() {
         </div>
       ),
     },
-    { key: 'qty', header: 'Qty', align: 'right', render: (item) => item.quantity },
-    { key: 'unitPrice', header: 'Unit price', align: 'right', render: (item) => formatCurrency(item.unitPrice) },
-    { key: 'lineTotal', header: 'Line total', align: 'right', render: (item) => formatCurrency(item.lineTotal) },
+    { key: 'sellingPrice', header: 'Selling price', align: 'right', render: (item) => formatCurrency(item.unitPrice) },
   ];
 
   const runAction = async (action: () => Promise<unknown>) => {
@@ -91,12 +89,28 @@ export function SaleDetailPage() {
                   <dd className="font-medium text-graphite-800">{formatCurrency(sale.subtotal)}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-graphite-500">Tax</dt>
+                  <dt className="text-graphite-500">Collected tax (3%, included)</dt>
                   <dd className="font-medium text-graphite-800">{formatCurrency(sale.tax)}</dd>
                 </div>
+                {sale.discountValue > 0 && (
+                  <div className="flex justify-between">
+                    <dt className="text-graphite-500">
+                      Discount{sale.discountPercent !== null ? ` (${sale.discountPercent}%)` : ''}
+                    </dt>
+                    <dd className="font-medium text-graphite-800">-{formatCurrency(sale.discountValue)}</dd>
+                  </div>
+                )}
                 <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
                   <dt className="font-semibold text-graphite-900">Total</dt>
                   <dd className="font-semibold text-graphite-900">{formatCurrency(sale.total)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-graphite-500">Received</dt>
+                  <dd className="font-medium text-graphite-800">{formatCurrency(sale.receivedAmount)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-graphite-500">Balance due</dt>
+                  <dd className="font-medium text-graphite-800">{formatCurrency(Math.max(sale.balanceDue, 0))}</dd>
                 </div>
               </dl>
               <p className="mt-4 text-xs text-graphite-400">

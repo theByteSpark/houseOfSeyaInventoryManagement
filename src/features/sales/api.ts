@@ -9,6 +9,9 @@ export interface SaleLineInput {
 export interface SaleInput {
   customerId: string;
   items: SaleLineInput[];
+  discountPercent?: number;
+  discountAmount?: number;
+  receivedAmount?: number;
 }
 
 export interface FetchSalesPageParams {

@@ -112,7 +112,12 @@ export interface Sale {
   items: SaleItem[];
   subtotal: number;
   tax: number;
+  discountPercent: number | null;
+  discountAmount: number | null;
+  discountValue: number;
   total: number;
+  receivedAmount: number;
+  balanceDue: number;
   issuedAt: string | null;
   createdAt: string;
 }
