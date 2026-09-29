@@ -11,7 +11,6 @@ export interface ProductInput {
   diamondQuality?: string;
   diamondPieces?: number;
   diamondCaratWeight?: number;
-  diamondWeight?: number;
   diamondRate?: number;
   makingChargePerGram: number;
   fixedExpense: number;

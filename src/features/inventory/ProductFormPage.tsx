@@ -51,7 +51,6 @@ export function ProductFormPage() {
       diamondQuality: product?.diamondQuality ?? '',
       diamondPieces: product?.diamondPieces ?? undefined,
       diamondCaratWeight: product?.diamondCaratWeight ?? undefined,
-      diamondWeight: product?.diamondWeight ?? undefined,
       diamondRate: product?.diamondRate ?? undefined,
       makingChargePerGram: product?.makingChargePerGram ?? 0,
       fixedExpense: product?.fixedExpense ?? 0,

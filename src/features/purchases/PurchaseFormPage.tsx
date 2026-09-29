@@ -1,22 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
 import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, SearchableCombobox } from '@/components/ui';
 import { useVendors } from '@/features/vendors/hooks';
 import { VendorFormModal } from '@/features/vendors/VendorFormModal';
 import { useCreatePurchase, usePurchase, useUpdatePurchase } from './hooks';
-import { AddPurchaseProductModal, type AddedPurchaseLine } from './AddPurchaseProductModal';
-import type { Vendor } from '@/types';
-
-interface DraftLine {
-  productId: string;
-  productName: string;
-  designNumber: string;
-  quantity: number;
-  unitCost: number;
-}
+import { AddPurchaseProductModal } from './AddPurchaseProductModal';
+import type { Product, Vendor } from '@/types';
 
 export function PurchaseFormPage() {
   const navigate = useNavigate();
@@ -31,11 +23,12 @@ export function PurchaseFormPage() {
   const [vendorId, setVendorId] = useState('');
   const [vendorInvoiceNumber, setVendorInvoiceNumber] = useState('');
   const [vendorInvoiceDate, setVendorInvoiceDate] = useState('');
-  const [lines, setLines] = useState<DraftLine[]>([]);
+  const [lines, setLines] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [vendorModalOpen, setVendorModalOpen] = useState(false);
   const [addProductOpen, setAddProductOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     if (!isEdit || !existingPurchase || initialized) return;
@@ -46,42 +39,36 @@ export function PurchaseFormPage() {
     setVendorId(existingPurchase.vendorId);
     setVendorInvoiceNumber(existingPurchase.vendorInvoiceNumber ?? '');
     setVendorInvoiceDate(existingPurchase.vendorInvoiceDate ? existingPurchase.vendorInvoiceDate.split('T')[0] : '');
-    setLines(
-      existingPurchase.items.map((item) => ({
-        productId: item.productId,
-        productName: item.productName,
-        designNumber: item.designNumber,
-        quantity: item.quantity,
-        unitCost: item.unitCost,
-      })),
-    );
+    setLines(existingPurchase.items.map((item) => item.product));
     setInitialized(true);
   }, [isEdit, existingPurchase, initialized]);
 
-  const updateLine = (index: number, patch: Partial<DraftLine>) => {
-    setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)));
+  const openAddProduct = () => {
+    setEditingProduct(null);
+    setAddProductOpen(true);
+  };
+
+  const openEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setAddProductOpen(true);
+  };
+
+  const handleProductAdded = (product: Product) => {
+    setLines((prev) => [...prev, product]);
+    setAddProductOpen(false);
+  };
+
+  const handleProductEdited = (product: Product) => {
+    setLines((prev) => prev.map((p) => (p.id === product.id ? product : p)));
+    setAddProductOpen(false);
+    setEditingProduct(null);
   };
 
   const removeLine = (index: number) => {
     setLines((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleProductAdded = (line: AddedPurchaseLine) => {
-    setLines((prev) => [...prev, line]);
-    setAddProductOpen(false);
-  };
-
-  const getLineQuantityError = (line: DraftLine): string | null => {
-    if (!line.quantity || line.quantity < 1) return 'Enter a quantity of at least 1.';
-    return null;
-  };
-
-  const getLineCostError = (line: DraftLine): string | null => {
-    if (line.unitCost < 0) return 'Cost cannot be negative.';
-    return null;
-  };
-
-  const total = lines.reduce((sum, l) => sum + l.unitCost * l.quantity, 0);
+  const total = lines.reduce((sum, p) => sum + p.totalCost, 0);
 
   const handleSubmit = async () => {
     setError(null);
@@ -93,15 +80,11 @@ export function PurchaseFormPage() {
       setError('Add at least one product.');
       return;
     }
-    if (lines.some((line) => getLineQuantityError(line) !== null || getLineCostError(line) !== null)) {
-      setError('Fix the highlighted fields before saving.');
-      return;
-    }
     const input = {
       vendorId,
       vendorInvoiceNumber: vendorInvoiceNumber.trim() || undefined,
       vendorInvoiceDate: vendorInvoiceDate || undefined,
-      items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitCost: l.unitCost })),
+      items: lines.map((p) => ({ productId: p.id, quantity: 1, unitCost: p.totalCost })),
     };
 
     try {
@@ -173,12 +156,7 @@ export function PurchaseFormPage() {
             <CardHeader
               title="Products"
               action={
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setAddProductOpen(true)}
-                  icon={<Plus className="h-3.5 w-3.5" strokeWidth={2} />}
-                >
+                <Button size="sm" variant="secondary" onClick={openAddProduct} icon={<Plus className="h-3.5 w-3.5" strokeWidth={2} />}>
                   Add product
                 </Button>
               }
@@ -187,41 +165,85 @@ export function PurchaseFormPage() {
               {lines.length === 0 ? (
                 <EmptyState title="No products added" description="Use the Add product button to define a design for this purchase." />
               ) : (
-                <div className="flex flex-col gap-3">
-                  {lines.map((line, index) => (
-                    <div key={`${line.productId}-${index}`} className="grid grid-cols-1 items-end gap-3 rounded-lg border border-graphite-100 p-3 sm:grid-cols-12">
-                      <div className="sm:col-span-5">
-                        <p className="font-medium text-graphite-900">{line.productName}</p>
-                        <p className="text-xs text-graphite-400">{line.designNumber}</p>
+                <div className="flex flex-col gap-4">
+                  {lines.map((product, index) => (
+                    <div key={`${product.id}-${index}`} className="rounded-lg border border-graphite-100 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-graphite-900">{product.name}</p>
+                          <p className="text-xs text-graphite-400">{product.designNumber}</p>
+                        </div>
+                        <div className="flex shrink-0 gap-1">
+                          <IconButton label="Edit product" tone="brand" onClick={() => openEditProduct(product)}>
+                            <Pencil className="h-4 w-4" strokeWidth={2} />
+                          </IconButton>
+                          <IconButton label="Remove product" tone="danger" onClick={() => removeLine(index)}>
+                            <Trash2 className="h-4 w-4" strokeWidth={2} />
+                          </IconButton>
+                        </div>
                       </div>
-                      <div className="sm:col-span-2">
-                        <Input
-                          label="Qty"
-                          type="number"
-                          min="1"
-                          value={line.quantity}
-                          onChange={(e) => updateLine(index, { quantity: Number(e.target.value) })}
-                          error={getLineQuantityError(line) ?? undefined}
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <Input
-                          label="Unit cost"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={line.unitCost}
-                          onChange={(e) => updateLine(index, { unitCost: Number(e.target.value) })}
-                          error={getLineCostError(line) ?? undefined}
-                        />
-                      </div>
-                      <div className="flex items-end justify-between gap-2 sm:col-span-2 sm:block sm:text-right sm:text-sm sm:text-graphite-500">
-                        <p className="font-medium text-graphite-800">{formatCurrency(line.unitCost * line.quantity)}</p>
-                      </div>
-                      <div className="flex justify-end sm:col-span-1">
-                        <IconButton label="Remove line item" tone="danger" onClick={() => removeLine(index)}>
-                          <Trash2 className="h-4 w-4" strokeWidth={2} />
-                        </IconButton>
+
+                      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-3">
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Subcategory</dt>
+                          <dd className="text-graphite-800">{product.subcategoryName ?? '—'}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Metal type</dt>
+                          <dd className="text-graphite-800">{product.metalType ?? '—'}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Gr.Wt (grams)</dt>
+                          <dd className="text-graphite-800">{product.grossWeight ?? '—'}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Metal price / gm</dt>
+                          <dd className="text-graphite-800">{formatCurrency(product.metalRatePerGram ?? 0)}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Shape</dt>
+                          <dd className="text-graphite-800">{product.diamondShape ?? '—'}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Quality</dt>
+                          <dd className="text-graphite-800">{product.diamondQuality ?? '—'}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Pcs</dt>
+                          <dd className="text-graphite-800">{product.diamondPieces ?? '—'}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Ct.Wt</dt>
+                          <dd className="text-graphite-800">{product.diamondCaratWeight ?? '—'}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Rate</dt>
+                          <dd className="text-graphite-800">{formatCurrency(product.diamondRate ?? 0)}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Making charge / gm</dt>
+                          <dd className="text-graphite-800">{formatCurrency(product.makingChargePerGram ?? 0)}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Other cost</dt>
+                          <dd className="text-graphite-800">{formatCurrency(product.fixedExpense)}</dd>
+                        </div>
+                        <div className="flex justify-between gap-2 sm:block">
+                          <dt className="text-graphite-500">Selling price</dt>
+                          <dd className="text-graphite-800">{formatCurrency(product.sellingPrice)}</dd>
+                        </div>
+                      </dl>
+
+                      <div className="mt-3 flex flex-wrap justify-end gap-x-4 gap-y-1 border-t border-graphite-100 pt-2 text-sm">
+                        <span className="text-graphite-500">
+                          Total cost:&nbsp;<span className="font-medium text-graphite-800">{formatCurrency(product.totalCost)}</span>
+                        </span>
+                        <span className="text-graphite-500">
+                          Tax (3%):&nbsp;<span className="font-medium text-graphite-800">{formatCurrency(product.taxAmount)}</span>
+                        </span>
+                        <span className="text-graphite-500">
+                          Final amount:&nbsp;<span className="font-semibold text-graphite-900">{formatCurrency(product.finalAmount)}</span>
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -248,7 +270,7 @@ export function PurchaseFormPage() {
                 className="mt-6 w-full"
                 onClick={handleSubmit}
                 isLoading={isEdit ? updatePurchase.isPending : createPurchase.isPending}
-                disabled={lines.length === 0 || lines.some((line) => getLineQuantityError(line) !== null || getLineCostError(line) !== null)}
+                disabled={lines.length === 0}
               >
                 {isEdit ? 'Save changes' : 'Save draft purchase'}
               </Button>
@@ -271,8 +293,13 @@ export function PurchaseFormPage() {
 
       <AddPurchaseProductModal
         isOpen={addProductOpen}
-        onClose={() => setAddProductOpen(false)}
+        onClose={() => {
+          setAddProductOpen(false);
+          setEditingProduct(null);
+        }}
+        product={editingProduct}
         onAdded={handleProductAdded}
+        onEdited={handleProductEdited}
       />
     </div>
   );

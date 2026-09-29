@@ -120,14 +120,6 @@ export function ProductCostSheetSections({ register, errors, watched }: ProductC
               error={errors.diamondCaratWeight?.message}
               {...register('diamondCaratWeight')}
             />
-            <Input
-              label="Wt"
-              type="number"
-              step="0.001"
-              min="0"
-              error={errors.diamondWeight?.message}
-              {...register('diamondWeight')}
-            />
             <Input label="Rate" type="number" step="0.01" min="0" error={errors.diamondRate?.message} {...register('diamondRate')} />
           </div>
           <div className="flex justify-end text-sm">
@@ -138,30 +130,34 @@ export function ProductCostSheetSections({ register, errors, watched }: ProductC
       </Card>
 
       <Card>
-        <CardHeader title="Labour & other costs" />
+        <CardHeader title="Labour" />
         <CardBody className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Input
-              label="Making charge / gm"
-              type="number"
-              step="0.01"
-              min="0"
-              error={errors.makingChargePerGram?.message}
-              {...register('makingChargePerGram')}
-            />
-            <Input
-              label="Fixed expense"
-              type="number"
-              step="0.01"
-              min="0"
-              error={errors.fixedExpense?.message}
-              {...register('fixedExpense')}
-            />
-          </div>
+          <Input
+            label="Making charge / gm"
+            type="number"
+            step="0.01"
+            min="0"
+            error={errors.makingChargePerGram?.message}
+            {...register('makingChargePerGram')}
+          />
           <div className="flex justify-end text-sm">
             <span className="text-graphite-500">Labour charge:&nbsp;</span>
             <span className="font-semibold text-graphite-900">{formatCurrency(costs.labourCost)}</span>
           </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader title="Other Cost" />
+        <CardBody>
+          <Input
+            label="Other cost"
+            type="number"
+            step="0.01"
+            min="0"
+            error={errors.fixedExpense?.message}
+            {...register('fixedExpense')}
+          />
         </CardBody>
       </Card>
     </>

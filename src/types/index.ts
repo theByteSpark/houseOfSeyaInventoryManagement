@@ -62,7 +62,6 @@ export interface Product {
   diamondQuality: string | null;
   diamondPieces: number | null;
   diamondCaratWeight: number | null;
-  diamondWeight: number | null;
   diamondRate: number | null;
   diamondCost: number;
   makingChargePerGram: number | null;
@@ -153,6 +152,7 @@ export interface PurchaseItem {
   productId: string;
   productName: string;
   designNumber: string;
+  product: Product;
   quantity: number;
   receivedQuantity: number;
   unitCost: number;

@@ -1,39 +1,73 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useState } from 'react';
-import { Button, Card, CardBody, CardHeader, Input, Modal } from '@/components/ui';
+import { useEffect, useState } from 'react';
+import { Button, Card, CardBody, CardHeader, Modal } from '@/components/ui';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { ProductCostSheetSections, ProductCostSummary } from '@/features/inventory/ProductCostSheetSections';
 import { productCostSheetSchema } from '@/features/inventory/productCostSheet';
-import { useCreateProduct } from '@/features/inventory/hooks';
+import { useCreateProduct, useUpdateProduct } from '@/features/inventory/hooks';
+import type { Product } from '@/types';
 
-const schema = productCostSheetSchema.extend({
-  quantity: z.coerce.number().int().positive('Enter a quantity greater than 0'),
-  unitCost: z.coerce.number().min(0, 'Cannot be negative'),
-});
+const schema = productCostSheetSchema;
 
-type FormValues = z.input<typeof schema>;
-type FormOutput = z.output<typeof schema>;
+type FormValues = import('zod').input<typeof schema>;
+type FormOutput = import('zod').output<typeof schema>;
 
-export interface AddedPurchaseLine {
-  productId: string;
-  productName: string;
-  designNumber: string;
-  quantity: number;
-  unitCost: number;
+const EMPTY_DEFAULTS: FormValues = {
+  designNumber: '',
+  name: '',
+  subcategoryId: '',
+  metalType: '',
+  grossWeight: 0,
+  metalRatePerGram: 0,
+  diamondShape: '',
+  diamondQuality: '',
+  diamondPieces: undefined,
+  diamondCaratWeight: undefined,
+  diamondRate: undefined,
+  makingChargePerGram: 0,
+  fixedExpense: 0,
+  sellingPrice: 0,
+};
+
+function defaultsFromProduct(product: Product): FormValues {
+  return {
+    designNumber: product.designNumber,
+    name: product.name,
+    subcategoryId: product.subcategoryId ?? '',
+    metalType: product.metalType ?? '',
+    grossWeight: product.grossWeight ?? 0,
+    metalRatePerGram: product.metalRatePerGram ?? 0,
+    diamondShape: product.diamondShape ?? '',
+    diamondQuality: product.diamondQuality ?? '',
+    diamondPieces: product.diamondPieces ?? undefined,
+    diamondCaratWeight: product.diamondCaratWeight ?? undefined,
+    diamondRate: product.diamondRate ?? undefined,
+    makingChargePerGram: product.makingChargePerGram ?? 0,
+    fixedExpense: product.fixedExpense,
+    sellingPrice: product.sellingPrice,
+  };
 }
 
 export function AddPurchaseProductModal({
   isOpen,
   onClose,
+  product,
   onAdded,
+  onEdited,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onAdded: (line: AddedPurchaseLine) => void;
+  // When set, the modal edits this already-created product instead of
+  // creating a new one — a purchase line's product is a real Product row
+  // from the moment it's added, not a local draft.
+  product?: Product | null;
+  onAdded: (product: Product) => void;
+  onEdited: (product: Product) => void;
 }) {
+  const isEditing = !!product;
   const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
@@ -44,30 +78,39 @@ export function AddPurchaseProductModal({
     formState: { errors },
   } = useForm<FormValues, unknown, FormOutput>({
     resolver: zodResolver(schema),
-    defaultValues: { quantity: 1, unitCost: 0 },
+    defaultValues: EMPTY_DEFAULTS,
   });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    reset(product ? defaultsFromProduct(product) : EMPTY_DEFAULTS);
+    setSubmitError(null);
+  }, [isOpen, product, reset]);
 
   const watched = watch();
 
   const handleClose = () => {
-    reset({ quantity: 1, unitCost: 0 });
-    setSubmitError(null);
     onClose();
   };
 
   const onSubmit = async (values: FormOutput) => {
     setSubmitError(null);
-    const { quantity, unitCost, ...productInput } = values;
     try {
-      const product = await createProduct.mutateAsync({
-        ...productInput,
-        quantityInStock: 0,
-        reorderLevel: 0,
-      });
-      onAdded({ productId: product.id, productName: product.name, designNumber: product.designNumber, quantity, unitCost });
-      reset({ quantity: 1, unitCost: 0 });
+      if (product) {
+        // quantityInStock/reorderLevel are carried over unchanged — the
+        // backend's updateProduct never touches stock from a plain field
+        // update anyway, this just satisfies ProductInput's shape.
+        const updated = await updateProduct.mutateAsync({
+          id: product.id,
+          input: { ...values, quantityInStock: product.quantityInStock, reorderLevel: product.reorderLevel },
+        });
+        onEdited(updated);
+      } else {
+        const created = await createProduct.mutateAsync({ ...values, quantityInStock: 0, reorderLevel: 0 });
+        onAdded(created);
+      }
     } catch (err) {
-      setSubmitError(extractErrorMessage(err, 'Could not create this product.'));
+      setSubmitError(extractErrorMessage(err, 'Could not save this product.'));
     }
   };
 
@@ -75,29 +118,21 @@ export function AddPurchaseProductModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add product"
+      title={isEditing ? 'Edit product' : 'Add product'}
       size="xl"
       footer={
         <>
           <Button variant="secondary" type="button" onClick={handleClose}>
             Cancel
           </Button>
-          <Button type="submit" form="add-purchase-product-form" isLoading={createProduct.isPending}>
-            Add to purchase
+          <Button type="submit" form="add-purchase-product-form" isLoading={createProduct.isPending || updateProduct.isPending}>
+            {isEditing ? 'Save changes' : 'Add to purchase'}
           </Button>
         </>
       }
     >
       <form id="add-purchase-product-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <ProductCostSheetSections register={register} errors={errors} watched={watched} />
-
-        <Card>
-          <CardHeader title="This purchase line" />
-          <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Input label="Quantity" type="number" min="1" error={errors.quantity?.message} {...register('quantity')} />
-            <Input label="Unit cost" type="number" step="0.01" min="0" error={errors.unitCost?.message} {...register('unitCost')} />
-          </CardBody>
-        </Card>
 
         <Card>
           <CardHeader title="Cost summary" />

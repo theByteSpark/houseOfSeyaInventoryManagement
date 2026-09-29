@@ -13,7 +13,6 @@ export const productCostSheetSchema = z.object({
   diamondQuality: z.string().min(1, 'Select a diamond quality'),
   diamondPieces: z.coerce.number().int().positive('Must be > 0'),
   diamondCaratWeight: z.coerce.number().positive('Must be > 0'),
-  diamondWeight: z.coerce.number().positive('Must be > 0'),
   diamondRate: z.coerce.number().positive('Must be > 0'),
   makingChargePerGram: z.coerce.number().min(0, 'Cannot be negative'),
   fixedExpense: z.coerce.number().min(0, 'Cannot be negative'),

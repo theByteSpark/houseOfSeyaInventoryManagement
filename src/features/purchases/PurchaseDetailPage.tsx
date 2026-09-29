@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { PackageCheck, Pencil, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
+import { Badge, Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
 import { useCancelPurchase, useOrderPurchase, usePurchase } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { ReceiveItemsModal } from './ReceiveItemsModal';
@@ -38,19 +38,17 @@ export function PurchaseDetailPage() {
         </div>
       ),
     },
-    { key: 'qty', header: 'Ordered', align: 'right', render: (item) => item.quantity },
+    { key: 'cost', header: 'Cost', align: 'right', render: (item) => formatCurrency(item.unitCost) },
     {
       key: 'received',
       header: 'Received',
       align: 'right',
       render: (item) => (
-        <span className={item.receivedQuantity >= item.quantity ? 'font-medium text-emerald-600' : 'font-medium text-graphite-700'}>
-          {item.receivedQuantity}
-        </span>
+        <Badge tone={item.receivedQuantity >= item.quantity ? 'success' : 'neutral'}>
+          {item.receivedQuantity >= item.quantity ? 'Received' : 'Pending'}
+        </Badge>
       ),
     },
-    { key: 'unitCost', header: 'Unit cost', align: 'right', render: (item) => formatCurrency(item.unitCost) },
-    { key: 'lineTotal', header: 'Line total', align: 'right', render: (item) => formatCurrency(item.lineTotal) },
   ];
 
   const runAction = async (action: () => Promise<unknown>) => {
