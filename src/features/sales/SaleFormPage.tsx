@@ -49,7 +49,7 @@ export function SaleFormPage() {
   }, [isEdit, existingSale, initialized]);
 
   const availableProducts = useMemo(
-    () => products?.filter((p) => !lines.some((l) => l.productId === p.id)) ?? [],
+    () => products?.filter((p) => p.status === 'ACTIVE' && !lines.some((l) => l.productId === p.id)) ?? [],
     [products, lines],
   );
 

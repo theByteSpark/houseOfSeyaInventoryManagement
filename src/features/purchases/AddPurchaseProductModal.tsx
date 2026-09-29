@@ -106,7 +106,7 @@ export function AddPurchaseProductModal({
         });
         onEdited(updated);
       } else {
-        const created = await createProduct.mutateAsync({ ...values, quantityInStock: 0, reorderLevel: 0 });
+        const created = await createProduct.mutateAsync({ ...values, quantityInStock: 0, reorderLevel: 0, status: 'ORDERED' });
         onAdded(created);
       }
     } catch (err) {

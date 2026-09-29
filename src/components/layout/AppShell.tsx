@@ -64,7 +64,7 @@ const baseNavGroups: NavGroup[] = [
     key: 'products',
     label: 'Products',
     items: [
-      { to: '/inventory/products', label: 'Products', icon: Package },
+      { to: '/inventory/products', label: 'Inventory', icon: Package },
       { to: '/inventory/categories', label: 'Categories', icon: Tags },
       { to: '/inventory/subcategories', label: 'Subcategories', icon: Layers },
       { to: '/enquiries', label: 'Enquiries', icon: MessageCircleQuestion },

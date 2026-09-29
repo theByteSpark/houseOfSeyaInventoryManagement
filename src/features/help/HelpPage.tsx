@@ -51,12 +51,13 @@ const SECTIONS: GuideSection[] = [
   },
   {
     id: 'products',
-    title: 'Products',
+    title: 'Inventory',
     icon: Package,
-    summary: 'Your full catalog — every design\'s cost sheet and stock level.',
+    summary: 'Your full catalog — every design\'s cost sheet and status.',
     points: [
       'Add a product with its metal, diamond, and charge details — cost and price update live as you type.',
-      'To add more stock later, use "Restock" on that row — don\'t edit the quantity directly.',
+      'Every product has a status: Ordered (created via a purchase, not yet received), Active (in stock, sellable), or Sold (a sale was issued for it). Status updates automatically as purchases are received and sales are issued.',
+      'Filter the list by subcategory.',
       'Import products in bulk from a spreadsheet using the template.',
     ],
   },

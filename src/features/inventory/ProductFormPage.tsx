@@ -98,7 +98,7 @@ export function ProductFormPage() {
                   type="number"
                   min="0"
                   disabled={isEdit}
-                  hint={isEdit ? 'Use Restock to change stock' : undefined}
+                  hint={isEdit ? 'Stock quantity is set once, at creation' : undefined}
                   error={errors.quantityInStock?.message}
                   {...register('quantityInStock')}
                 />

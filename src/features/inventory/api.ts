@@ -18,6 +18,7 @@ export interface ProductInput {
   quantityInStock: number;
   reorderLevel: number;
   subcategoryId?: string;
+  status?: 'ORDERED' | 'ACTIVE' | 'SOLD';
 }
 
 export interface CategoryInput {
@@ -29,15 +30,13 @@ export interface SubcategoryInput {
   categoryId: string;
 }
 
-export type StockFilter = 'all' | 'low';
-
 export interface FetchProductsPageParams {
   page: number;
   pageSize: number;
   search?: string;
   sortBy?: string;
   sortDir?: SortDir;
-  stockFilter?: StockFilter;
+  subcategoryId?: string;
 }
 
 export interface FetchCategoriesPageParams {
@@ -84,11 +83,6 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Pr
 
 export async function deleteProduct(id: string): Promise<void> {
   await apiClient.delete(`/inventory/products/${id}`);
-}
-
-export async function restockProduct(id: string, quantity: number, reason?: string): Promise<Product> {
-  const { data } = await apiClient.post<Product>(`/inventory/products/${id}/restock`, { quantity, reason });
-  return data;
 }
 
 export async function fetchStockMovements(productId: string): Promise<StockMovement[]> {

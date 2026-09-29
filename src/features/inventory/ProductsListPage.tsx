@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { PackagePlus, Pencil, Plus, Trash2, Upload } from 'lucide-react';
+import { Pencil, Plus, Trash2, Upload } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -19,35 +19,45 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import type { StockFilter } from './api';
 import { importProductsCsv } from '@/features/import-export/api';
-import { productKeys, useDeleteProduct, useProductsPage } from './hooks';
-import { RestockModal } from './RestockModal';
+import { productKeys, useDeleteProduct, useProductsPage, useSubcategoryGroups } from './hooks';
 import { formatCurrency } from '@/lib/format';
 import type { Product } from '@/types';
+
+const STATUS_BADGE_TONE: Record<Product['status'], 'warning' | 'success' | 'neutral'> = {
+  ORDERED: 'warning',
+  ACTIVE: 'success',
+  SOLD: 'neutral',
+};
+
+const STATUS_LABEL: Record<Product['status'], string> = {
+  ORDERED: 'Ordered',
+  ACTIVE: 'Active',
+  SOLD: 'Sold',
+};
 
 export function ProductsListPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
-  const [stockFilter, setStockFilter] = useState<StockFilter>('all');
+  const [subcategoryId, setSubcategoryId] = useState('');
   const [importOpen, setImportOpen] = useState(false);
+  const subcategoryGroups = useSubcategoryGroups();
   const { data, isLoading, isPlaceholderData } = useProductsPage({
     page: query.page,
     pageSize: query.pageSize,
     search: query.search,
     sortBy: query.sortBy,
     sortDir: query.sortDir,
-    stockFilter,
+    subcategoryId: subcategoryId || undefined,
   });
   const deleteProduct = useDeleteProduct();
-  const [restockTarget, setRestockTarget] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
 
   const products = data?.data ?? [];
 
-  const handleStockFilterChange = (value: StockFilter) => {
-    setStockFilter(value);
+  const handleSubcategoryChange = (value: string) => {
+    setSubcategoryId(value);
     query.setPage(1);
   };
 
@@ -88,18 +98,9 @@ export function ProductsListPage() {
       render: (p) => formatCurrency(p.sellingPrice),
     },
     {
-      key: 'stock',
-      header: 'Stock',
-      sortField: 'quantityInStock',
-      render: (p) => {
-        const isLow = p.quantityInStock <= p.reorderLevel;
-        return (
-          <div className="flex items-center gap-2">
-            <span className={isLow ? 'font-medium text-amber-600' : 'text-graphite-700'}>{p.quantityInStock}</span>
-            {isLow && <Badge tone="warning">Low</Badge>}
-          </div>
-        );
-      },
+      key: 'status',
+      header: 'Status',
+      render: (p) => <Badge tone={STATUS_BADGE_TONE[p.status]}>{STATUS_LABEL[p.status]}</Badge>,
     },
     {
       key: 'actions',
@@ -107,16 +108,6 @@ export function ProductsListPage() {
       align: 'right',
       render: (p) => (
         <div className="flex justify-end gap-1">
-          <IconButton
-            label="Restock product"
-            tone="amber"
-            onClick={(e) => {
-              e.stopPropagation();
-              setRestockTarget(p);
-            }}
-          >
-            <PackagePlus className="h-4 w-4" strokeWidth={2} />
-          </IconButton>
           <IconButton
             label="Edit product"
             tone="brand"
@@ -147,8 +138,8 @@ export function ProductsListPage() {
   return (
     <div>
       <PageHeader
-        title="Products"
-        description="Track stock levels and manage your product catalog."
+        title="Inventory"
+        description="Track your product catalog and its status."
         action={
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<Upload className="h-4 w-4" strokeWidth={2} />}>
@@ -168,14 +159,22 @@ export function ProductsListPage() {
             onKeyDown={query.handleSearchKeyDown}
           />
         </div>
-        <div className="w-full max-w-[10rem]">
+        <div className="w-full max-w-[14rem]">
           <Select
-            aria-label="Stock filter"
-            value={stockFilter}
-            onChange={(e) => handleStockFilterChange(e.target.value as StockFilter)}
+            aria-label="Subcategory filter"
+            value={subcategoryId}
+            onChange={(e) => handleSubcategoryChange(e.target.value)}
           >
-            <option value="all">All stock</option>
-            <option value="low">Low stock</option>
+            <option value="">All subcategories</option>
+            {subcategoryGroups.map((group) => (
+              <optgroup key={group.categoryName} label={group.categoryName}>
+                {group.items?.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
           </Select>
         </div>
       </div>
@@ -207,8 +206,6 @@ export function ProductsListPage() {
           </>
         )}
       </Card>
-
-      <RestockModal isOpen={!!restockTarget} onClose={() => setRestockTarget(null)} product={restockTarget} />
 
       <CsvImportModal
         isOpen={importOpen}

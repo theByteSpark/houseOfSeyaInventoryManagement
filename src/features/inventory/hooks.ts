@@ -84,18 +84,6 @@ export function useDeleteProduct() {
   });
 }
 
-export function useRestockProduct() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, quantity, reason }: { id: string; quantity: number; reason?: string }) =>
-      api.restockProduct(id, quantity, reason),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: productKeys.all });
-      queryClient.invalidateQueries({ queryKey: productKeys.movements(variables.id) });
-    },
-  });
-}
-
 export function useCategories() {
   return useQuery({ queryKey: categoryKeys.all, queryFn: api.fetchCategories });
 }

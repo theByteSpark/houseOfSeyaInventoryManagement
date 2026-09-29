@@ -73,6 +73,7 @@ export interface Product {
   sellingPrice: number;
   quantityInStock: number;
   reorderLevel: number;
+  status: 'ORDERED' | 'ACTIVE' | 'SOLD';
   subcategoryId: string | null;
   subcategoryName: string | null;
   categoryId: string | null;
