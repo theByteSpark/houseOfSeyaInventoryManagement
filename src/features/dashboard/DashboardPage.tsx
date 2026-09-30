@@ -1,117 +1,374 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, IndianRupee, Package, Users, Truck, ClipboardList, ClipboardCheck, Plus } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRightCircle,
+  IndianRupee,
+  Package,
+  Pencil,
+  Plus,
+  Trash2,
+  Truck,
+  Users,
+  XCircle,
+  ClipboardList,
+  ClipboardCheck,
+} from 'lucide-react';
 import {
   Button,
   Card,
   CardBody,
   CardHeader,
+  ConfirmModal,
   EmptyState,
   FullPageSpinner,
+  IconButton,
   PageHeader,
   StatTile,
-  Table,
-  type Column,
 } from '@/components/ui';
 import { formatCurrency } from '@/lib/format';
+import { useAuth } from '@/features/auth/useAuth';
 import { useDashboardSummary } from './hooks';
-import { SaleStatusBadge } from '@/features/sales/statusBadge';
-import { PurchaseStatusBadge } from '@/features/purchases/statusBadge';
+import { useEnquiries, useDeleteEnquiry } from '@/features/enquiries/hooks';
 import { EnquiryFormModal } from '@/features/enquiries/EnquiryFormModal';
-import type { Sale, Product, Purchase } from '@/types';
+import { useSales, useCancelSale } from '@/features/sales/hooks';
+import { usePurchaseEnquiries, useDeletePurchaseEnquiry } from '@/features/purchase-enquiries/hooks';
+import { PurchaseEnquiryFormModal } from '@/features/purchase-enquiries/PurchaseEnquiryFormModal';
+import { usePurchases, useCancelPurchase } from '@/features/purchases/hooks';
+import type { Enquiry, PurchaseEnquiry } from '@/types';
+
+const LIST_HEIGHT = 'h-[420px] overflow-y-auto';
+const RECENT_LIMIT = 10;
+
+function byRecent<T extends { createdAt: string }>(items: T[] | undefined): T[] {
+  return [...(items ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, RECENT_LIMIT);
+}
 
 export function DashboardPage() {
-  const { data, isLoading } = useDashboardSummary();
   const navigate = useNavigate();
+  const { data: summary, isLoading: summaryLoading } = useDashboardSummary();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+
+  const { data: enquiriesData } = useEnquiries();
+  const deleteEnquiry = useDeleteEnquiry();
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
+  const [editingEnquiry, setEditingEnquiry] = useState<Enquiry | null>(null);
+  const [enquiryDeleteTarget, setEnquiryDeleteTarget] = useState<Enquiry | null>(null);
 
-  if (isLoading || !data) return <FullPageSpinner />;
+  const { data: salesData } = useSales();
+  const cancelSale = useCancelSale();
 
-  const saleColumns: Column<Sale>[] = [
-    { key: 'number', header: 'Sale', render: (sale) => <span className="font-medium text-graphite-900">{sale.saleNumber}</span> },
-    { key: 'customer', header: 'Customer', render: (sale) => sale.customerName },
-    { key: 'status', header: 'Status', render: (sale) => <SaleStatusBadge status={sale.status} /> },
-    { key: 'total', header: 'Total', align: 'right', render: (sale) => formatCurrency(sale.total) },
-  ];
+  const { data: purchaseEnquiriesData } = usePurchaseEnquiries();
+  const deletePurchaseEnquiry = useDeletePurchaseEnquiry();
+  const [poModalOpen, setPoModalOpen] = useState(false);
+  const [editingPo, setEditingPo] = useState<PurchaseEnquiry | null>(null);
+  const [poDeleteTarget, setPoDeleteTarget] = useState<PurchaseEnquiry | null>(null);
 
-  const purchaseColumns: Column<Purchase>[] = [
-    { key: 'number', header: 'PO #', render: (p) => <span className="font-medium text-graphite-900">{p.purchaseNumber}</span> },
-    { key: 'vendor', header: 'Vendor', render: (p) => p.vendorName },
-    { key: 'status', header: 'Status', render: (p) => <PurchaseStatusBadge status={p.status} /> },
-    { key: 'total', header: 'Total', align: 'right', render: (p) => formatCurrency(p.total) },
-  ];
+  const { data: purchasesData } = usePurchases();
+  const cancelPurchase = useCancelPurchase();
 
-  const lowStockColumns: Column<Product>[] = [
-    { key: 'name', header: 'Product', render: (p) => <span className="font-medium text-graphite-900">{p.name}</span> },
-    { key: 'designNumber', header: 'Design #', render: (p) => p.designNumber },
-    { key: 'stock', header: 'Stock', align: 'right', render: (p) => <span className="font-medium text-amber-600">{p.quantityInStock}</span> },
-  ];
+  if (summaryLoading || !summary) return <FullPageSpinner />;
+
+  const recentEnquiries = byRecent(enquiriesData);
+  const recentSales = byRecent(salesData);
+  const recentPurchaseEnquiries = byRecent(purchaseEnquiriesData);
+  const recentPurchases = byRecent(purchasesData);
+
+  const openCreateEnquiry = () => {
+    setEditingEnquiry(null);
+    setEnquiryModalOpen(true);
+  };
+
+  const openEditEnquiry = (enquiry: Enquiry) => {
+    setEditingEnquiry(enquiry);
+    setEnquiryModalOpen(true);
+  };
+
+  const openCreatePo = () => {
+    setEditingPo(null);
+    setPoModalOpen(true);
+  };
+
+  const openEditPo = (enquiry: PurchaseEnquiry) => {
+    setEditingPo(enquiry);
+    setPoModalOpen(true);
+  };
+
+  const convertToPurchase = (enquiry: PurchaseEnquiry) => {
+    navigate('/purchases/new', {
+      state: {
+        vendorId: enquiry.vendorId,
+        prefill: {
+          subcategoryId: enquiry.subcategoryId ?? undefined,
+          metalType: enquiry.metalType,
+          grossWeight: enquiry.grossWeight,
+          diamondShape: enquiry.diamondShape ?? undefined,
+          diamondQuality: enquiry.diamondQuality ?? undefined,
+          diamondPieces: enquiry.diamondPieces ?? undefined,
+          diamondCaratWeight: enquiry.diamondCaratWeight ?? undefined,
+        },
+      },
+    });
+  };
+
+  const sectionAction = (viewAllPath: string, onAdd: () => void, addLabel: string) => (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={() => navigate(viewAllPath)}
+        className="text-sm font-medium text-brand-600 hover:underline"
+      >
+        View all
+      </button>
+      <Button size="sm" onClick={onAdd} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>
+        {addLabel}
+      </Button>
+    </div>
+  );
 
   return (
     <div>
-      <PageHeader
-        title="Dashboard"
-        description="Overview of your inventory, sales, and purchases."
-        action={
-          <Button onClick={() => setEnquiryModalOpen(true)} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>
-            Add enquiry
-          </Button>
-        }
-      />
+      <PageHeader title="Dashboard" description="Overview of your inventory, sales, and purchases." />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Total products" value={data.totalProducts} icon={<Package className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Low stock items" value={data.lowStockCount} icon={<AlertTriangle className="h-4 w-4" strokeWidth={2} />} tone={data.lowStockCount > 0 ? 'warning' : 'neutral'} />
-        <StatTile label="Total customers" value={data.totalCustomers} icon={<Users className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Total vendors" value={data.totalVendors} icon={<Truck className="h-4 w-4" strokeWidth={2} />} />
+        <StatTile label="Total products" value={summary.totalProducts} icon={<Package className="h-4 w-4" strokeWidth={2} />} />
+        <StatTile
+          label="Low stock items"
+          value={summary.lowStockCount}
+          icon={<AlertTriangle className="h-4 w-4" strokeWidth={2} />}
+          tone={summary.lowStockCount > 0 ? 'warning' : 'neutral'}
+        />
+        <StatTile label="Total customers" value={summary.totalCustomers} icon={<Users className="h-4 w-4" strokeWidth={2} />} />
+        <StatTile label="Total vendors" value={summary.totalVendors} icon={<Truck className="h-4 w-4" strokeWidth={2} />} />
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Sales this month" value={data.salesThisMonth} icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Revenue this month" value={formatCurrency(data.revenueThisMonth)} icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Purchases this month" value={data.purchasesThisMonth} icon={<ClipboardList className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Pending POs" value={data.pendingPOs} icon={<ClipboardCheck className="h-4 w-4" strokeWidth={2} />} tone={data.pendingPOs > 0 ? 'warning' : 'neutral'} />
+        <StatTile label="Sales this month" value={summary.salesThisMonth} icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />} />
+        <StatTile label="Revenue this month" value={formatCurrency(summary.revenueThisMonth)} icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />} />
+        <StatTile label="Purchases this month" value={summary.purchasesThisMonth} icon={<ClipboardList className="h-4 w-4" strokeWidth={2} />} />
+        <StatTile
+          label="Pending POs"
+          value={summary.pendingPOs}
+          icon={<ClipboardCheck className="h-4 w-4" strokeWidth={2} />}
+          tone={summary.pendingPOs > 0 ? 'warning' : 'neutral'}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader
-            title="Recent sales"
-            action={<button onClick={() => navigate('/sales')} className="text-sm font-medium text-brand-600 hover:underline">View all</button>}
-          />
-          {data.recentSales.length === 0 ? (
-            <CardBody><EmptyState title="No sales yet" description="Sales will appear here once created." /></CardBody>
+          <CardHeader title="Enquiries" action={sectionAction('/enquiries', openCreateEnquiry, 'Add enquiry')} />
+          {recentEnquiries.length === 0 ? (
+            <CardBody><EmptyState title="No enquiries yet" description="Record a customer's interest to start tracking it." /></CardBody>
           ) : (
-            <Table columns={saleColumns} rows={data.recentSales} getRowKey={(s) => s.id} onRowClick={(s) => navigate(`/sales/${s.id}`)} />
+            <div className={LIST_HEIGHT}>
+              <div className="divide-y divide-graphite-100">
+                {recentEnquiries.map((e) => (
+                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_auto_auto] items-center gap-3 px-4 py-2.5 sm:px-5">
+                    <span className="truncate font-medium text-graphite-900">{e.customerName}</span>
+                    <span className="truncate text-graphite-600">{e.subcategoryName ?? '—'}</span>
+                    <span className="text-right font-medium text-graphite-800">
+                      {e.sellingAmount !== null ? formatCurrency(e.sellingAmount) : '—'}
+                    </span>
+                    <div className="flex justify-end gap-1">
+                      <IconButton label="Edit enquiry" tone="brand" onClick={() => openEditEnquiry(e)}>
+                        <Pencil className="h-4 w-4" strokeWidth={2} />
+                      </IconButton>
+                      <IconButton label="Delete enquiry" tone="danger" onClick={() => setEnquiryDeleteTarget(e)}>
+                        <Trash2 className="h-4 w-4" strokeWidth={2} />
+                      </IconButton>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </Card>
 
         <Card>
-          <CardHeader
-            title="Recent purchases"
-            action={<button onClick={() => navigate('/purchases')} className="text-sm font-medium text-brand-600 hover:underline">View all</button>}
-          />
-          {data.recentPurchases.length === 0 ? (
+          <CardHeader title="Purchase orders" action={sectionAction('/purchase-enquiries', openCreatePo, 'Add purchase order')} />
+          {recentPurchaseEnquiries.length === 0 ? (
+            <CardBody><EmptyState title="No purchase orders yet" description="Record interest in a design from a vendor to start tracking it." /></CardBody>
+          ) : (
+            <div className={LIST_HEIGHT}>
+              <div className="divide-y divide-graphite-100">
+                {recentPurchaseEnquiries.map((e) => (
+                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_auto] items-center gap-3 px-4 py-2.5 sm:px-5">
+                    <span className="truncate font-medium text-graphite-900">{e.vendorName}</span>
+                    <span className="truncate text-graphite-600">{e.subcategoryName ?? '—'}</span>
+                    <div className="flex justify-end gap-1">
+                      <IconButton label="Convert to purchase" tone="brand" onClick={() => convertToPurchase(e)}>
+                        <ArrowRightCircle className="h-4 w-4" strokeWidth={2} />
+                      </IconButton>
+                      <IconButton label="Edit purchase order" tone="brand" onClick={() => openEditPo(e)}>
+                        <Pencil className="h-4 w-4" strokeWidth={2} />
+                      </IconButton>
+                      <IconButton label="Delete purchase order" tone="danger" onClick={() => setPoDeleteTarget(e)}>
+                        <Trash2 className="h-4 w-4" strokeWidth={2} />
+                      </IconButton>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <Card>
+          <CardHeader title="Sales" action={sectionAction('/sales', () => navigate('/sales/new'), 'Add sale')} />
+          {recentSales.length === 0 ? (
+            <CardBody><EmptyState title="No sales yet" description="Sales will appear here once created." /></CardBody>
+          ) : (
+            <div className={LIST_HEIGHT}>
+              <div className="divide-y divide-graphite-100">
+                {recentSales.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex cursor-pointer items-start justify-between gap-3 px-4 py-3 hover:bg-graphite-50 sm:px-5"
+                    onClick={() => navigate(`/sales/${s.id}`)}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-graphite-900">{s.customerName}</p>
+                      <div className="mt-1 flex flex-col gap-0.5">
+                        {s.items.map((item) => (
+                          <p key={item.id} className="truncate text-xs text-graphite-500">
+                            {item.productName} — {item.subcategoryName ?? '—'}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      <span className="font-medium text-graphite-800">{formatCurrency(s.total)}</span>
+                      <div className="flex gap-1">
+                        {s.status === 'DRAFT' && (
+                          <IconButton
+                            label="Edit sale"
+                            tone="brand"
+                            onClick={(ev) => {
+                              ev.stopPropagation();
+                              navigate(`/sales/${s.id}/edit`);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" strokeWidth={2} />
+                          </IconButton>
+                        )}
+                        {isAdmin && (s.status === 'DRAFT' || s.status === 'ISSUED') && (
+                          <IconButton
+                            label="Cancel sale"
+                            tone="danger"
+                            disabled={cancelSale.isPending}
+                            onClick={(ev) => {
+                              ev.stopPropagation();
+                              cancelSale.mutate(s.id);
+                            }}
+                          >
+                            <XCircle className="h-4 w-4" strokeWidth={2} />
+                          </IconButton>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <Card>
+          <CardHeader title="Purchases" action={sectionAction('/purchases', () => navigate('/purchases/new'), 'Add purchase')} />
+          {recentPurchases.length === 0 ? (
             <CardBody><EmptyState title="No purchases yet" description="Purchases will appear here once created." /></CardBody>
           ) : (
-            <Table columns={purchaseColumns} rows={data.recentPurchases} getRowKey={(p) => p.id} onRowClick={(p) => navigate(`/purchases/${p.id}`)} />
+            <div className={LIST_HEIGHT}>
+              <div className="divide-y divide-graphite-100">
+                {recentPurchases.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex cursor-pointer items-start justify-between gap-3 px-4 py-3 hover:bg-graphite-50 sm:px-5"
+                    onClick={() => navigate(`/purchases/${p.id}`)}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-graphite-900">{p.vendorName}</p>
+                      <div className="mt-1 flex flex-col gap-0.5">
+                        {p.items.map((item) => (
+                          <p key={item.id} className="truncate text-xs text-graphite-500">
+                            {item.productName}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      <span className="font-medium text-graphite-800">{formatCurrency(p.total)}</span>
+                      <div className="flex gap-1">
+                        {p.status === 'DRAFT' && (
+                          <IconButton
+                            label="Edit purchase"
+                            tone="brand"
+                            onClick={(ev) => {
+                              ev.stopPropagation();
+                              navigate(`/purchases/${p.id}/edit`);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" strokeWidth={2} />
+                          </IconButton>
+                        )}
+                        {isAdmin && (p.status === 'DRAFT' || p.status === 'ORDERED' || p.status === 'PARTIALLY_RECEIVED') && (
+                          <IconButton
+                            label="Cancel purchase"
+                            tone="danger"
+                            disabled={cancelPurchase.isPending}
+                            onClick={(ev) => {
+                              ev.stopPropagation();
+                              cancelPurchase.mutate(p.id);
+                            }}
+                          >
+                            <XCircle className="h-4 w-4" strokeWidth={2} />
+                          </IconButton>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </Card>
       </div>
 
-      <Card className="mt-6">
-        <CardHeader
-          title="Low stock alerts"
-          action={<button onClick={() => navigate('/inventory/products')} className="text-sm font-medium text-brand-600 hover:underline">View all</button>}
-        />
-        {data.lowStockProducts.length === 0 ? (
-          <CardBody><EmptyState title="All stocked up" description="No products are below their reorder level." /></CardBody>
-        ) : (
-          <Table columns={lowStockColumns} rows={data.lowStockProducts} getRowKey={(p) => p.id} />
-        )}
-      </Card>
+      <EnquiryFormModal isOpen={enquiryModalOpen} onClose={() => setEnquiryModalOpen(false)} enquiry={editingEnquiry} />
+      <ConfirmModal
+        isOpen={!!enquiryDeleteTarget}
+        onClose={() => setEnquiryDeleteTarget(null)}
+        onConfirm={() => {
+          if (!enquiryDeleteTarget) return;
+          deleteEnquiry.mutate(enquiryDeleteTarget.id, { onSuccess: () => setEnquiryDeleteTarget(null) });
+        }}
+        title="Delete enquiry"
+        description={
+          <>
+            Are you sure you want to delete the enquiry from <strong>{enquiryDeleteTarget?.customerName}</strong>? This cannot be undone.
+          </>
+        }
+        confirmLabel="Delete"
+        isLoading={deleteEnquiry.isPending}
+      />
 
-      <EnquiryFormModal isOpen={enquiryModalOpen} onClose={() => setEnquiryModalOpen(false)} />
+      <PurchaseEnquiryFormModal isOpen={poModalOpen} onClose={() => setPoModalOpen(false)} enquiry={editingPo} />
+      <ConfirmModal
+        isOpen={!!poDeleteTarget}
+        onClose={() => setPoDeleteTarget(null)}
+        onConfirm={() => {
+          if (!poDeleteTarget) return;
+          deletePurchaseEnquiry.mutate(poDeleteTarget.id, { onSuccess: () => setPoDeleteTarget(null) });
+        }}
+        title="Delete purchase order"
+        description={
+          <>
+            Are you sure you want to delete the purchase order for <strong>{poDeleteTarget?.vendorName}</strong>? This cannot be undone.
+          </>
+        }
+        confirmLabel="Delete"
+        isLoading={deletePurchaseEnquiry.isPending}
+      />
     </div>
   );
 }

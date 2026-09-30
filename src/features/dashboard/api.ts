@@ -33,30 +33,17 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     (p) => p.status === 'ORDERED' || p.status === 'PARTIALLY_RECEIVED',
   ).length;
 
-  const lowStockProducts = products
-    .filter((p) => p.quantityInStock <= p.reorderLevel)
-    .sort((a, b) => a.quantityInStock - b.quantityInStock);
-
-  const recentSales = [...sales]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 5);
-
-  const recentPurchases = [...purchases]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 5);
+  const lowStockCount = products.filter((p) => p.quantityInStock <= p.reorderLevel).length;
 
   const summary: DashboardSummary = {
     totalProducts: products.length,
-    lowStockCount: lowStockProducts.length,
+    lowStockCount,
     totalCustomers: customers.length,
     totalVendors: vendors.length,
     salesThisMonth: salesThisMonth.length,
     revenueThisMonth,
     purchasesThisMonth: purchasesThisMonth.length,
     pendingPOs,
-    recentSales,
-    recentPurchases,
-    lowStockProducts: lowStockProducts.slice(0, 5),
   };
 
   return summary;

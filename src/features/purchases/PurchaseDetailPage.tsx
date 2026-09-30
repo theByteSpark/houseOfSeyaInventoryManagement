@@ -6,6 +6,7 @@ import { formatCurrency } from '@/lib/format';
 import { Badge, Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
 import { useCancelPurchase, useOrderPurchase, usePurchase } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
+import { useAuth } from '@/features/auth/useAuth';
 import { ReceiveItemsModal } from './ReceiveItemsModal';
 import type { PurchaseItem } from '@/types';
 
@@ -17,6 +18,8 @@ export function PurchaseDetailPage() {
   const cancelPurchase = useCancelPurchase();
   const [actionError, setActionError] = useState<string | null>(null);
   const [receiveOpen, setReceiveOpen] = useState(false);
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
 
   if (isLoading) return <FullPageSpinner />;
   if (!purchase) {
@@ -61,7 +64,7 @@ export function PurchaseDetailPage() {
   };
 
   const canReceive = purchase.status === 'ORDERED' || purchase.status === 'PARTIALLY_RECEIVED';
-  const canCancel = purchase.status === 'DRAFT' || purchase.status === 'ORDERED' || purchase.status === 'PARTIALLY_RECEIVED';
+  const canCancel = isAdmin && (purchase.status === 'DRAFT' || purchase.status === 'ORDERED' || purchase.status === 'PARTIALLY_RECEIVED');
 
   return (
     <div>

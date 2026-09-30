@@ -99,6 +99,7 @@ export interface SaleItem {
   productId: string;
   productName: string;
   designNumber: string;
+  subcategoryName: string | null;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
@@ -132,9 +133,6 @@ export interface DashboardSummary {
   revenueThisMonth: number;
   purchasesThisMonth: number;
   pendingPOs: number;
-  recentSales: Sale[];
-  recentPurchases: Purchase[];
-  lowStockProducts: Product[];
 }
 
 export interface Vendor {
@@ -221,6 +219,7 @@ export interface Enquiry {
   diamondQuality: string | null;
   diamondPieces: number | null;
   diamondCaratWeight: number | null;
+  sellingAmount: number | null;
   createdAt: string;
 }
 

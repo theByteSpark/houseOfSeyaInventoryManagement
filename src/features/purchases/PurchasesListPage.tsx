@@ -22,6 +22,7 @@ import { useTableQuery } from '@/lib/useTableQuery';
 import { importPurchasesCsv } from '@/features/import-export/api';
 import { purchaseKeys, useCancelPurchase, useOrderPurchase, usePurchasesPage } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
+import { useAuth } from '@/features/auth/useAuth';
 import type { Purchase, PurchaseStatus } from '@/types';
 
 export function PurchasesListPage() {
@@ -41,6 +42,8 @@ export function PurchasesListPage() {
   const orderPurchase = useOrderPurchase();
   const cancelPurchase = useCancelPurchase();
   const [actionError, setActionError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
 
   const purchases = data?.data ?? [];
 
@@ -99,7 +102,7 @@ export function PurchasesListPage() {
               <ClipboardCheck className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
-          {(p.status === 'DRAFT' || p.status === 'ORDERED' || p.status === 'PARTIALLY_RECEIVED') && (
+          {isAdmin && (p.status === 'DRAFT' || p.status === 'ORDERED' || p.status === 'PARTIALLY_RECEIVED') && (
             <IconButton
               label="Cancel purchase"
               tone="danger"

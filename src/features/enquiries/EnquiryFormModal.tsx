@@ -21,6 +21,7 @@ const schema = z.object({
   diamondQuality: z.string().optional(),
   diamondPieces: z.coerce.number().int().positive('Must be > 0').optional(),
   diamondCaratWeight: z.coerce.number().positive('Must be > 0').optional(),
+  sellingAmount: z.coerce.number().positive('Must be greater than 0'),
 });
 
 type FormValues = z.input<typeof schema>;
@@ -70,6 +71,7 @@ export function EnquiryFormModal({
         diamondQuality: enquiry?.diamondQuality ?? '',
         diamondPieces: enquiry?.diamondPieces ?? undefined,
         diamondCaratWeight: enquiry?.diamondCaratWeight ?? undefined,
+        sellingAmount: enquiry?.sellingAmount ?? 0,
       });
     }
   }, [isOpen, enquiry, reset]);
@@ -149,14 +151,24 @@ export function EnquiryFormModal({
           </Select>
         </div>
 
-        <Input
-          label="Gr.Wt (grams)"
-          type="number"
-          step="0.001"
-          min="0"
-          error={errors.grossWeight?.message}
-          {...register('grossWeight')}
-        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Input
+            label="Gr.Wt (grams)"
+            type="number"
+            step="0.001"
+            min="0"
+            error={errors.grossWeight?.message}
+            {...register('grossWeight')}
+          />
+          <Input
+            label="Selling amount"
+            type="number"
+            step="0.01"
+            min="0"
+            error={errors.sellingAmount?.message}
+            {...register('sellingAmount')}
+          />
+        </div>
 
         <div>
           <p className="mb-2 text-[13px] font-medium text-graphite-700">Diamond (optional)</p>

@@ -10,6 +10,7 @@ export interface EnquiryInput {
   diamondQuality?: string;
   diamondPieces?: number;
   diamondCaratWeight?: number;
+  sellingAmount: number;
 }
 
 export interface FetchEnquiriesPageParams {

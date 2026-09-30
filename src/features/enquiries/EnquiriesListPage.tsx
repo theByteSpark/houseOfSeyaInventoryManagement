@@ -14,6 +14,7 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
+import { formatCurrency } from '@/lib/format';
 import { useDeleteEnquiry, useEnquiriesPage } from './hooks';
 import { EnquiryFormModal } from './EnquiryFormModal';
 import type { Enquiry } from '@/types';
@@ -76,6 +77,12 @@ export function EnquiriesListPage() {
         ) : (
           <span className="text-graphite-300">—</span>
         ),
+    },
+    {
+      key: 'sellingAmount',
+      header: 'Selling amount',
+      align: 'right',
+      render: (e) => (e.sellingAmount !== null ? formatCurrency(e.sellingAmount) : <span className="text-graphite-300">—</span>),
     },
     {
       key: 'createdAt',

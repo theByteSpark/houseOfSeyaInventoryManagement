@@ -5,6 +5,7 @@ import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
 import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
 import { useCancelSale, useSale, useIssueSale, useMarkSalePaid } from './hooks';
+import { useAuth } from '@/features/auth/useAuth';
 import { SaleStatusBadge } from './statusBadge';
 import { InvoicePdfModal } from './InvoicePdfModal';
 import type { SaleItem } from '@/types';
@@ -16,6 +17,8 @@ export function SaleDetailPage() {
   const issueSale = useIssueSale();
   const markPaid = useMarkSalePaid();
   const cancelSale = useCancelSale();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const [actionError, setActionError] = useState<string | null>(null);
   const [pdfOpen, setPdfOpen] = useState(false);
 
@@ -148,7 +151,7 @@ export function SaleDetailPage() {
                   Mark as paid
                 </Button>
               )}
-              {(sale.status === 'DRAFT' || sale.status === 'ISSUED') && (
+              {isAdmin && (sale.status === 'DRAFT' || sale.status === 'ISSUED') && (
                 <Button
                   variant="danger"
                   isLoading={cancelSale.isPending}
