@@ -59,7 +59,7 @@ const baseNavGroups: NavGroup[] = [
     items: [
       { to: '/purchases', label: 'Purchases', icon: ClipboardList },
       { to: '/vendors', label: 'Vendors', icon: Truck },
-      { to: '/purchase-enquiries', label: 'Purchase Enquiries', icon: MessageCircleQuestion },
+      { to: '/purchase-enquiries', label: 'Purchase Order', icon: MessageCircleQuestion },
     ],
   },
   {

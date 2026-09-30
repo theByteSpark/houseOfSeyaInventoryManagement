@@ -45,7 +45,7 @@ export function PurchaseFormPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productPrefill, setProductPrefill] = useState<PurchaseEnquiryPrefillState['prefill']>(undefined);
 
-  // Arrived here from a Purchase Enquiry's "Convert to purchase" — pre-select
+  // Arrived here from a Purchase Order's "Convert to purchase" — pre-select
   // the vendor and open the Add Product modal pre-filled with whatever the
   // enquiry captured (design number/name/rates/selling price are left blank,
   // the enquiry never had them). Consumed once, then cleared so a refresh

@@ -109,14 +109,14 @@ const SECTIONS: GuideSection[] = [
   },
   {
     id: 'purchase-enquiries',
-    title: 'Purchase Enquiries',
+    title: 'Purchase Order',
     icon: MessageCircleQuestion,
-    summary: 'Note down what you\'re asking a vendor about, before it becomes a real purchase order.',
+    summary: 'Note down what you\'re asking a vendor about, before you commit to an actual purchase.',
     points: [
-      'Add a purchase enquiry against an existing or new vendor.',
+      'Add a purchase order against an existing or new vendor.',
       'Optionally describe the metal, subcategory, and a single diamond (shape/quality/pcs/carat weight).',
-      'Edit or delete any purchase enquiry from the list.',
-      '"Convert to purchase" jumps straight to Add Purchase with the vendor and cost-sheet detail already filled in — you only fill in what the enquiry didn\'t capture (design number, name, rates, making charge, other cost, selling price).',
+      'Edit or delete any purchase order from the list.',
+      '"Convert to purchase" jumps straight to Add Purchase with the vendor and cost-sheet detail already filled in — you only fill in what wasn\'t captured here (design number, name, rates, making charge, other cost, selling price).',
     ],
   },
   {

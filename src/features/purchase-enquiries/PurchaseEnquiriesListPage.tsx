@@ -119,7 +119,7 @@ export function PurchaseEnquiriesListPage() {
             <ArrowRightCircle className="h-4 w-4" strokeWidth={2} />
           </IconButton>
           <IconButton
-            label="Edit purchase enquiry"
+            label="Edit purchase order"
             tone="brand"
             onClick={(ev) => {
               ev.stopPropagation();
@@ -129,7 +129,7 @@ export function PurchaseEnquiriesListPage() {
             <Pencil className="h-4 w-4" strokeWidth={2} />
           </IconButton>
           <IconButton
-            label="Delete purchase enquiry"
+            label="Delete purchase order"
             tone="danger"
             onClick={(ev) => {
               ev.stopPropagation();
@@ -148,9 +148,9 @@ export function PurchaseEnquiriesListPage() {
   return (
     <div>
       <PageHeader
-        title="Purchase Enquiries"
-        description="Record what you're asking a vendor about before it becomes a real purchase order."
-        action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add purchase enquiry</Button>}
+        title="Purchase Order"
+        description="Record what you're asking a vendor about before you commit to an actual purchase."
+        action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add purchase order</Button>}
       />
 
       <div className="mb-4 w-full max-w-xs">
@@ -165,9 +165,9 @@ export function PurchaseEnquiriesListPage() {
       <Card className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
         {enquiries.length === 0 ? (
           <EmptyState
-            title="No purchase enquiries yet"
+            title="No purchase orders yet"
             description="Record interest in a design from a vendor to start tracking it."
-            action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add purchase enquiry</Button>}
+            action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add purchase order</Button>}
           />
         ) : (
           <>
@@ -199,10 +199,10 @@ export function PurchaseEnquiriesListPage() {
           if (!deleteTarget) return;
           deletePurchaseEnquiry.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
         }}
-        title="Delete purchase enquiry"
+        title="Delete purchase order"
         description={
           <>
-            Are you sure you want to delete the purchase enquiry for <strong>{deleteTarget?.vendorName}</strong>? This cannot be undone.
+            Are you sure you want to delete the purchase order for <strong>{deleteTarget?.vendorName}</strong>? This cannot be undone.
           </>
         }
         confirmLabel="Delete"

@@ -64,7 +64,7 @@ export function AddPurchaseProductModal({
   // from the moment it's added, not a local draft.
   product?: Product | null;
   // Partial defaults for create mode only — e.g. carried over from a
-  // converted Purchase Enquiry, which only ever captures a subset of the
+  // converted Purchase Order, which only ever captures a subset of the
   // cost sheet (no design number/name/rates/selling price).
   initialValues?: Partial<FormValues>;
   onAdded: (product: Product) => void;

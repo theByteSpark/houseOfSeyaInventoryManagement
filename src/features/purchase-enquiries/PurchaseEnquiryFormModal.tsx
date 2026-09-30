@@ -92,7 +92,7 @@ export function PurchaseEnquiryFormModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEditing ? 'Edit purchase enquiry' : 'Add purchase enquiry'}
+      title={isEditing ? 'Edit purchase order' : 'Add purchase order'}
       size="xl"
       footer={
         <>
@@ -100,7 +100,7 @@ export function PurchaseEnquiryFormModal({
             Cancel
           </Button>
           <Button type="submit" form="purchase-enquiry-form" isLoading={isSubmitting}>
-            {isEditing ? 'Save changes' : 'Add enquiry'}
+            {isEditing ? 'Save changes' : 'Add purchase order'}
           </Button>
         </>
       }
