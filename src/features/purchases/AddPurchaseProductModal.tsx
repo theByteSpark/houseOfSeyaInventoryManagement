@@ -53,6 +53,7 @@ export function AddPurchaseProductModal({
   isOpen,
   onClose,
   product,
+  initialValues,
   onAdded,
   onEdited,
 }: {
@@ -62,6 +63,10 @@ export function AddPurchaseProductModal({
   // creating a new one — a purchase line's product is a real Product row
   // from the moment it's added, not a local draft.
   product?: Product | null;
+  // Partial defaults for create mode only — e.g. carried over from a
+  // converted Purchase Enquiry, which only ever captures a subset of the
+  // cost sheet (no design number/name/rates/selling price).
+  initialValues?: Partial<FormValues>;
   onAdded: (product: Product) => void;
   onEdited: (product: Product) => void;
 }) {
@@ -83,9 +88,9 @@ export function AddPurchaseProductModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    reset(product ? defaultsFromProduct(product) : EMPTY_DEFAULTS);
+    reset(product ? defaultsFromProduct(product) : { ...EMPTY_DEFAULTS, ...initialValues });
     setSubmitError(null);
-  }, [isOpen, product, reset]);
+  }, [isOpen, product, initialValues, reset]);
 
   const watched = watch();
 

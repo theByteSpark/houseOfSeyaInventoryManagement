@@ -4,16 +4,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Input, Modal, SearchableCombobox, Select } from '@/components/ui';
 import { extractErrorMessage } from '@/lib/apiClient';
-import { useCustomers } from '@/features/customers/hooks';
-import { CustomerFormModal } from '@/features/customers/CustomerFormModal';
+import { useVendors } from '@/features/vendors/hooks';
+import { VendorFormModal } from '@/features/vendors/VendorFormModal';
 import { useAttributeOptions } from '@/features/attributes/hooks';
 import { useSubcategoryGroups } from '@/features/inventory/hooks';
 import { withCurrentValue } from '@/features/inventory/productCostSheet';
-import { useCreateEnquiry, useUpdateEnquiry } from './hooks';
-import type { Customer, Enquiry } from '@/types';
+import { useCreatePurchaseEnquiry, useUpdatePurchaseEnquiry } from './hooks';
+import type { PurchaseEnquiry, Vendor } from '@/types';
 
 const schema = z.object({
-  customerId: z.string().min(1, 'Select a customer'),
+  vendorId: z.string().min(1, 'Select a vendor'),
   subcategoryId: z.string().optional(),
   metalType: z.string().min(1, 'Select a metal type'),
   grossWeight: z.coerce.number().positive('Must be greater than 0'),
@@ -26,24 +26,24 @@ const schema = z.object({
 type FormValues = z.input<typeof schema>;
 type FormOutput = z.output<typeof schema>;
 
-export function EnquiryFormModal({
+export function PurchaseEnquiryFormModal({
   isOpen,
   onClose,
   enquiry,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  enquiry?: Enquiry | null;
+  enquiry?: PurchaseEnquiry | null;
 }) {
   const isEditing = !!enquiry;
-  const { data: customers } = useCustomers();
+  const { data: vendors } = useVendors();
   const subcategoriesByCategory = useSubcategoryGroups();
   const { data: metalOptions } = useAttributeOptions('METAL');
   const { data: shapeOptions } = useAttributeOptions('DIAMOND_SHAPE');
   const { data: qualityOptions } = useAttributeOptions('DIAMOND_QUALITY');
-  const createEnquiry = useCreateEnquiry();
-  const updateEnquiry = useUpdateEnquiry();
-  const [customerModalOpen, setCustomerModalOpen] = useState(false);
+  const createPurchaseEnquiry = useCreatePurchaseEnquiry();
+  const updatePurchaseEnquiry = useUpdatePurchaseEnquiry();
+  const [vendorModalOpen, setVendorModalOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
@@ -62,7 +62,7 @@ export function EnquiryFormModal({
     if (isOpen) {
       setSubmitError(null);
       reset({
-        customerId: enquiry?.customerId ?? '',
+        vendorId: enquiry?.vendorId ?? '',
         subcategoryId: enquiry?.subcategoryId ?? '',
         metalType: enquiry?.metalType ?? '',
         grossWeight: enquiry?.grossWeight ?? 0,
@@ -78,9 +78,9 @@ export function EnquiryFormModal({
     setSubmitError(null);
     try {
       if (isEditing && enquiry) {
-        await updateEnquiry.mutateAsync({ id: enquiry.id, input: values });
+        await updatePurchaseEnquiry.mutateAsync({ id: enquiry.id, input: values });
       } else {
-        await createEnquiry.mutateAsync(values);
+        await createPurchaseEnquiry.mutateAsync(values);
       }
       onClose();
     } catch (err) {
@@ -92,36 +92,36 @@ export function EnquiryFormModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEditing ? 'Edit enquiry' : 'Add enquiry'}
+      title={isEditing ? 'Edit purchase enquiry' : 'Add purchase enquiry'}
       size="xl"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} type="button">
             Cancel
           </Button>
-          <Button type="submit" form="enquiry-form" isLoading={isSubmitting}>
+          <Button type="submit" form="purchase-enquiry-form" isLoading={isSubmitting}>
             {isEditing ? 'Save changes' : 'Add enquiry'}
           </Button>
         </>
       }
     >
-      <form id="enquiry-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      <form id="purchase-enquiry-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <Controller
           control={control}
-          name="customerId"
+          name="vendorId"
           render={({ field }) => (
             <SearchableCombobox
-              label="Customer"
-              items={customers ?? []}
+              label="Vendor"
+              items={vendors ?? []}
               value={field.value || null}
-              onChange={(customer: Customer) => field.onChange(customer.id)}
-              getOptionLabel={(c) => c.name}
-              getOptionValue={(c) => c.id}
-              getOptionSublabel={(c) => c.email ?? null}
-              placeholder="Search customer by name or email…"
-              addNewLabel="Add new customer"
-              onAddNew={() => setCustomerModalOpen(true)}
-              error={errors.customerId?.message}
+              onChange={(vendor: Vendor) => field.onChange(vendor.id)}
+              getOptionLabel={(v) => v.companyName}
+              getOptionValue={(v) => v.id}
+              getOptionSublabel={(v) => v.contactPerson ?? null}
+              placeholder="Search vendor by company or contact…"
+              addNewLabel="Add new vendor"
+              onAddNew={() => setVendorModalOpen(true)}
+              error={errors.vendorId?.message}
             />
           )}
         />
@@ -192,12 +192,12 @@ export function EnquiryFormModal({
         {submitError && <p className="text-sm text-red-600">{submitError}</p>}
       </form>
 
-      <CustomerFormModal
-        isOpen={customerModalOpen}
-        onClose={() => setCustomerModalOpen(false)}
-        onCreated={(customer) => {
-          setValue('customerId', customer.id, { shouldValidate: true });
-          setCustomerModalOpen(false);
+      <VendorFormModal
+        isOpen={vendorModalOpen}
+        onClose={() => setVendorModalOpen(false)}
+        onCreated={(vendor) => {
+          setValue('vendorId', vendor.id, { shouldValidate: true });
+          setVendorModalOpen(false);
         }}
       />
     </Modal>

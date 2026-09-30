@@ -12,6 +12,7 @@ import { CategoriesPage } from '@/features/inventory/CategoriesPage';
 import { SubcategoriesPage } from '@/features/inventory/SubcategoriesPage';
 import { AttributeOptionsPage } from '@/features/attributes/AttributeOptionsPage';
 import { EnquiriesListPage } from '@/features/enquiries/EnquiriesListPage';
+import { PurchaseEnquiriesListPage } from '@/features/purchase-enquiries/PurchaseEnquiriesListPage';
 import { SalesListPage } from '@/features/sales/SalesListPage';
 import { SaleFormPage } from '@/features/sales/SaleFormPage';
 import { SaleDetailPage } from '@/features/sales/SaleDetailPage';
@@ -53,6 +54,7 @@ export function AppRoutes() {
         <Route path="/purchases/new" element={<PurchaseFormPage />} />
         <Route path="/purchases/:id/edit" element={<PurchaseFormPage />} />
         <Route path="/purchases/:id" element={<PurchaseDetailPage />} />
+        <Route path="/purchase-enquiries" element={<PurchaseEnquiriesListPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/help" element={<HelpPage />} />
         <Route

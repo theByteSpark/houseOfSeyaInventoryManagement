@@ -207,14 +207,6 @@ export interface InventoryReport {
   recentMovements: { id: string; productName: string; designNumber: string; type: StockMovementType; quantity: number; reason: string | null; createdAt: string }[];
 }
 
-export interface EnquiryDiamond {
-  id?: string;
-  shape: string;
-  quality: string;
-  pieces: number;
-  caratWeight: number;
-}
-
 export interface Enquiry {
   id: string;
   customerId: string;
@@ -225,6 +217,26 @@ export interface Enquiry {
   categoryName: string | null;
   metalType: string;
   grossWeight: number;
-  diamonds: EnquiryDiamond[];
+  diamondShape: string | null;
+  diamondQuality: string | null;
+  diamondPieces: number | null;
+  diamondCaratWeight: number | null;
+  createdAt: string;
+}
+
+export interface PurchaseEnquiry {
+  id: string;
+  vendorId: string;
+  vendorName: string;
+  subcategoryId: string | null;
+  subcategoryName: string | null;
+  categoryId: string | null;
+  categoryName: string | null;
+  metalType: string;
+  grossWeight: number;
+  diamondShape: string | null;
+  diamondQuality: string | null;
+  diamondPieces: number | null;
+  diamondCaratWeight: number | null;
   createdAt: string;
 }

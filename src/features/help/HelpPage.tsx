@@ -45,7 +45,8 @@ const SECTIONS: GuideSection[] = [
     summary: 'Note down what a customer is asking about, before it becomes a real product or sale.',
     points: [
       'Add an enquiry against an existing or new customer.',
-      'Optionally describe the metal, subcategory, and any diamonds involved.',
+      'Optionally describe the metal, subcategory, and a single diamond (shape/quality/pcs/carat weight).',
+      'Edit or delete any enquiry from the list.',
       'Nothing here is priced or automatic — someone builds the real product later if it goes ahead.',
     ],
   },
@@ -105,6 +106,18 @@ const SECTIONS: GuideSection[] = [
     icon: Truck,
     summary: 'Everyone you buy from.',
     points: ['Add or edit vendor details.', 'See each vendor\'s order history at a glance.'],
+  },
+  {
+    id: 'purchase-enquiries',
+    title: 'Purchase Enquiries',
+    icon: MessageCircleQuestion,
+    summary: 'Note down what you\'re asking a vendor about, before it becomes a real purchase order.',
+    points: [
+      'Add a purchase enquiry against an existing or new vendor.',
+      'Optionally describe the metal, subcategory, and a single diamond (shape/quality/pcs/carat weight).',
+      'Edit or delete any purchase enquiry from the list.',
+      '"Convert to purchase" jumps straight to Add Purchase with the vendor and cost-sheet detail already filled in — you only fill in what the enquiry didn\'t capture (design number, name, rates, making charge, other cost, selling price).',
+    ],
   },
   {
     id: 'reports',

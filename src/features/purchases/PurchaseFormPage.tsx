@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
@@ -10,8 +10,22 @@ import { useCreatePurchase, usePurchase, useUpdatePurchase } from './hooks';
 import { AddPurchaseProductModal } from './AddPurchaseProductModal';
 import type { Product, Vendor } from '@/types';
 
+interface PurchaseEnquiryPrefillState {
+  vendorId?: string;
+  prefill?: {
+    subcategoryId?: string;
+    metalType?: string;
+    grossWeight?: number;
+    diamondShape?: string;
+    diamondQuality?: string;
+    diamondPieces?: number;
+    diamondCaratWeight?: number;
+  };
+}
+
 export function PurchaseFormPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
 
@@ -29,6 +43,28 @@ export function PurchaseFormPage() {
   const [vendorModalOpen, setVendorModalOpen] = useState(false);
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productPrefill, setProductPrefill] = useState<PurchaseEnquiryPrefillState['prefill']>(undefined);
+
+  // Arrived here from a Purchase Enquiry's "Convert to purchase" — pre-select
+  // the vendor and open the Add Product modal pre-filled with whatever the
+  // enquiry captured (design number/name/rates/selling price are left blank,
+  // the enquiry never had them). Consumed once, then cleared so a refresh
+  // doesn't re-trigger it.
+  useEffect(() => {
+    if (isEdit) return;
+    const state = location.state as PurchaseEnquiryPrefillState | null;
+    if (!state) return;
+    if (state.vendorId) setVendorId(state.vendorId);
+    if (state.prefill) {
+      setProductPrefill(state.prefill);
+      setEditingProduct(null);
+      setAddProductOpen(true);
+    }
+    navigate(location.pathname, { replace: true, state: null });
+    // Deliberately runs once on mount only — location/navigate are excluded
+    // since navigate() itself changes location and would otherwise re-fire.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit]);
 
   useEffect(() => {
     if (!isEdit || !existingPurchase || initialized) return;
@@ -56,6 +92,7 @@ export function PurchaseFormPage() {
   const handleProductAdded = (product: Product) => {
     setLines((prev) => [...prev, product]);
     setAddProductOpen(false);
+    setProductPrefill(undefined);
   };
 
   const handleProductEdited = (product: Product) => {
@@ -296,8 +333,10 @@ export function PurchaseFormPage() {
         onClose={() => {
           setAddProductOpen(false);
           setEditingProduct(null);
+          setProductPrefill(undefined);
         }}
         product={editingProduct}
+        initialValues={editingProduct ? undefined : productPrefill}
         onAdded={handleProductAdded}
         onEdited={handleProductEdited}
       />

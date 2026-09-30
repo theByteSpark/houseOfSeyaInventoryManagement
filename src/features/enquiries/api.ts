@@ -1,19 +1,15 @@
 import { apiClient } from '@/lib/apiClient';
 import type { Enquiry, PaginatedResult, SortDir } from '@/types';
 
-export interface EnquiryDiamondInput {
-  shape: string;
-  quality: string;
-  pieces: number;
-  caratWeight: number;
-}
-
 export interface EnquiryInput {
   customerId: string;
   subcategoryId?: string;
   metalType: string;
   grossWeight: number;
-  diamonds: EnquiryDiamondInput[];
+  diamondShape?: string;
+  diamondQuality?: string;
+  diamondPieces?: number;
+  diamondCaratWeight?: number;
 }
 
 export interface FetchEnquiriesPageParams {

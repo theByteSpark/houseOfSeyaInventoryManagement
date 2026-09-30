@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRightCircle, Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   Button,
   Card,
@@ -14,23 +15,24 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { useDeleteEnquiry, useEnquiriesPage } from './hooks';
-import { EnquiryFormModal } from './EnquiryFormModal';
-import type { Enquiry } from '@/types';
+import { useDeletePurchaseEnquiry, usePurchaseEnquiriesPage } from './hooks';
+import { PurchaseEnquiryFormModal } from './PurchaseEnquiryFormModal';
+import type { PurchaseEnquiry } from '@/types';
 
-export function EnquiriesListPage() {
+export function PurchaseEnquiriesListPage() {
+  const navigate = useNavigate();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
-  const { data, isLoading, isPlaceholderData } = useEnquiriesPage({
+  const { data, isLoading, isPlaceholderData } = usePurchaseEnquiriesPage({
     page: query.page,
     pageSize: query.pageSize,
     search: query.search,
     sortBy: query.sortBy,
     sortDir: query.sortDir,
   });
-  const deleteEnquiry = useDeleteEnquiry();
+  const deletePurchaseEnquiry = useDeletePurchaseEnquiry();
   const [formOpen, setFormOpen] = useState(false);
-  const [editingEnquiry, setEditingEnquiry] = useState<Enquiry | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Enquiry | null>(null);
+  const [editingEnquiry, setEditingEnquiry] = useState<PurchaseEnquiry | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PurchaseEnquiry | null>(null);
 
   const enquiries = data?.data ?? [];
 
@@ -39,17 +41,34 @@ export function EnquiriesListPage() {
     setFormOpen(true);
   };
 
-  const openEdit = (enquiry: Enquiry) => {
+  const openEdit = (enquiry: PurchaseEnquiry) => {
     setEditingEnquiry(enquiry);
     setFormOpen(true);
   };
 
-  const columns: Column<Enquiry>[] = [
+  const convertToPurchase = (enquiry: PurchaseEnquiry) => {
+    navigate('/purchases/new', {
+      state: {
+        vendorId: enquiry.vendorId,
+        prefill: {
+          subcategoryId: enquiry.subcategoryId ?? undefined,
+          metalType: enquiry.metalType,
+          grossWeight: enquiry.grossWeight,
+          diamondShape: enquiry.diamondShape ?? undefined,
+          diamondQuality: enquiry.diamondQuality ?? undefined,
+          diamondPieces: enquiry.diamondPieces ?? undefined,
+          diamondCaratWeight: enquiry.diamondCaratWeight ?? undefined,
+        },
+      },
+    });
+  };
+
+  const columns: Column<PurchaseEnquiry>[] = [
     {
-      key: 'customer',
-      header: 'Customer',
-      sortField: 'customer',
-      render: (e) => <span className="font-medium text-graphite-900">{e.customerName}</span>,
+      key: 'vendor',
+      header: 'Vendor',
+      sortField: 'vendor',
+      render: (e) => <span className="font-medium text-graphite-900">{e.vendorName}</span>,
     },
     {
       key: 'subcategory',
@@ -90,7 +109,17 @@ export function EnquiriesListPage() {
       render: (e) => (
         <div className="flex justify-end gap-1">
           <IconButton
-            label="Edit enquiry"
+            label="Convert to purchase"
+            tone="brand"
+            onClick={(ev) => {
+              ev.stopPropagation();
+              convertToPurchase(e);
+            }}
+          >
+            <ArrowRightCircle className="h-4 w-4" strokeWidth={2} />
+          </IconButton>
+          <IconButton
+            label="Edit purchase enquiry"
             tone="brand"
             onClick={(ev) => {
               ev.stopPropagation();
@@ -100,7 +129,7 @@ export function EnquiriesListPage() {
             <Pencil className="h-4 w-4" strokeWidth={2} />
           </IconButton>
           <IconButton
-            label="Delete enquiry"
+            label="Delete purchase enquiry"
             tone="danger"
             onClick={(ev) => {
               ev.stopPropagation();
@@ -119,14 +148,14 @@ export function EnquiriesListPage() {
   return (
     <div>
       <PageHeader
-        title="Enquiries"
-        description="Record what a customer is asking about before it becomes a costed product or sale."
-        action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add enquiry</Button>}
+        title="Purchase Enquiries"
+        description="Record what you're asking a vendor about before it becomes a real purchase order."
+        action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add purchase enquiry</Button>}
       />
 
       <div className="mb-4 w-full max-w-xs">
         <Input
-          placeholder="Search by customer, subcategory or metal"
+          placeholder="Search by vendor, subcategory or metal"
           value={query.searchInput}
           onChange={(e) => query.setSearchInput(e.target.value)}
           onKeyDown={query.handleSearchKeyDown}
@@ -136,9 +165,9 @@ export function EnquiriesListPage() {
       <Card className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
         {enquiries.length === 0 ? (
           <EmptyState
-            title="No enquiries yet"
-            description="Record a customer's interest to start tracking it."
-            action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add enquiry</Button>}
+            title="No purchase enquiries yet"
+            description="Record interest in a design from a vendor to start tracking it."
+            action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add purchase enquiry</Button>}
           />
         ) : (
           <>
@@ -161,23 +190,23 @@ export function EnquiriesListPage() {
         )}
       </Card>
 
-      <EnquiryFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} enquiry={editingEnquiry} />
+      <PurchaseEnquiryFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} enquiry={editingEnquiry} />
 
       <ConfirmModal
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => {
           if (!deleteTarget) return;
-          deleteEnquiry.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+          deletePurchaseEnquiry.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
         }}
-        title="Delete enquiry"
+        title="Delete purchase enquiry"
         description={
           <>
-            Are you sure you want to delete the enquiry from <strong>{deleteTarget?.customerName}</strong>? This cannot be undone.
+            Are you sure you want to delete the purchase enquiry for <strong>{deleteTarget?.vendorName}</strong>? This cannot be undone.
           </>
         }
         confirmLabel="Delete"
-        isLoading={deleteEnquiry.isPending}
+        isLoading={deletePurchaseEnquiry.isPending}
       />
     </div>
   );

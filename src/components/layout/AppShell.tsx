@@ -50,6 +50,7 @@ const baseNavGroups: NavGroup[] = [
     items: [
       { to: '/sales', label: 'Sales', icon: ShoppingCart },
       { to: '/customers', label: 'Customers', icon: Users },
+      { to: '/enquiries', label: 'Enquiries', icon: MessageCircleQuestion },
     ],
   },
   {
@@ -58,6 +59,7 @@ const baseNavGroups: NavGroup[] = [
     items: [
       { to: '/purchases', label: 'Purchases', icon: ClipboardList },
       { to: '/vendors', label: 'Vendors', icon: Truck },
+      { to: '/purchase-enquiries', label: 'Purchase Enquiries', icon: MessageCircleQuestion },
     ],
   },
   {
@@ -67,7 +69,6 @@ const baseNavGroups: NavGroup[] = [
       { to: '/inventory/products', label: 'Inventory', icon: Package },
       { to: '/inventory/categories', label: 'Categories', icon: Tags },
       { to: '/inventory/subcategories', label: 'Subcategories', icon: Layers },
-      { to: '/enquiries', label: 'Enquiries', icon: MessageCircleQuestion },
     ],
   },
 ];
