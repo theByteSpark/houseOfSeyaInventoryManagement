@@ -173,9 +173,11 @@ export function DashboardPage() {
                       <IconButton label="Edit enquiry" tone="brand" onClick={() => openEditEnquiry(e)}>
                         <Pencil className="h-4 w-4" strokeWidth={2} />
                       </IconButton>
-                      <IconButton label="Delete enquiry" tone="danger" onClick={() => setEnquiryDeleteTarget(e)}>
-                        <Trash2 className="h-4 w-4" strokeWidth={2} />
-                      </IconButton>
+                      {isAdmin && (
+                        <IconButton label="Delete enquiry" tone="danger" onClick={() => setEnquiryDeleteTarget(e)}>
+                          <Trash2 className="h-4 w-4" strokeWidth={2} />
+                        </IconButton>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -202,9 +204,11 @@ export function DashboardPage() {
                       <IconButton label="Edit purchase order" tone="brand" onClick={() => openEditPo(e)}>
                         <Pencil className="h-4 w-4" strokeWidth={2} />
                       </IconButton>
-                      <IconButton label="Delete purchase order" tone="danger" onClick={() => setPoDeleteTarget(e)}>
-                        <Trash2 className="h-4 w-4" strokeWidth={2} />
-                      </IconButton>
+                      {isAdmin && (
+                        <IconButton label="Delete purchase order" tone="danger" onClick={() => setPoDeleteTarget(e)}>
+                          <Trash2 className="h-4 w-4" strokeWidth={2} />
+                        </IconButton>
+                      )}
                     </div>
                   </div>
                 ))}

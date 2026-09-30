@@ -15,12 +15,15 @@ import {
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
 import { formatCurrency } from '@/lib/format';
+import { useAuth } from '@/features/auth/useAuth';
 import { useDeleteEnquiry, useEnquiriesPage } from './hooks';
 import { EnquiryFormModal } from './EnquiryFormModal';
 import type { Enquiry } from '@/types';
 
 export function EnquiriesListPage() {
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const { data, isLoading, isPlaceholderData } = useEnquiriesPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -106,16 +109,18 @@ export function EnquiriesListPage() {
           >
             <Pencil className="h-4 w-4" strokeWidth={2} />
           </IconButton>
-          <IconButton
-            label="Delete enquiry"
-            tone="danger"
-            onClick={(ev) => {
-              ev.stopPropagation();
-              setDeleteTarget(e);
-            }}
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={2} />
-          </IconButton>
+          {isAdmin && (
+            <IconButton
+              label="Delete enquiry"
+              tone="danger"
+              onClick={(ev) => {
+                ev.stopPropagation();
+                setDeleteTarget(e);
+              }}
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+          )}
         </div>
       ),
     },

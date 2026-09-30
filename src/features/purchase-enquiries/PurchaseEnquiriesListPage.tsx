@@ -15,6 +15,7 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
+import { useAuth } from '@/features/auth/useAuth';
 import { useDeletePurchaseEnquiry, usePurchaseEnquiriesPage } from './hooks';
 import { PurchaseEnquiryFormModal } from './PurchaseEnquiryFormModal';
 import type { PurchaseEnquiry } from '@/types';
@@ -22,6 +23,8 @@ import type { PurchaseEnquiry } from '@/types';
 export function PurchaseEnquiriesListPage() {
   const navigate = useNavigate();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const { data, isLoading, isPlaceholderData } = usePurchaseEnquiriesPage({
     page: query.page,
     pageSize: query.pageSize,
@@ -128,16 +131,18 @@ export function PurchaseEnquiriesListPage() {
           >
             <Pencil className="h-4 w-4" strokeWidth={2} />
           </IconButton>
-          <IconButton
-            label="Delete purchase order"
-            tone="danger"
-            onClick={(ev) => {
-              ev.stopPropagation();
-              setDeleteTarget(e);
-            }}
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={2} />
-          </IconButton>
+          {isAdmin && (
+            <IconButton
+              label="Delete purchase order"
+              tone="danger"
+              onClick={(ev) => {
+                ev.stopPropagation();
+                setDeleteTarget(e);
+              }}
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+          )}
         </div>
       ),
     },
