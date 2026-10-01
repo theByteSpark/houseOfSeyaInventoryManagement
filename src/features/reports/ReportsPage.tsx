@@ -130,8 +130,7 @@ function SalesReportTab() {
         status={status} setStatus={setStatus}
         statusOptions={[
           { value: 'ALL', label: 'All statuses' },
-          { value: 'DRAFT', label: 'Draft' },
-          { value: 'ISSUED', label: 'Issued' },
+          { value: 'SOLD', label: 'Sold' },
           { value: 'PAID', label: 'Paid' },
           { value: 'CANCELLED', label: 'Cancelled' },
         ]}
@@ -205,9 +204,7 @@ function PurchasesReportTab() {
         status={status} setStatus={setStatus}
         statusOptions={[
           { value: 'ALL', label: 'All statuses' },
-          { value: 'DRAFT', label: 'Draft' },
           { value: 'ORDERED', label: 'Ordered' },
-          { value: 'PARTIALLY_RECEIVED', label: 'Partially received' },
           { value: 'RECEIVED', label: 'Received' },
           { value: 'CANCELLED', label: 'Cancelled' },
         ]}

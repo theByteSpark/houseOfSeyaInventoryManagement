@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRightCircle, Pencil, Plus, Trash2, XCircle } from 'lucide-react';
+import { ArrowRightCircle, ClipboardCheck, Pencil, Plus, Trash2, XCircle } from 'lucide-react';
 import {
   Button,
   Card,
@@ -19,7 +19,7 @@ import { EnquiryFormModal } from '@/features/enquiries/EnquiryFormModal';
 import { useSales, useCancelSale } from '@/features/sales/hooks';
 import { usePurchaseEnquiries, useDeletePurchaseEnquiry } from '@/features/purchase-enquiries/hooks';
 import { PurchaseEnquiryFormModal } from '@/features/purchase-enquiries/PurchaseEnquiryFormModal';
-import { usePurchases, useCancelPurchase } from '@/features/purchases/hooks';
+import { usePurchases, useCancelPurchase, useReceivePurchase } from '@/features/purchases/hooks';
 import type { Enquiry, PurchaseEnquiry } from '@/types';
 
 const LIST_HEIGHT = 'h-[420px] overflow-y-auto';
@@ -51,6 +51,7 @@ export function DashboardPage() {
 
   const { data: purchasesData, isLoading: purchasesLoading } = usePurchases();
   const cancelPurchase = useCancelPurchase();
+  const receivePurchase = useReceivePurchase();
 
   if (enquiriesLoading || salesLoading || poLoading || purchasesLoading) return <FullPageSpinner />;
 
@@ -123,7 +124,7 @@ export function DashboardPage() {
             <div className={LIST_HEIGHT}>
               <div className="divide-y divide-graphite-100">
                 {recentEnquiries.map((e) => (
-                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_auto_auto] items-center gap-3 px-4 py-2.5 sm:px-5">
+                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_auto_auto] items-center gap-3 px-4 py-2 text-xs sm:px-5">
                     <span className="truncate font-medium text-graphite-900">{e.customerName}</span>
                     <span className="truncate text-graphite-600">{e.subcategoryName ?? '—'}</span>
                     <span className="text-right font-medium text-graphite-800">
@@ -154,7 +155,7 @@ export function DashboardPage() {
             <div className={LIST_HEIGHT}>
               <div className="divide-y divide-graphite-100">
                 {recentPurchaseEnquiries.map((e) => (
-                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_auto] items-center gap-3 px-4 py-2.5 sm:px-5">
+                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_auto] items-center gap-3 px-4 py-2 text-xs sm:px-5">
                     <span className="truncate font-medium text-graphite-900">{e.vendorName}</span>
                     <span className="truncate text-graphite-600">{e.subcategoryName ?? '—'}</span>
                     <div className="flex justify-end gap-1">
@@ -187,48 +188,37 @@ export function DashboardPage() {
                 {recentSales.map((s) => (
                   <div
                     key={s.id}
-                    className="flex cursor-pointer items-start justify-between gap-3 px-4 py-3 hover:bg-graphite-50 sm:px-5"
+                    className="grid cursor-pointer grid-cols-[1.5fr_auto_auto] items-center gap-3 px-4 py-2 text-xs hover:bg-graphite-50 sm:px-5"
                     onClick={() => navigate(`/sales/${s.id}`)}
                   >
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-graphite-900">{s.customerName}</p>
-                      <div className="mt-1 flex flex-col gap-0.5">
-                        {s.items.map((item) => (
-                          <p key={item.id} className="truncate text-xs text-graphite-500">
-                            {item.productName} — {item.subcategoryName ?? '—'}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-2">
-                      <span className="font-medium text-graphite-800">{formatCurrency(s.total)}</span>
-                      <div className="flex gap-1">
-                        {s.status === 'DRAFT' && (
-                          <IconButton
-                            label="Edit sale"
-                            tone="brand"
-                            onClick={(ev) => {
-                              ev.stopPropagation();
-                              navigate(`/sales/${s.id}/edit`);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" strokeWidth={2} />
-                          </IconButton>
-                        )}
-                        {isAdmin && (s.status === 'DRAFT' || s.status === 'ISSUED') && (
-                          <IconButton
-                            label="Cancel sale"
-                            tone="danger"
-                            disabled={cancelSale.isPending}
-                            onClick={(ev) => {
-                              ev.stopPropagation();
-                              cancelSale.mutate(s.id);
-                            }}
-                          >
-                            <XCircle className="h-4 w-4" strokeWidth={2} />
-                          </IconButton>
-                        )}
-                      </div>
+                    <span className="truncate font-medium text-graphite-900">{s.customerName}</span>
+                    <span className="text-right font-medium text-graphite-800">{formatCurrency(s.total)}</span>
+                    <div className="flex justify-end gap-1">
+                      {(s.status === 'SOLD' || s.status === 'PAID') && (
+                        <IconButton
+                          label="Edit sale"
+                          tone="brand"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            navigate(`/sales/${s.id}/edit`);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" strokeWidth={2} />
+                        </IconButton>
+                      )}
+                      {isAdmin && (s.status === 'SOLD' || s.status === 'PAID') && (
+                        <IconButton
+                          label="Cancel sale"
+                          tone="danger"
+                          disabled={cancelSale.isPending}
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            cancelSale.mutate(s.id);
+                          }}
+                        >
+                          <XCircle className="h-4 w-4" strokeWidth={2} />
+                        </IconButton>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -247,48 +237,50 @@ export function DashboardPage() {
                 {recentPurchases.map((p) => (
                   <div
                     key={p.id}
-                    className="flex cursor-pointer items-start justify-between gap-3 px-4 py-3 hover:bg-graphite-50 sm:px-5"
+                    className="grid cursor-pointer grid-cols-[1.5fr_auto_auto] items-center gap-3 px-4 py-2 text-xs hover:bg-graphite-50 sm:px-5"
                     onClick={() => navigate(`/purchases/${p.id}`)}
                   >
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-graphite-900">{p.vendorName}</p>
-                      <div className="mt-1 flex flex-col gap-0.5">
-                        {p.items.map((item) => (
-                          <p key={item.id} className="truncate text-xs text-graphite-500">
-                            {item.productName}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-2">
-                      <span className="font-medium text-graphite-800">{formatCurrency(p.total)}</span>
-                      <div className="flex gap-1">
-                        {p.status === 'DRAFT' && (
-                          <IconButton
-                            label="Edit purchase"
-                            tone="brand"
-                            onClick={(ev) => {
-                              ev.stopPropagation();
-                              navigate(`/purchases/${p.id}/edit`);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" strokeWidth={2} />
-                          </IconButton>
-                        )}
-                        {isAdmin && (p.status === 'DRAFT' || p.status === 'ORDERED' || p.status === 'PARTIALLY_RECEIVED') && (
-                          <IconButton
-                            label="Cancel purchase"
-                            tone="danger"
-                            disabled={cancelPurchase.isPending}
-                            onClick={(ev) => {
-                              ev.stopPropagation();
-                              cancelPurchase.mutate(p.id);
-                            }}
-                          >
-                            <XCircle className="h-4 w-4" strokeWidth={2} />
-                          </IconButton>
-                        )}
-                      </div>
+                    <span className="truncate font-medium text-graphite-900">{p.vendorName}</span>
+                    <span className="text-right font-medium text-graphite-800">{formatCurrency(p.total)}</span>
+                    <div className="flex justify-end gap-1">
+                      {p.status === 'ORDERED' && (
+                        <IconButton
+                          label="Edit purchase"
+                          tone="brand"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            navigate(`/purchases/${p.id}/edit`);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" strokeWidth={2} />
+                        </IconButton>
+                      )}
+                      {p.status === 'ORDERED' && (
+                        <IconButton
+                          label="Mark as received"
+                          tone="brand"
+                          disabled={receivePurchase.isPending}
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            receivePurchase.mutate(p.id);
+                          }}
+                        >
+                          <ClipboardCheck className="h-4 w-4" strokeWidth={2} />
+                        </IconButton>
+                      )}
+                      {isAdmin && p.status === 'ORDERED' && (
+                        <IconButton
+                          label="Cancel purchase"
+                          tone="danger"
+                          disabled={cancelPurchase.isPending}
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            cancelPurchase.mutate(p.id);
+                          }}
+                        >
+                          <XCircle className="h-4 w-4" strokeWidth={2} />
+                        </IconButton>
+                      )}
                     </div>
                   </div>
                 ))}
