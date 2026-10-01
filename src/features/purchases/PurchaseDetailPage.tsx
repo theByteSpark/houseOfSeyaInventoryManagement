@@ -4,20 +4,18 @@ import { PackageCheck, Pencil, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
 import { Badge, Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
-import { useCancelPurchase, useOrderPurchase, usePurchase } from './hooks';
+import { useCancelPurchase, useReceivePurchase, usePurchase } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { useAuth } from '@/features/auth/useAuth';
-import { ReceiveItemsModal } from './ReceiveItemsModal';
 import type { PurchaseItem } from '@/types';
 
 export function PurchaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: purchase, isLoading } = usePurchase(id);
-  const orderPurchase = useOrderPurchase();
+  const receivePurchase = useReceivePurchase();
   const cancelPurchase = useCancelPurchase();
   const [actionError, setActionError] = useState<string | null>(null);
-  const [receiveOpen, setReceiveOpen] = useState(false);
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
@@ -63,8 +61,7 @@ export function PurchaseDetailPage() {
     }
   };
 
-  const canReceive = purchase.status === 'ORDERED' || purchase.status === 'PARTIALLY_RECEIVED';
-  const canCancel = isAdmin && (purchase.status === 'DRAFT' || purchase.status === 'ORDERED' || purchase.status === 'PARTIALLY_RECEIVED');
+  const canCancel = isAdmin && purchase.status === 'ORDERED';
 
   return (
     <div>
@@ -125,7 +122,7 @@ export function PurchaseDetailPage() {
           <Card>
             <CardHeader title="Actions" />
             <CardBody className="flex flex-col gap-2">
-              {purchase.status === 'DRAFT' && (
+              {purchase.status === 'ORDERED' && (
                 <Button
                   variant="secondary"
                   onClick={() => navigate(`/purchases/${purchase.id}/edit`)}
@@ -134,20 +131,13 @@ export function PurchaseDetailPage() {
                   Edit purchase
                 </Button>
               )}
-              {purchase.status === 'DRAFT' && (
+              {purchase.status === 'ORDERED' && (
                 <Button
-                  isLoading={orderPurchase.isPending}
-                  onClick={() => runAction(() => orderPurchase.mutateAsync(purchase.id))}
-                >
-                  Mark as ordered
-                </Button>
-              )}
-              {canReceive && (
-                <Button
-                  onClick={() => setReceiveOpen(true)}
+                  isLoading={receivePurchase.isPending}
+                  onClick={() => runAction(() => receivePurchase.mutateAsync(purchase.id))}
                   icon={<PackageCheck className="h-4 w-4" strokeWidth={2} />}
                 >
-                  Receive items
+                  Mark as received
                 </Button>
               )}
               {canCancel && (
@@ -170,14 +160,6 @@ export function PurchaseDetailPage() {
           </Card>
         </div>
       </div>
-
-      {receiveOpen && (
-        <ReceiveItemsModal
-          isOpen={receiveOpen}
-          onClose={() => setReceiveOpen(false)}
-          purchase={purchase}
-        />
-      )}
     </div>
   );
 }

@@ -20,7 +20,7 @@ import {
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
 import { importPurchasesCsv } from '@/features/import-export/api';
-import { purchaseKeys, useCancelPurchase, useOrderPurchase, usePurchasesPage } from './hooks';
+import { purchaseKeys, useCancelPurchase, useReceivePurchase, usePurchasesPage } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { useAuth } from '@/features/auth/useAuth';
 import type { Purchase, PurchaseStatus } from '@/types';
@@ -39,7 +39,7 @@ export function PurchasesListPage() {
     status: statusFilter,
   });
   const navigate = useNavigate();
-  const orderPurchase = useOrderPurchase();
+  const receivePurchase = useReceivePurchase();
   const cancelPurchase = useCancelPurchase();
   const [actionError, setActionError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -60,6 +60,19 @@ export function PurchasesListPage() {
       render: (p) => <span className="font-medium text-graphite-900">{p.purchaseNumber}</span>,
     },
     { key: 'vendor', header: 'Vendor', sortField: 'vendor', render: (p) => p.vendorName },
+    {
+      key: 'items',
+      header: 'Items',
+      render: (p) => (
+        <div className="flex flex-col gap-0.5">
+          {p.items.map((item) => (
+            <span key={item.id} className="truncate text-graphite-700">
+              {item.productName}
+            </span>
+          ))}
+        </div>
+      ),
+    },
     { key: 'status', header: 'Status', sortField: 'status', render: (p) => <PurchaseStatusBadge status={p.status} /> },
     { key: 'total', header: 'Total', align: 'right', render: (p) => formatCurrency(p.total) },
     {
@@ -74,7 +87,7 @@ export function PurchasesListPage() {
       align: 'right',
       render: (p) => (
         <div className="flex justify-end gap-1">
-          {p.status === 'DRAFT' && (
+          {p.status === 'ORDERED' && (
             <IconButton
               label="Edit purchase"
               tone="brand"
@@ -86,23 +99,23 @@ export function PurchasesListPage() {
               <Pencil className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
-          {p.status === 'DRAFT' && (
+          {p.status === 'ORDERED' && (
             <IconButton
-              label="Mark as ordered"
+              label="Mark as received"
               tone="brand"
-              disabled={orderPurchase.isPending}
+              disabled={receivePurchase.isPending}
               onClick={(e) => {
                 e.stopPropagation();
                 setActionError(null);
-                orderPurchase.mutate(p.id, {
-                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not order purchase.')),
+                receivePurchase.mutate(p.id, {
+                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not receive purchase.')),
                 });
               }}
             >
               <ClipboardCheck className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
-          {isAdmin && (p.status === 'DRAFT' || p.status === 'ORDERED' || p.status === 'PARTIALLY_RECEIVED') && (
+          {isAdmin && p.status === 'ORDERED' && (
             <IconButton
               label="Cancel purchase"
               tone="danger"
@@ -161,9 +174,7 @@ export function PurchasesListPage() {
           onChange={(e) => handleStatusFilterChange(e.target.value as PurchaseStatus | 'ALL')}
         >
           <option value="ALL">All statuses</option>
-          <option value="DRAFT">Draft</option>
           <option value="ORDERED">Ordered</option>
-          <option value="PARTIALLY_RECEIVED">Partially received</option>
           <option value="RECEIVED">Received</option>
           <option value="CANCELLED">Cancelled</option>
         </Select>

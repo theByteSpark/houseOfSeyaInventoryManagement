@@ -61,21 +61,10 @@ function invalidateAfterStockChange(queryClient: ReturnType<typeof useQueryClien
   queryClient.invalidateQueries({ queryKey: productKeys.all, refetchType: 'all' });
 }
 
-export function useOrderPurchase() {
+export function useReceivePurchase() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: api.orderPurchase,
-    onSuccess: (purchase) => {
-      invalidateAll(queryClient);
-      invalidateDetail(queryClient, purchase.id);
-    },
-  });
-}
-
-export function useReceivePurchaseItems() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: api.ReceiveInput }) => api.receivePurchaseItems(id, input),
+    mutationFn: api.receivePurchase,
     onSuccess: (purchase) => invalidateAfterStockChange(queryClient, purchase.id),
   });
 }

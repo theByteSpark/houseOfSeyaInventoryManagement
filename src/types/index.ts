@@ -138,7 +138,7 @@ export interface Vendor {
   createdAt: string;
 }
 
-export type PurchaseStatus = 'DRAFT' | 'ORDERED' | 'PARTIALLY_RECEIVED' | 'RECEIVED' | 'CANCELLED';
+export type PurchaseStatus = 'ORDERED' | 'RECEIVED' | 'CANCELLED';
 
 export interface PurchaseItem {
   id: string;

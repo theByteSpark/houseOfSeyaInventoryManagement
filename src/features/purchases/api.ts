@@ -14,15 +14,6 @@ export interface PurchaseInput {
   items: PurchaseLineInput[];
 }
 
-export interface ReceiveItemInput {
-  productId: string;
-  receivedQty: number;
-}
-
-export interface ReceiveInput {
-  items: ReceiveItemInput[];
-}
-
 export interface FetchPurchasesPageParams {
   page: number;
   pageSize: number;
@@ -57,13 +48,8 @@ export async function updatePurchase(id: string, input: PurchaseInput): Promise<
   return data;
 }
 
-export async function orderPurchase(id: string): Promise<Purchase> {
-  const { data } = await apiClient.patch<Purchase>(`/purchases/${id}/order`);
-  return data;
-}
-
-export async function receivePurchaseItems(id: string, input: ReceiveInput): Promise<Purchase> {
-  const { data } = await apiClient.patch<Purchase>(`/purchases/${id}/receive`, input);
+export async function receivePurchase(id: string): Promise<Purchase> {
+  const { data } = await apiClient.patch<Purchase>(`/purchases/${id}/receive`);
   return data;
 }
 

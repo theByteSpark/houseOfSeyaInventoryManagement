@@ -68,8 +68,8 @@ export function PurchaseFormPage() {
 
   useEffect(() => {
     if (!isEdit || !existingPurchase || initialized) return;
-    if (existingPurchase.status !== 'DRAFT') {
-      setError('Only draft purchases can be edited.');
+    if (existingPurchase.status !== 'ORDERED') {
+      setError('Only ordered purchases can be edited.');
       return;
     }
     setVendorId(existingPurchase.vendorId);
@@ -309,7 +309,7 @@ export function PurchaseFormPage() {
                 isLoading={isEdit ? updatePurchase.isPending : createPurchase.isPending}
                 disabled={lines.length === 0}
               >
-                {isEdit ? 'Save changes' : 'Save draft purchase'}
+                {isEdit ? 'Save changes' : 'Create purchase'}
               </Button>
               <p className="mt-2 text-center text-xs text-graphite-400">
                 Stock is only updated when items are received.
