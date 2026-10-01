@@ -36,11 +36,19 @@ function invalidateDetail(queryClient: ReturnType<typeof useQueryClient>, id: st
   return queryClient.invalidateQueries({ queryKey: saleKeys.detail(id), refetchType: 'all' });
 }
 
+function invalidateAfterStockChange(queryClient: ReturnType<typeof useQueryClient>, id: string) {
+  invalidateAll(queryClient);
+  invalidateDetail(queryClient, id);
+  queryClient.invalidateQueries({ queryKey: productKeys.all, refetchType: 'all' });
+}
+
+// Create/update/cancel all deduct or restore stock now that a sale commits
+// immediately, so each one needs to invalidate the product cache too.
 export function useCreateSale() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: api.createSale,
-    onSuccess: () => invalidateAll(queryClient),
+    onSuccess: (sale) => invalidateAfterStockChange(queryClient, sale.id),
   });
 }
 
@@ -48,23 +56,6 @@ export function useUpdateSale() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: api.SaleInput }) => api.updateSale(id, input),
-    onSuccess: (sale) => {
-      invalidateAll(queryClient);
-      invalidateDetail(queryClient, sale.id);
-    },
-  });
-}
-
-function invalidateAfterStockChange(queryClient: ReturnType<typeof useQueryClient>, id: string) {
-  invalidateAll(queryClient);
-  invalidateDetail(queryClient, id);
-  queryClient.invalidateQueries({ queryKey: productKeys.all, refetchType: 'all' });
-}
-
-export function useIssueSale() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: api.issueSale,
     onSuccess: (sale) => invalidateAfterStockChange(queryClient, sale.id),
   });
 }
@@ -84,9 +75,6 @@ export function useCancelSale() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: api.cancelSale,
-    onSuccess: (sale) => {
-      invalidateAll(queryClient);
-      invalidateDetail(queryClient, sale.id);
-    },
+    onSuccess: (sale) => invalidateAfterStockChange(queryClient, sale.id),
   });
 }

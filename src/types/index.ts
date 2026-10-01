@@ -92,7 +92,7 @@ export interface StockMovement {
   createdAt: string;
 }
 
-export type SaleStatus = 'DRAFT' | 'ISSUED' | 'PAID' | 'CANCELLED';
+export type SaleStatus = 'SOLD' | 'PAID' | 'CANCELLED';
 
 export interface SaleItem {
   id: string;
@@ -120,7 +120,7 @@ export interface Sale {
   total: number;
   receivedAmount: number;
   balanceDue: number;
-  issuedAt: string | null;
+  soldAt: string | null;
   createdAt: string;
 }
 

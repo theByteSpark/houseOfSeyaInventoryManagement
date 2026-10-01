@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Banknote, FileText, Pencil, Plus, Send, Upload } from 'lucide-react';
+import { Banknote, FileText, Pencil, Plus, Upload, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import {
   Button,
@@ -19,8 +19,9 @@ import {
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
 import { formatCurrency } from '@/lib/format';
+import { useAuth } from '@/features/auth/useAuth';
 import { importSalesCsv } from '@/features/import-export/api';
-import { saleKeys, useIssueSale, useMarkSalePaid, useSalesPage } from './hooks';
+import { saleKeys, useCancelSale, useMarkSalePaid, useSalesPage } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
 import { InvoicePdfModal } from './InvoicePdfModal';
 import type { Sale, SaleStatus } from '@/types';
@@ -39,8 +40,10 @@ export function SalesListPage() {
     status: statusFilter,
   });
   const navigate = useNavigate();
-  const issueSale = useIssueSale();
   const markSalePaid = useMarkSalePaid();
+  const cancelSale = useCancelSale();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const [actionError, setActionError] = useState<string | null>(null);
   const [pdfSale, setPdfSale] = useState<Sale | null>(null);
 
@@ -73,7 +76,7 @@ export function SalesListPage() {
       align: 'right',
       render: (sale) => (
         <div className="flex justify-end gap-1">
-          {sale.status === 'DRAFT' && (
+          {(sale.status === 'SOLD' || sale.status === 'PAID') && (
             <IconButton
               label="Edit sale"
               tone="brand"
@@ -85,23 +88,7 @@ export function SalesListPage() {
               <Pencil className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
-          {sale.status === 'DRAFT' && (
-            <IconButton
-              label="Issue invoice"
-              tone="brand"
-              disabled={issueSale.isPending}
-              onClick={(e) => {
-                e.stopPropagation();
-                setActionError(null);
-                issueSale.mutate(sale.id, {
-                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not issue sale.')),
-                });
-              }}
-            >
-              <Send className="h-4 w-4" strokeWidth={2} />
-            </IconButton>
-          )}
-          {sale.status === 'ISSUED' && (
+          {sale.status === 'SOLD' && (
             <IconButton
               label="Mark as paid"
               tone="brand"
@@ -117,7 +104,23 @@ export function SalesListPage() {
               <Banknote className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
-          {sale.status !== 'DRAFT' && (
+          {isAdmin && (sale.status === 'SOLD' || sale.status === 'PAID') && (
+            <IconButton
+              label="Cancel sale"
+              tone="danger"
+              disabled={cancelSale.isPending}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActionError(null);
+                cancelSale.mutate(sale.id, {
+                  onError: (err) => setActionError(extractErrorMessage(err, 'Could not cancel sale.')),
+                });
+              }}
+            >
+              <XCircle className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+          )}
+          {(sale.status === 'SOLD' || sale.status === 'PAID') && (
             <IconButton
               label="View / download invoice"
               tone="neutral"
@@ -172,8 +175,7 @@ export function SalesListPage() {
           onChange={(e) => handleStatusFilterChange(e.target.value as SaleStatus | 'ALL')}
         >
           <option value="ALL">All statuses</option>
-          <option value="DRAFT">Draft</option>
-          <option value="ISSUED">Issued</option>
+          <option value="SOLD">Sold</option>
           <option value="PAID">Paid</option>
           <option value="CANCELLED">Cancelled</option>
         </Select>

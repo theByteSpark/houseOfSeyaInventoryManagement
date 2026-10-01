@@ -48,11 +48,6 @@ export async function updateSale(id: string, input: SaleInput): Promise<Sale> {
   return data;
 }
 
-export async function issueSale(id: string): Promise<Sale> {
-  const { data } = await apiClient.patch<Sale>(`/sales/${id}/issue`);
-  return data;
-}
-
 export async function markSalePaid(id: string): Promise<Sale> {
   const { data } = await apiClient.patch<Sale>(`/sales/${id}/pay`);
   return data;

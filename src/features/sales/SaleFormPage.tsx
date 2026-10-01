@@ -36,8 +36,8 @@ export function SaleFormPage() {
 
   useEffect(() => {
     if (!isEdit || !existingSale || initialized) return;
-    if (existingSale.status !== 'DRAFT') {
-      setError('Only draft sales can be edited.');
+    if (existingSale.status === 'CANCELLED') {
+      setError('A cancelled sale cannot be edited.');
       return;
     }
     setCustomerId(existingSale.customerId);
@@ -301,10 +301,10 @@ export function SaleFormPage() {
                 isLoading={isEdit ? updateSale.isPending : createSale.isPending}
                 disabled={lines.length === 0}
               >
-                {isEdit ? 'Save changes' : 'Save draft sale'}
+                {isEdit ? 'Save changes' : 'Record sale'}
               </Button>
               <p className="mt-2 text-center text-xs text-graphite-400">
-                Stock is only deducted once the sale is issued as an invoice.
+                Stock is deducted immediately when the sale is recorded.
               </p>
             </CardBody>
           </Card>

@@ -4,7 +4,7 @@ import { FileText, Pencil } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
 import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
-import { useCancelSale, useSale, useIssueSale, useMarkSalePaid } from './hooks';
+import { useCancelSale, useSale, useMarkSalePaid } from './hooks';
 import { useAuth } from '@/features/auth/useAuth';
 import { SaleStatusBadge } from './statusBadge';
 import { InvoicePdfModal } from './InvoicePdfModal';
@@ -14,7 +14,6 @@ export function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: sale, isLoading } = useSale(id);
-  const issueSale = useIssueSale();
   const markPaid = useMarkSalePaid();
   const cancelSale = useCancelSale();
   const { user } = useAuth();
@@ -118,7 +117,7 @@ export function SaleDetailPage() {
               </dl>
               <p className="mt-4 text-xs text-graphite-400">
                 Created {new Date(sale.createdAt).toLocaleString()}
-                {sale.issuedAt && <> · Issued {new Date(sale.issuedAt).toLocaleString()}</>}
+                {sale.soldAt && <> · Sold {new Date(sale.soldAt).toLocaleString()}</>}
               </p>
             </CardBody>
           </Card>
@@ -126,7 +125,7 @@ export function SaleDetailPage() {
           <Card>
             <CardHeader title="Actions" />
             <CardBody className="flex flex-col gap-2">
-              {sale.status === 'DRAFT' && (
+              {(sale.status === 'SOLD' || sale.status === 'PAID') && (
                 <Button
                   variant="secondary"
                   onClick={() => navigate(`/sales/${sale.id}/edit`)}
@@ -135,15 +134,7 @@ export function SaleDetailPage() {
                   Edit sale
                 </Button>
               )}
-              {sale.status === 'DRAFT' && (
-                <Button
-                  isLoading={issueSale.isPending}
-                  onClick={() => runAction(() => issueSale.mutateAsync(sale.id))}
-                >
-                  Issue invoice
-                </Button>
-              )}
-              {sale.status === 'ISSUED' && (
+              {sale.status === 'SOLD' && (
                 <Button
                   isLoading={markPaid.isPending}
                   onClick={() => runAction(() => markPaid.mutateAsync(sale.id))}
@@ -151,7 +142,7 @@ export function SaleDetailPage() {
                   Mark as paid
                 </Button>
               )}
-              {isAdmin && (sale.status === 'DRAFT' || sale.status === 'ISSUED') && (
+              {isAdmin && (sale.status === 'SOLD' || sale.status === 'PAID') && (
                 <Button
                   variant="danger"
                   isLoading={cancelSale.isPending}
@@ -160,10 +151,10 @@ export function SaleDetailPage() {
                   Cancel sale
                 </Button>
               )}
-              {(sale.status === 'PAID' || sale.status === 'CANCELLED') && (
+              {sale.status === 'CANCELLED' && (
                 <p className="text-sm text-graphite-400">No further actions available.</p>
               )}
-              {sale.status !== 'DRAFT' && (
+              {(sale.status === 'SOLD' || sale.status === 'PAID') && (
                 <Button
                   variant="secondary"
                   onClick={() => setPdfOpen(true)}
