@@ -144,7 +144,11 @@ const SECTIONS: GuideSection[] = [
     icon: Settings,
     adminOnly: true,
     summary: 'The dropdown lists used for metal type and diamond details.',
-    points: ['Add or remove options.', 'Removing one only affects new entries, not past records.'],
+    points: [
+      'Add, rename, or remove options.',
+      'Renaming an option updates its name on every existing product, enquiry, and purchase order that already uses it.',
+      'Removing one only affects new entries, not past records.',
+    ],
   },
 ];
 
