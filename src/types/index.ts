@@ -124,17 +124,6 @@ export interface Sale {
   createdAt: string;
 }
 
-export interface DashboardSummary {
-  totalProducts: number;
-  lowStockCount: number;
-  totalCustomers: number;
-  totalVendors: number;
-  salesThisMonth: number;
-  revenueThisMonth: number;
-  purchasesThisMonth: number;
-  pendingPOs: number;
-}
-
 export interface Vendor {
   id: string;
   companyName: string;

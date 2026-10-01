@@ -1,19 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  AlertTriangle,
-  ArrowRightCircle,
-  IndianRupee,
-  Package,
-  Pencil,
-  Plus,
-  Trash2,
-  Truck,
-  Users,
-  XCircle,
-  ClipboardList,
-  ClipboardCheck,
-} from 'lucide-react';
+import { ArrowRightCircle, Pencil, Plus, Trash2, XCircle } from 'lucide-react';
 import {
   Button,
   Card,
@@ -24,11 +11,9 @@ import {
   FullPageSpinner,
   IconButton,
   PageHeader,
-  StatTile,
 } from '@/components/ui';
 import { formatCurrency } from '@/lib/format';
 import { useAuth } from '@/features/auth/useAuth';
-import { useDashboardSummary } from './hooks';
 import { useEnquiries, useDeleteEnquiry } from '@/features/enquiries/hooks';
 import { EnquiryFormModal } from '@/features/enquiries/EnquiryFormModal';
 import { useSales, useCancelSale } from '@/features/sales/hooks';
@@ -46,29 +31,28 @@ function byRecent<T extends { createdAt: string }>(items: T[] | undefined): T[] 
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { data: summary, isLoading: summaryLoading } = useDashboardSummary();
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
-  const { data: enquiriesData } = useEnquiries();
+  const { data: enquiriesData, isLoading: enquiriesLoading } = useEnquiries();
   const deleteEnquiry = useDeleteEnquiry();
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
   const [editingEnquiry, setEditingEnquiry] = useState<Enquiry | null>(null);
   const [enquiryDeleteTarget, setEnquiryDeleteTarget] = useState<Enquiry | null>(null);
 
-  const { data: salesData } = useSales();
+  const { data: salesData, isLoading: salesLoading } = useSales();
   const cancelSale = useCancelSale();
 
-  const { data: purchaseEnquiriesData } = usePurchaseEnquiries();
+  const { data: purchaseEnquiriesData, isLoading: poLoading } = usePurchaseEnquiries();
   const deletePurchaseEnquiry = useDeletePurchaseEnquiry();
   const [poModalOpen, setPoModalOpen] = useState(false);
   const [editingPo, setEditingPo] = useState<PurchaseEnquiry | null>(null);
   const [poDeleteTarget, setPoDeleteTarget] = useState<PurchaseEnquiry | null>(null);
 
-  const { data: purchasesData } = usePurchases();
+  const { data: purchasesData, isLoading: purchasesLoading } = usePurchases();
   const cancelPurchase = useCancelPurchase();
 
-  if (summaryLoading || !summary) return <FullPageSpinner />;
+  if (enquiriesLoading || salesLoading || poLoading || purchasesLoading) return <FullPageSpinner />;
 
   const recentEnquiries = byRecent(enquiriesData);
   const recentSales = byRecent(salesData);
@@ -129,30 +113,6 @@ export function DashboardPage() {
   return (
     <div>
       <PageHeader title="Dashboard" description="Overview of your inventory, sales, and purchases." />
-
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Total products" value={summary.totalProducts} icon={<Package className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile
-          label="Low stock items"
-          value={summary.lowStockCount}
-          icon={<AlertTriangle className="h-4 w-4" strokeWidth={2} />}
-          tone={summary.lowStockCount > 0 ? 'warning' : 'neutral'}
-        />
-        <StatTile label="Total customers" value={summary.totalCustomers} icon={<Users className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Total vendors" value={summary.totalVendors} icon={<Truck className="h-4 w-4" strokeWidth={2} />} />
-      </div>
-
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Sales this month" value={summary.salesThisMonth} icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Revenue this month" value={formatCurrency(summary.revenueThisMonth)} icon={<IndianRupee className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile label="Purchases this month" value={summary.purchasesThisMonth} icon={<ClipboardList className="h-4 w-4" strokeWidth={2} />} />
-        <StatTile
-          label="Pending POs"
-          value={summary.pendingPOs}
-          icon={<ClipboardCheck className="h-4 w-4" strokeWidth={2} />}
-          tone={summary.pendingPOs > 0 ? 'warning' : 'neutral'}
-        />
-      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
