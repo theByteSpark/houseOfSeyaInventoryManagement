@@ -33,9 +33,8 @@ const SECTIONS: GuideSection[] = [
     icon: LayoutDashboard,
     summary: 'A quick snapshot of the business when you log in.',
     points: [
-      'Stat tiles for products, customers, vendors, sales, and revenue.',
-      'Recent sales and purchases — click any row to open it.',
-      'Low stock alerts, with a link to the full product list.',
+      'Four sections: Enquiries and Sales on the left, Purchase Order and Purchases on the right.',
+      'Each section shows up to the last 10 records with an Add button and a View all link — click any Sale or Purchase row to open it.',
     ],
   },
   {
@@ -76,11 +75,12 @@ const SECTIONS: GuideSection[] = [
     id: 'sales',
     title: 'Sales',
     icon: ShoppingCart,
-    summary: 'Take a sale from draft to paid, and get the invoice.',
+    summary: 'A sale is recorded straight to Sold, and stays editable from there.',
     points: [
-      'Add a sale for a customer with one or more products.',
-      'A sale moves Draft → Issued (stock is deducted here) → Paid, or can be cancelled before payment.',
-      'Download the invoice as a PDF once issued.',
+      'Add a sale for a customer with one or more products — it\'s recorded as Sold immediately, and stock is deducted right away.',
+      'Mark it Paid once payment is received in full, or edit a Sold/Paid sale any time to record a partial payment or fix a mistake.',
+      'Admins can cancel a Sold or Paid sale if the deal falls through — the item returns to stock.',
+      'Download the invoice as a PDF any time after it\'s sold.',
     ],
   },
   {
@@ -96,8 +96,9 @@ const SECTIONS: GuideSection[] = [
     icon: ClipboardList,
     summary: 'Order new designs from a vendor — this is how a new design enters your catalog.',
     points: [
-      'Add a purchase and define the new product\'s cost sheet right there.',
-      'Moves Draft → Ordered → Received as items arrive — partial deliveries are fine.',
+      'Add a purchase and define the new product\'s cost sheet right there — it\'s placed as Ordered immediately.',
+      'Edit an Ordered purchase, or mark it Received in one step once everything arrives.',
+      'Admins can cancel an Ordered purchase.',
     ],
   },
   {
