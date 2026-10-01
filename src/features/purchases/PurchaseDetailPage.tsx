@@ -61,7 +61,7 @@ export function PurchaseDetailPage() {
     }
   };
 
-  const canCancel = isAdmin && purchase.status === 'ORDERED';
+  const canCancel = isAdmin && (purchase.status === 'ORDERED' || purchase.status === 'RECEIVED');
 
   return (
     <div>
@@ -150,7 +150,7 @@ export function PurchaseDetailPage() {
                   Cancel purchase
                 </Button>
               )}
-              {purchase.status === 'RECEIVED' && (
+              {purchase.status === 'RECEIVED' && !canCancel && (
                 <p className="text-sm text-graphite-400">All items received. No further actions available.</p>
               )}
               {purchase.status === 'CANCELLED' && (

@@ -268,7 +268,7 @@ export function DashboardPage() {
                           <ClipboardCheck className="h-4 w-4" strokeWidth={2} />
                         </IconButton>
                       )}
-                      {isAdmin && p.status === 'ORDERED' && (
+                      {isAdmin && (p.status === 'ORDERED' || p.status === 'RECEIVED') && (
                         <IconButton
                           label="Cancel purchase"
                           tone="danger"

@@ -98,7 +98,7 @@ const SECTIONS: GuideSection[] = [
     points: [
       'Add a purchase and define the new product\'s cost sheet right there — it\'s placed as Ordered immediately.',
       'Edit an Ordered purchase, or mark it Received in one step once everything arrives.',
-      'Admins can cancel an Ordered purchase.',
+      'Admins can cancel an Ordered or Received purchase. Cancelling a Received purchase deletes the product it created from Inventory entirely — blocked if that product has already been sold.',
     ],
   },
   {
