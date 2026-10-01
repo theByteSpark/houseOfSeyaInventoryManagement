@@ -100,6 +100,7 @@ export interface SaleItem {
   productName: string;
   designNumber: string;
   subcategoryName: string | null;
+  product: Product;
   quantity: number;
   unitPrice: number;
   lineTotal: number;

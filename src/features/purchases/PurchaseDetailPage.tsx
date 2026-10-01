@@ -3,11 +3,10 @@ import { useState } from 'react';
 import { PackageCheck, Pencil, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Badge, Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
+import { Badge, Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader } from '@/components/ui';
 import { useCancelPurchase, useReceivePurchase, usePurchase } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { useAuth } from '@/features/auth/useAuth';
-import type { PurchaseItem } from '@/types';
 
 export function PurchaseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,30 +26,6 @@ export function PurchaseDetailPage() {
       </div>
     );
   }
-
-  const columns: Column<PurchaseItem>[] = [
-    {
-      key: 'product',
-      header: 'Product',
-      render: (item) => (
-        <div>
-          <p className="font-medium text-graphite-900">{item.productName}</p>
-          <p className="text-xs text-graphite-400">{item.designNumber}</p>
-        </div>
-      ),
-    },
-    { key: 'cost', header: 'Cost', align: 'right', render: (item) => formatCurrency(item.unitCost) },
-    {
-      key: 'received',
-      header: 'Received',
-      align: 'right',
-      render: (item) => (
-        <Badge tone={item.receivedQuantity >= item.quantity ? 'success' : 'neutral'}>
-          {item.receivedQuantity >= item.quantity ? 'Received' : 'Pending'}
-        </Badge>
-      ),
-    },
-  ];
 
   const runAction = async (action: () => Promise<unknown>) => {
     setActionError(null);
@@ -87,7 +62,84 @@ export function PurchaseDetailPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader title="Line items" />
-            <Table columns={columns} rows={purchase.items} getRowKey={(item) => item.id} />
+            <CardBody className="flex flex-col gap-4">
+              {purchase.items.map((item) => (
+                <div key={item.id} className="rounded-lg border border-graphite-100 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-graphite-900">{item.productName}</p>
+                      <p className="text-xs text-graphite-400">{item.designNumber}</p>
+                    </div>
+                    <Badge tone={item.receivedQuantity >= item.quantity ? 'success' : 'neutral'}>
+                      {item.receivedQuantity >= item.quantity ? 'Received' : 'Pending'}
+                    </Badge>
+                  </div>
+
+                  <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-3">
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Subcategory</dt>
+                      <dd className="text-graphite-800">{item.product.subcategoryName ?? '—'}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Metal type</dt>
+                      <dd className="text-graphite-800">{item.product.metalType ?? '—'}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Gr.Wt (grams)</dt>
+                      <dd className="text-graphite-800">{item.product.grossWeight ?? '—'}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Metal price / gm</dt>
+                      <dd className="text-graphite-800">{formatCurrency(item.product.metalRatePerGram ?? 0)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Shape</dt>
+                      <dd className="text-graphite-800">{item.product.diamondShape ?? '—'}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Quality</dt>
+                      <dd className="text-graphite-800">{item.product.diamondQuality ?? '—'}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Pcs</dt>
+                      <dd className="text-graphite-800">{item.product.diamondPieces ?? '—'}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Ct.Wt</dt>
+                      <dd className="text-graphite-800">{item.product.diamondCaratWeight ?? '—'}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Rate</dt>
+                      <dd className="text-graphite-800">{formatCurrency(item.product.diamondRate ?? 0)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Making charge / gm</dt>
+                      <dd className="text-graphite-800">{formatCurrency(item.product.makingChargePerGram ?? 0)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Other cost</dt>
+                      <dd className="text-graphite-800">{formatCurrency(item.product.fixedExpense)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Selling price</dt>
+                      <dd className="text-graphite-800">{formatCurrency(item.product.sellingPrice)}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-3 flex flex-wrap justify-end gap-x-4 gap-y-1 border-t border-graphite-100 pt-2 text-sm">
+                    <span className="text-graphite-500">
+                      Unit cost:&nbsp;<span className="font-medium text-graphite-800">{formatCurrency(item.unitCost)}</span>
+                    </span>
+                    <span className="text-graphite-500">
+                      Tax (3%):&nbsp;<span className="font-medium text-graphite-800">{formatCurrency(item.product.taxAmount)}</span>
+                    </span>
+                    <span className="text-graphite-500">
+                      Final amount:&nbsp;<span className="font-semibold text-graphite-900">{formatCurrency(item.product.finalAmount)}</span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </CardBody>
           </Card>
         </div>
 

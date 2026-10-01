@@ -3,12 +3,11 @@ import { useState } from 'react';
 import { FileText, Pencil } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader, Table, type Column } from '@/components/ui';
+import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader } from '@/components/ui';
 import { useCancelSale, useSale, useMarkSalePaid } from './hooks';
 import { useAuth } from '@/features/auth/useAuth';
 import { SaleStatusBadge } from './statusBadge';
 import { InvoicePdfModal } from './InvoicePdfModal';
-import type { SaleItem } from '@/types';
 
 export function SaleDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,20 +28,6 @@ export function SaleDetailPage() {
       </div>
     );
   }
-
-  const columns: Column<SaleItem>[] = [
-    {
-      key: 'product',
-      header: 'Product',
-      render: (item) => (
-        <div>
-          <p className="font-medium text-graphite-900">{item.productName}</p>
-          <p className="text-xs text-graphite-400">{item.designNumber}</p>
-        </div>
-      ),
-    },
-    { key: 'sellingPrice', header: 'Selling price', align: 'right', render: (item) => formatCurrency(item.unitPrice) },
-  ];
 
   const runAction = async (action: () => Promise<unknown>) => {
     setActionError(null);
@@ -77,7 +62,42 @@ export function SaleDetailPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader title="Line items" />
-            <Table columns={columns} rows={sale.items} getRowKey={(item) => item.id} />
+            <CardBody className="flex flex-col gap-4">
+              {sale.items.map((item) => (
+                <div key={item.id} className="rounded-lg border border-graphite-100 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-graphite-900">{item.productName}</p>
+                      <p className="text-xs text-graphite-400">{item.designNumber}</p>
+                    </div>
+                    <span className="font-medium text-graphite-900">{formatCurrency(item.unitPrice)}</span>
+                  </div>
+
+                  <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-5">
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Metal cost</dt>
+                      <dd className="text-graphite-800">{formatCurrency(item.product.metalCost)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Diamond cost</dt>
+                      <dd className="text-graphite-800">{formatCurrency(item.product.diamondCost)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Labour cost</dt>
+                      <dd className="text-graphite-800">{formatCurrency(item.product.labourCost)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Other cost</dt>
+                      <dd className="text-graphite-800">{formatCurrency(item.product.fixedExpense)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-graphite-500">Selling price</dt>
+                      <dd className="font-medium text-graphite-900">{formatCurrency(item.product.sellingPrice)}</dd>
+                    </div>
+                  </dl>
+                </div>
+              ))}
+            </CardBody>
           </Card>
         </div>
 
