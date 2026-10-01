@@ -124,10 +124,10 @@ export function DashboardPage() {
             <div className={LIST_HEIGHT}>
               <div className="divide-y divide-graphite-100">
                 {recentEnquiries.map((e) => (
-                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_auto_auto] items-center gap-3 px-4 py-2 text-xs sm:px-5">
+                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_100px_80px] items-center gap-3 px-4 py-2 text-xs sm:px-5">
                     <span className="truncate font-medium text-graphite-900">{e.customerName}</span>
                     <span className="truncate text-graphite-600">{e.subcategoryName ?? '—'}</span>
-                    <span className="text-right font-medium text-graphite-800">
+                    <span className="truncate text-right font-medium text-graphite-800">
                       {e.sellingAmount !== null ? formatCurrency(e.sellingAmount) : '—'}
                     </span>
                     <div className="flex justify-end gap-1">
@@ -155,7 +155,7 @@ export function DashboardPage() {
             <div className={LIST_HEIGHT}>
               <div className="divide-y divide-graphite-100">
                 {recentPurchaseEnquiries.map((e) => (
-                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_auto] items-center gap-3 px-4 py-2 text-xs sm:px-5">
+                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_120px] items-center gap-3 px-4 py-2 text-xs sm:px-5">
                     <span className="truncate font-medium text-graphite-900">{e.vendorName}</span>
                     <span className="truncate text-graphite-600">{e.subcategoryName ?? '—'}</span>
                     <div className="flex justify-end gap-1">
@@ -188,11 +188,11 @@ export function DashboardPage() {
                 {recentSales.map((s) => (
                   <div
                     key={s.id}
-                    className="grid cursor-pointer grid-cols-[1.5fr_auto_auto] items-center gap-3 px-4 py-2 text-xs hover:bg-graphite-50 sm:px-5"
+                    className="grid cursor-pointer grid-cols-[1.5fr_100px_80px] items-center gap-3 px-4 py-2 text-xs hover:bg-graphite-50 sm:px-5"
                     onClick={() => navigate(`/sales/${s.id}`)}
                   >
                     <span className="truncate font-medium text-graphite-900">{s.customerName}</span>
-                    <span className="text-right font-medium text-graphite-800">{formatCurrency(s.total)}</span>
+                    <span className="truncate text-right font-medium text-graphite-800">{formatCurrency(s.total)}</span>
                     <div className="flex justify-end gap-1">
                       {(s.status === 'SOLD' || s.status === 'PAID') && (
                         <IconButton
@@ -237,11 +237,11 @@ export function DashboardPage() {
                 {recentPurchases.map((p) => (
                   <div
                     key={p.id}
-                    className="grid cursor-pointer grid-cols-[1.5fr_auto_auto] items-center gap-3 px-4 py-2 text-xs hover:bg-graphite-50 sm:px-5"
+                    className="grid cursor-pointer grid-cols-[1.5fr_100px_120px] items-center gap-3 px-4 py-2 text-xs hover:bg-graphite-50 sm:px-5"
                     onClick={() => navigate(`/purchases/${p.id}`)}
                   >
                     <span className="truncate font-medium text-graphite-900">{p.vendorName}</span>
-                    <span className="text-right font-medium text-graphite-800">{formatCurrency(p.total)}</span>
+                    <span className="truncate text-right font-medium text-graphite-800">{formatCurrency(p.total)}</span>
                     <div className="flex justify-end gap-1">
                       {p.status === 'ORDERED' && (
                         <IconButton
