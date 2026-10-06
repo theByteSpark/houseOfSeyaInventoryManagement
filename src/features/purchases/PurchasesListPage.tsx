@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ClipboardCheck, Pencil, Plus, Upload, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatDate } from '@/lib/format';
 import {
   Button,
   Card,
@@ -79,7 +79,7 @@ export function PurchasesListPage() {
       key: 'date',
       header: 'Created',
       sortField: 'createdAt',
-      render: (p) => new Date(p.createdAt).toLocaleDateString(),
+      render: (p) => formatDate(p.createdAt),
     },
     {
       key: 'actions',
@@ -144,7 +144,7 @@ export function PurchasesListPage() {
         title="Purchases"
         description="Record purchase orders and track deliveries from vendors."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<Upload className="h-4 w-4" strokeWidth={2} />}>
               Import
             </Button>

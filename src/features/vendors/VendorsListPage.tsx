@@ -21,6 +21,7 @@ import { importVendorsCsv } from '@/features/import-export/api';
 import { vendorKeys, useVendorsPage, useDeleteVendor } from './hooks';
 import { VendorFormModal } from './VendorFormModal';
 import type { Vendor } from '@/types';
+import { formatDate } from '@/lib/format';
 
 export function VendorsListPage() {
   const queryClient = useQueryClient();
@@ -70,7 +71,7 @@ export function VendorsListPage() {
       render: (v) =>
         v.lastOrderedDate ? (
           <div>
-            <p className="text-sm text-graphite-700">{new Date(v.lastOrderedDate).toLocaleDateString()}</p>
+            <p className="text-sm text-graphite-700">{formatDate(v.lastOrderedDate)}</p>
             {v.lastOrderedProduct && (
               <p className="text-xs text-graphite-400">
                 {v.lastOrderedProduct} ({v.lastOrderedQty})
@@ -127,7 +128,7 @@ export function VendorsListPage() {
         title="Vendors"
         description="Manage the suppliers you purchase from."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<Upload className="h-4 w-4" strokeWidth={2} />}>
               Import
             </Button>

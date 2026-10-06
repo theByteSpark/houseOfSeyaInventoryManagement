@@ -41,6 +41,7 @@ export function ProductsListPage() {
   const queryClient = useQueryClient();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
   const [subcategoryId, setSubcategoryId] = useState('');
+  const [statusFilter, setStatusFilter] = useState<Product['status'] | 'ALL'>('ALL');
   const [importOpen, setImportOpen] = useState(false);
   const subcategoryGroups = useSubcategoryGroups();
   const { data, isLoading, isPlaceholderData } = useProductsPage({
@@ -50,14 +51,21 @@ export function ProductsListPage() {
     sortBy: query.sortBy,
     sortDir: query.sortDir,
     subcategoryId: subcategoryId || undefined,
+    status: statusFilter === 'ALL' ? undefined : statusFilter,
   });
   const deleteProduct = useDeleteProduct();
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
 
-  const products = data?.data ?? [];
+  // The server filters by status; re-checking here keeps the list correct even against an API that ignores the param.
+  const products = (data?.data ?? []).filter((p) => statusFilter === 'ALL' || p.status === statusFilter);
 
   const handleSubcategoryChange = (value: string) => {
     setSubcategoryId(value);
+    query.setPage(1);
+  };
+
+  const handleStatusChange = (value: Product['status'] | 'ALL') => {
+    setStatusFilter(value);
     query.setPage(1);
   };
 
@@ -141,7 +149,7 @@ export function ProductsListPage() {
         title="Inventory"
         description="Track your product catalog and its status."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<Upload className="h-4 w-4" strokeWidth={2} />}>
               Import
             </Button>
@@ -177,15 +185,33 @@ export function ProductsListPage() {
             ))}
           </Select>
         </div>
+        <div className="w-full max-w-[12rem]">
+          <Select
+            aria-label="Status filter"
+            value={statusFilter}
+            onChange={(e) => handleStatusChange(e.target.value as Product['status'] | 'ALL')}
+          >
+            <option value="ALL">All statuses</option>
+            {(Object.keys(STATUS_LABEL) as Product['status'][]).map((status) => (
+              <option key={status} value={status}>
+                {STATUS_LABEL[status]}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       <Card className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
         {products.length === 0 ? (
-          <EmptyState
-            title="No products yet"
-            description="Add your first product to start tracking inventory."
-            action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add product</Button>}
-          />
+          statusFilter !== 'ALL' || subcategoryId || query.search ? (
+            <EmptyState title="No matching products" description="Try changing the search or filters." />
+          ) : (
+            <EmptyState
+              title="No products yet"
+              description="Add your first product to start tracking inventory."
+              action={<Button onClick={openCreate} icon={<Plus className="h-4 w-4" strokeWidth={2} />}>Add product</Button>}
+            />
+          )
         ) : (
           <>
             <Table

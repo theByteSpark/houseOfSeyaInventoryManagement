@@ -95,14 +95,14 @@ export function ProductFormPage() {
               <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
                   label="Stock qty"
-                  type="number"
+                  type="number" zeroDefault
                   min="0"
                   disabled={isEdit}
                   hint={isEdit ? 'Stock quantity is set once, at creation' : undefined}
                   error={errors.quantityInStock?.message}
                   {...register('quantityInStock')}
                 />
-                <Input label="Reorder level" type="number" min="0" error={errors.reorderLevel?.message} {...register('reorderLevel')} />
+                <Input label="Reorder level" type="number" zeroDefault min="0" error={errors.reorderLevel?.message} {...register('reorderLevel')} />
               </CardBody>
             </Card>
           </div>

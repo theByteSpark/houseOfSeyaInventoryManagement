@@ -18,7 +18,7 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatDate } from '@/lib/format';
 import { useAuth } from '@/features/auth/useAuth';
 import { importSalesCsv } from '@/features/import-export/api';
 import { saleKeys, useCancelSale, useMarkSalePaid, useSalesPage } from './hooks';
@@ -68,7 +68,7 @@ export function SalesListPage() {
       key: 'date',
       header: 'Created',
       sortField: 'createdAt',
-      render: (sale) => new Date(sale.createdAt).toLocaleDateString(),
+      render: (sale) => formatDate(sale.createdAt),
     },
     {
       key: 'actions',
@@ -76,7 +76,7 @@ export function SalesListPage() {
       align: 'right',
       render: (sale) => (
         <div className="flex justify-end gap-1">
-          {(sale.status === 'SOLD' || sale.status === 'PAID') && (
+          {sale.status !== 'CANCELLED' && (
             <IconButton
               label="Edit sale"
               tone="brand"
@@ -88,7 +88,7 @@ export function SalesListPage() {
               <Pencil className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
-          {sale.status === 'SOLD' && (
+          {(sale.status === 'SOLD' || sale.status === 'PARTIALLY_PAID') && (
             <IconButton
               label="Mark as paid"
               tone="brand"
@@ -104,7 +104,7 @@ export function SalesListPage() {
               <Banknote className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
-          {isAdmin && (sale.status === 'SOLD' || sale.status === 'PAID') && (
+          {isAdmin && sale.status !== 'CANCELLED' && (
             <IconButton
               label="Cancel sale"
               tone="danger"
@@ -120,9 +120,9 @@ export function SalesListPage() {
               <XCircle className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
-          {(sale.status === 'SOLD' || sale.status === 'PAID') && (
+          {sale.status !== 'CANCELLED' && (
             <IconButton
-              label="View / download invoice"
+              label={sale.status === 'PAID' ? 'View / download invoice' : 'View / download credit note'}
               tone="neutral"
               onClick={(e) => {
                 e.stopPropagation();
@@ -145,7 +145,7 @@ export function SalesListPage() {
         title="Sales"
         description="Record sales and generate invoices for customers."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<Upload className="h-4 w-4" strokeWidth={2} />}>
               Import
             </Button>
@@ -176,6 +176,7 @@ export function SalesListPage() {
         >
           <option value="ALL">All statuses</option>
           <option value="SOLD">Sold</option>
+          <option value="PARTIALLY_PAID">Partially paid</option>
           <option value="PAID">Paid</option>
           <option value="CANCELLED">Cancelled</option>
         </Select>
@@ -211,7 +212,7 @@ export function SalesListPage() {
       </Card>
 
       {pdfSale && (
-        <InvoicePdfModal saleId={pdfSale.id} saleNumber={pdfSale.saleNumber} onClose={() => setPdfSale(null)} />
+        <InvoicePdfModal sale={pdfSale} onClose={() => setPdfSale(null)} />
       )}
 
       <CsvImportModal

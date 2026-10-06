@@ -15,7 +15,7 @@ export function PageHeader({
         <h1 className="text-[17px] font-semibold tracking-tight text-graphite-900 sm:text-[19px]">{title}</h1>
         {description && <p className="mt-1 text-sm text-graphite-500">{description}</p>}
       </div>
-      {action && <div className="w-full sm:w-auto">{action}</div>}
+      {action && <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end [&>div]:flex-wrap">{action}</div>}
     </div>
   );
 }

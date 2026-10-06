@@ -20,8 +20,8 @@ const variantClasses: Record<Variant, string> = {
 };
 
 const sizeClasses: Record<Size, string> = {
-  sm: 'px-3 py-1.5 text-[13px] gap-1.5',
-  md: 'px-4 py-2 text-sm gap-2',
+  sm: 'min-h-8 px-3 py-1.5 text-[13px] gap-1.5',
+  md: 'min-h-9 px-4 py-2 text-sm gap-2',
 };
 
 export function Button({
@@ -37,7 +37,7 @@ export function Button({
   return (
     <button
       className={cn(
-        'inline-flex cursor-pointer items-center justify-center rounded-md font-medium tracking-tight transition-colors',
+        'inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap rounded-md font-medium tracking-tight transition-colors',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
         'disabled:cursor-not-allowed disabled:opacity-50',
         variantClasses[variant],

@@ -45,17 +45,17 @@ export function Modal({
         className={cn('w-full rounded-t-lg bg-white shadow-xl sm:rounded-lg', sizeClasses[size])}
       >
         <div className="flex items-center justify-between border-b border-graphite-100 px-4 py-3 sm:px-5 sm:py-4">
-          <h2 className="text-[15px] font-semibold text-graphite-900">{title}</h2>
+          <h2 className="min-w-0 truncate pr-2 text-[15px] font-semibold text-graphite-900">{title}</h2>
           <button
             onClick={onClose}
-            aria-label="Close"
-            className="cursor-pointer rounded-md p-1 text-graphite-400 hover:bg-graphite-100 hover:text-graphite-600"
+            aria-label="Close" title="Close"
+            className="shrink-0 cursor-pointer rounded-md p-1.5 text-graphite-400 hover:bg-graphite-100 hover:text-graphite-600"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto px-4 py-4 sm:px-5">{children}</div>
-        {footer && <div className="flex justify-end gap-2 border-t border-graphite-100 px-4 py-3 sm:px-5 sm:py-4">{footer}</div>}
+        <div className="max-h-[calc(100dvh-10rem)] sm:max-h-[70vh] overflow-y-auto px-4 py-4 sm:px-5">{children}</div>
+        {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-graphite-100 px-4 py-3 sm:px-5 sm:py-4">{footer}</div>}
       </div>
     </div>,
     document.body,

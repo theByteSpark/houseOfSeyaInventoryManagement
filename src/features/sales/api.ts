@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/apiClient';
+import { withEffectiveStatus } from './saleStatus';
 import type { PaginatedResult, Sale, SaleStatus, SortDir } from '@/types';
 
 export interface SaleLineInput {
@@ -25,17 +26,17 @@ export interface FetchSalesPageParams {
 
 export async function fetchSales(): Promise<Sale[]> {
   const { data } = await apiClient.get<Sale[]>('/sales');
-  return data;
+  return data.map(withEffectiveStatus);
 }
 
 export async function fetchSalesPage(params: FetchSalesPageParams): Promise<PaginatedResult<Sale>> {
   const { data } = await apiClient.get<PaginatedResult<Sale>>('/sales', { params });
-  return data;
+  return { ...data, data: data.data.map(withEffectiveStatus) };
 }
 
 export async function fetchSale(id: string): Promise<Sale> {
   const { data } = await apiClient.get<Sale>(`/sales/${id}`);
-  return data;
+  return withEffectiveStatus(data);
 }
 
 export async function createSale(input: SaleInput): Promise<Sale> {

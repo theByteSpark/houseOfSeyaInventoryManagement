@@ -213,7 +213,7 @@ export function AppShell() {
         </div>
         <button
           onClick={() => logout()}
-          aria-label="Sign out"
+          aria-label="Sign out" title="Sign out"
           className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-graphite-500 hover:bg-graphite-100 hover:text-graphite-800"
         >
           <LogOut className="h-[17px] w-[17px]" strokeWidth={2} />

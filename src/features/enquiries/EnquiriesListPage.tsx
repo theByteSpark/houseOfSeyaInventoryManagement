@@ -14,7 +14,7 @@ import {
   type Column,
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatDate } from '@/lib/format';
 import { useAuth } from '@/features/auth/useAuth';
 import { useDeleteEnquiry, useEnquiriesPage } from './hooks';
 import { EnquiryFormModal } from './EnquiryFormModal';
@@ -91,7 +91,7 @@ export function EnquiriesListPage() {
       key: 'createdAt',
       header: 'Recorded',
       sortField: 'createdAt',
-      render: (e) => new Date(e.createdAt).toLocaleDateString(),
+      render: (e) => formatDate(e.createdAt),
     },
     {
       key: 'actions',

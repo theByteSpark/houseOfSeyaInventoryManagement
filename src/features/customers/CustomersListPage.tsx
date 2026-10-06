@@ -105,7 +105,7 @@ export function CustomersListPage() {
         title="Customers"
         description="Manage the companies and contacts you sell to."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setImportOpen(true)} icon={<Upload className="h-4 w-4" strokeWidth={2} />}>
               Import
             </Button>

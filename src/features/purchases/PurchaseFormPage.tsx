@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
-import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, SearchableCombobox } from '@/components/ui';
+import { formatCurrency, todayIso } from '@/lib/format';
+import { Button, DateInput, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, SearchableCombobox } from '@/components/ui';
 import { useVendors } from '@/features/vendors/hooks';
 import { VendorFormModal } from '@/features/vendors/VendorFormModal';
 import { useCreatePurchase, usePurchase, useUpdatePurchase } from './hooks';
@@ -36,7 +36,7 @@ export function PurchaseFormPage() {
 
   const [vendorId, setVendorId] = useState('');
   const [vendorInvoiceNumber, setVendorInvoiceNumber] = useState('');
-  const [vendorInvoiceDate, setVendorInvoiceDate] = useState('');
+  const [vendorInvoiceDate, setVendorInvoiceDate] = useState(todayIso());
   const [lines, setLines] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
@@ -180,12 +180,7 @@ export function PurchaseFormPage() {
                 value={vendorInvoiceNumber}
                 onChange={(e) => setVendorInvoiceNumber(e.target.value)}
               />
-              <Input
-                label="Vendor invoice date"
-                type="date"
-                value={vendorInvoiceDate}
-                onChange={(e) => setVendorInvoiceDate(e.target.value)}
-              />
+              <DateInput label="Vendor invoice date" value={vendorInvoiceDate} onChange={setVendorInvoiceDate} />
             </CardBody>
           </Card>
 

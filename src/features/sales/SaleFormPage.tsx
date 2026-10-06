@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency } from '@/lib/format';
-import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, Select, SearchableCombobox } from '@/components/ui';
+import { Button, Card, CardBody, CardHeader, EmptyState, FullPageSpinner, IconButton, Input, PageHeader, SearchableCombobox } from '@/components/ui';
 import { useCustomers } from '@/features/customers/hooks';
 import { CustomerFormModal } from '@/features/customers/CustomerFormModal';
 import { useProducts } from '@/features/inventory/hooks';
@@ -55,7 +55,7 @@ export function SaleFormPage() {
 
   const addLine = () => {
     if (availableProducts.length === 0) return;
-    setLines((prev) => [...prev, { productId: availableProducts[0].id }]);
+    setLines((prev) => [...prev, { productId: '' }]);
   };
 
   const updateLine = (index: number, patch: Partial<DraftLine>) => {
@@ -96,6 +96,10 @@ export function SaleFormPage() {
     }
     if (lines.length === 0) {
       setError('Add at least one product line.');
+      return;
+    }
+    if (lines.some((l) => !l.productId)) {
+      setError('Select a product for every line item, or remove the empty line.');
       return;
     }
     const input = {
@@ -161,7 +165,7 @@ export function SaleFormPage() {
                   size="sm"
                   variant="secondary"
                   onClick={addLine}
-                  disabled={availableProducts.length === 0}
+                  disabled={availableProducts.length === 0 || lines.some((l) => !l.productId)}
                   icon={<Plus className="h-3.5 w-3.5" strokeWidth={2} />}
                 >
                   Add product
@@ -179,18 +183,16 @@ export function SaleFormPage() {
                       <div key={index} className="rounded-lg border border-graphite-100 p-3">
                         <div className="flex items-end gap-3">
                           <div className="flex-1">
-                            <Select
+                            <SearchableCombobox
                               label="Product"
-                              value={line.productId}
-                              onChange={(e) => updateLine(index, { productId: e.target.value })}
-                            >
-                              <option value={line.productId}>{product?.name}</option>
-                              {availableProducts.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                  {p.name} ({p.designNumber})
-                                </option>
-                              ))}
-                            </Select>
+                              items={[...(product ? [product] : []), ...availableProducts]}
+                              value={line.productId || null}
+                              onChange={(p) => updateLine(index, { productId: p.id })}
+                              getOptionLabel={(p) => p.name}
+                              getOptionValue={(p) => p.id}
+                              getOptionSublabel={(p) => p.designNumber}
+                              placeholder="Search product by name or design number…"
+                            />
                           </div>
                           <IconButton label="Remove line item" tone="danger" onClick={() => removeLine(index)}>
                             <Trash2 className="h-4 w-4" strokeWidth={2} />
@@ -272,8 +274,8 @@ export function SaleFormPage() {
                 <dd className="font-semibold text-graphite-900">{formatCurrency(total)}</dd>
               </div>
 
-              <div className="mt-4 flex items-end gap-2">
-                <div className="flex-1">
+              <div className="mt-4 flex flex-wrap items-end gap-2">
+                <div className="min-w-[8rem] flex-1">
                   <Input
                     label="Received amount"
                     type="number"

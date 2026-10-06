@@ -1,15 +1,41 @@
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import { forwardRef, type ChangeEvent, type FocusEvent, type InputHTMLAttributes } from 'react';
 import { cn } from '@/lib/cn';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   hint?: string;
+  /** Number inputs: shows 0 when empty, selects it on focus, and never keeps leading zeros (05 → 5). */
+  zeroDefault?: boolean;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, hint, className, id, ...rest }, ref) => {
+  ({ label, error, hint, className, id, zeroDefault, onChange, onFocus, onBlur, ...rest }, ref) => {
     const inputId = id ?? rest.name;
+
+    const zeroHandlers = zeroDefault
+      ? {
+          onFocus: (e: FocusEvent<HTMLInputElement>) => {
+            if (e.target.value === '0') e.target.select();
+            onFocus?.(e);
+          },
+          onChange: (e: ChangeEvent<HTMLInputElement>) => {
+            const v = e.target.value;
+            // Strip leading zeros from integers ("05" -> "5"), keep "0" and "0.5".
+            if (/^0\d/.test(v)) e.target.value = v.replace(/^0+(?=\d)/, '');
+            onChange?.(e);
+          },
+          onBlur: (e: FocusEvent<HTMLInputElement>) => {
+            if (e.target.value === '') {
+              // Restore the default through the native setter so react-hook-form sees the change.
+              const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+              setter?.call(e.target, '0');
+              e.target.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            onBlur?.(e);
+          },
+        }
+      : { onFocus, onChange, onBlur };
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
@@ -28,6 +54,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             className,
           )}
           {...rest}
+          {...zeroHandlers}
         />
         {error ? (
           <span className="text-xs text-red-600">{error}</span>

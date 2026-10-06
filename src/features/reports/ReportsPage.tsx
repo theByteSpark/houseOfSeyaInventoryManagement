@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BarChart3, Package, ShoppingCart, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/format';
 import {
   Badge,
   Card,
@@ -113,7 +113,7 @@ function SalesReportTab() {
     { key: 'customer', header: 'Customer', render: (s) => s.customerName },
     { key: 'status', header: 'Status', render: (s) => <SaleStatusBadge status={s.status as SaleStatus} /> },
     { key: 'total', header: 'Total', render: (s) => formatCurrency(s.total) },
-    { key: 'date', header: 'Date', render: (s) => new Date(s.createdAt).toLocaleDateString() },
+    { key: 'date', header: 'Date', render: (s) => formatDate(s.createdAt) },
   ];
 
   const topProductColumns: Column<typeof data.topProducts[number]>[] = [
@@ -131,6 +131,7 @@ function SalesReportTab() {
         statusOptions={[
           { value: 'ALL', label: 'All statuses' },
           { value: 'SOLD', label: 'Sold' },
+          { value: 'PARTIALLY_PAID', label: 'Partially paid' },
           { value: 'PAID', label: 'Paid' },
           { value: 'CANCELLED', label: 'Cancelled' },
         ]}
@@ -187,7 +188,7 @@ function PurchasesReportTab() {
     { key: 'vendor', header: 'Vendor', render: (p) => p.vendorName },
     { key: 'status', header: 'Status', render: (p) => <PurchaseStatusBadge status={p.status as PurchaseStatus} /> },
     { key: 'total', header: 'Total', align: 'right', render: (p) => formatCurrency(p.total) },
-    { key: 'date', header: 'Date', render: (p) => new Date(p.createdAt).toLocaleDateString() },
+    { key: 'date', header: 'Date', render: (p) => formatDate(p.createdAt) },
   ];
 
   const topProductColumns: Column<typeof data.topProducts[number]>[] = [
@@ -267,7 +268,7 @@ function InventoryReportTab() {
     { key: 'type', header: 'Type', render: (m) => <Badge tone={m.type === 'RESTOCK' ? 'success' : m.type === 'SALE' ? 'info' : 'warning'}>{m.type}</Badge> },
     { key: 'qty', header: 'Qty', align: 'right', render: (m) => m.quantity },
     { key: 'reason', header: 'Reason', render: (m) => m.reason ?? <span className="text-graphite-300">—</span> },
-    { key: 'date', header: 'Date', render: (m) => new Date(m.createdAt).toLocaleString() },
+    { key: 'date', header: 'Date', render: (m) => formatDateTime(m.createdAt) },
   ];
 
   return (

@@ -37,6 +37,7 @@ export interface FetchProductsPageParams {
   sortBy?: string;
   sortDir?: SortDir;
   subcategoryId?: string;
+  status?: 'ORDERED' | 'ACTIVE' | 'SOLD';
 }
 
 export interface FetchCategoriesPageParams {

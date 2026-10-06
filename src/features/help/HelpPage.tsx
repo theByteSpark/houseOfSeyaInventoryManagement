@@ -78,7 +78,7 @@ const SECTIONS: GuideSection[] = [
     summary: 'A sale is recorded straight to Sold, and stays editable from there.',
     points: [
       'Add a sale for a customer with one or more products — it\'s recorded as Sold immediately, and stock is deducted right away.',
-      'Mark it Paid once payment is received in full, or edit a Sold/Paid sale any time to record a partial payment or fix a mistake.',
+      'Status follows the money received: Sold (nothing yet), Partially paid (some received, balance due) and Paid (settled in full). Edit a sale any time to record a payment, or use Mark as paid to settle the balance.',
       'Admins can cancel a Sold or Paid sale if the deal falls through — the item returns to stock.',
       'Download the invoice as a PDF any time after it\'s sold.',
     ],

@@ -18,7 +18,7 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
   const end = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-graphite-100 px-4 py-3 text-sm text-graphite-500">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-graphite-100 px-4 py-3 text-sm text-graphite-500">
       <div className="flex items-center gap-2">
         <span>Rows per page</span>
         <Select

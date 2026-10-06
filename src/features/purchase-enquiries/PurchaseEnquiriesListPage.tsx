@@ -19,6 +19,7 @@ import { useAuth } from '@/features/auth/useAuth';
 import { useDeletePurchaseEnquiry, usePurchaseEnquiriesPage } from './hooks';
 import { PurchaseEnquiryFormModal } from './PurchaseEnquiryFormModal';
 import type { PurchaseEnquiry } from '@/types';
+import { formatDate } from '@/lib/format';
 
 export function PurchaseEnquiriesListPage() {
   const navigate = useNavigate();
@@ -103,7 +104,7 @@ export function PurchaseEnquiriesListPage() {
       key: 'createdAt',
       header: 'Recorded',
       sortField: 'createdAt',
-      render: (e) => new Date(e.createdAt).toLocaleDateString(),
+      render: (e) => formatDate(e.createdAt),
     },
     {
       key: 'actions',

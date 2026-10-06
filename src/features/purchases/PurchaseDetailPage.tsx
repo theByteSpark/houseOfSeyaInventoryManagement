@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { PackageCheck, Pencil, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/format';
 import { Badge, Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader } from '@/components/ui';
 import { useCancelPurchase, useReceivePurchase, usePurchase } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
@@ -44,7 +44,7 @@ export function PurchaseDetailPage() {
         title={purchase.purchaseNumber}
         description={`Ordered from ${purchase.vendorName}`}
         action={
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <PurchaseStatusBadge status={purchase.status} />
             <Button variant="secondary" size="sm" onClick={() => navigate('/purchases')}>
               Back
@@ -155,7 +155,7 @@ export function PurchaseDetailPage() {
                 <div className="flex justify-between">
                   <dt className="text-graphite-500">Vendor invoice date</dt>
                   <dd className="font-medium text-graphite-800">
-                    {purchase.vendorInvoiceDate ? new Date(purchase.vendorInvoiceDate).toLocaleDateString() : '—'}
+                    {purchase.vendorInvoiceDate ? formatDate(purchase.vendorInvoiceDate) : '—'}
                   </dd>
                 </div>
                 <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
@@ -164,9 +164,9 @@ export function PurchaseDetailPage() {
                 </div>
               </dl>
               <p className="mt-4 text-xs text-graphite-400">
-                Created {new Date(purchase.createdAt).toLocaleString()}
-                {purchase.orderedAt && <> · Ordered {new Date(purchase.orderedAt).toLocaleString()}</>}
-                {purchase.receivedAt && <> · Received {new Date(purchase.receivedAt).toLocaleString()}</>}
+                Created {formatDateTime(purchase.createdAt)}
+                {purchase.orderedAt && <> · Ordered {formatDateTime(purchase.orderedAt)}</>}
+                {purchase.receivedAt && <> · Received {formatDateTime(purchase.receivedAt)}</>}
               </p>
             </CardBody>
           </Card>

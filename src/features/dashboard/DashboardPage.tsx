@@ -98,10 +98,10 @@ export function DashboardPage() {
   };
 
   const sectionAction = (viewAllPath: string, onAdd: () => void, addLabel: string) => (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
       <button
         onClick={() => navigate(viewAllPath)}
-        className="text-sm font-medium text-brand-600 hover:underline"
+        className="cursor-pointer whitespace-nowrap text-sm font-medium text-brand-600 hover:underline"
       >
         View all
       </button>
@@ -194,7 +194,7 @@ export function DashboardPage() {
                     <span className="truncate font-medium text-graphite-900">{s.customerName}</span>
                     <span className="truncate text-right font-medium text-graphite-800">{formatCurrency(s.total)}</span>
                     <div className="flex justify-end gap-1">
-                      {(s.status === 'SOLD' || s.status === 'PAID') && (
+                      {s.status !== 'CANCELLED' && (
                         <IconButton
                           label="Edit sale"
                           tone="brand"
@@ -206,7 +206,7 @@ export function DashboardPage() {
                           <Pencil className="h-4 w-4" strokeWidth={2} />
                         </IconButton>
                       )}
-                      {isAdmin && (s.status === 'SOLD' || s.status === 'PAID') && (
+                      {isAdmin && s.status !== 'CANCELLED' && (
                         <IconButton
                           label="Cancel sale"
                           tone="danger"

@@ -22,12 +22,12 @@ export function CardHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-graphite-100 px-4 py-3 sm:px-5 sm:py-4">
-      <div className="min-w-0">
+    <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-graphite-100 px-4 py-3 sm:px-5 sm:py-4">
+      <div className="min-w-0 flex-1 basis-32">
         <h2 className="text-[15px] font-semibold text-graphite-900">{title}</h2>
         {description && <p className="mt-0.5 text-sm text-graphite-500">{description}</p>}
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {action && <div className="max-w-full">{action}</div>}
     </div>
   );
 }

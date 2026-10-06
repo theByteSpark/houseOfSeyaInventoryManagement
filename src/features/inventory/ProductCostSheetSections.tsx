@@ -69,7 +69,7 @@ export function ProductCostSheetSections({ register, errors, watched }: ProductC
             </Select>
             <Input
               label="Gr.Wt (grams)"
-              type="number"
+              type="number" zeroDefault
               step="0.001"
               min="0"
               error={errors.grossWeight?.message}
@@ -77,7 +77,7 @@ export function ProductCostSheetSections({ register, errors, watched }: ProductC
             />
             <Input
               label="Metal price / gm"
-              type="number"
+              type="number" zeroDefault
               step="0.01"
               min="0"
               error={errors.metalRatePerGram?.message}
@@ -134,7 +134,7 @@ export function ProductCostSheetSections({ register, errors, watched }: ProductC
         <CardBody className="flex flex-col gap-4">
           <Input
             label="Making charge / gm"
-            type="number"
+            type="number" zeroDefault
             step="0.01"
             min="0"
             error={errors.makingChargePerGram?.message}
@@ -152,7 +152,7 @@ export function ProductCostSheetSections({ register, errors, watched }: ProductC
         <CardBody>
           <Input
             label="Other cost"
-            type="number"
+            type="number" zeroDefault
             step="0.01"
             min="0"
             error={errors.fixedExpense?.message}
@@ -201,7 +201,7 @@ export function ProductCostSummary({ register, errors, watched }: ProductCostSum
       <div className="mt-4">
         <Input
           label="Selling price"
-          type="number"
+          type="number" zeroDefault
           step="0.01"
           min="0"
           error={errors.sellingPrice?.message}

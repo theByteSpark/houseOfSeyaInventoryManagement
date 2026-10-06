@@ -16,3 +16,4 @@ export { Pagination } from './Pagination';
 export { SearchableCombobox } from './SearchableCombobox';
 export { CsvImportModal } from './CsvImportModal';
 export type { CsvImportRowResult, CsvImportResult } from './CsvImportModal';
+export { DateInput } from './DateInput';

@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { FileText, Pencil } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatDateTime } from '@/lib/format';
 import { Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader } from '@/components/ui';
 import { useCancelSale, useSale, useMarkSalePaid } from './hooks';
 import { useAuth } from '@/features/auth/useAuth';
@@ -44,7 +44,7 @@ export function SaleDetailPage() {
         title={sale.saleNumber}
         description={`Billed to ${sale.customerName}`}
         action={
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <SaleStatusBadge status={sale.status} />
             <Button variant="secondary" size="sm" onClick={() => navigate('/sales')}>
               Back
@@ -136,8 +136,9 @@ export function SaleDetailPage() {
                 </div>
               </dl>
               <p className="mt-4 text-xs text-graphite-400">
-                Created {new Date(sale.createdAt).toLocaleString()}
-                {sale.soldAt && <> · Sold {new Date(sale.soldAt).toLocaleString()}</>}
+                Created {formatDateTime(sale.createdAt)}
+                {sale.soldAt && <> · Sold {formatDateTime(sale.soldAt)}</>}
+                {sale.paidAt && <> · Paid {formatDateTime(sale.paidAt)}</>}
               </p>
             </CardBody>
           </Card>
@@ -145,7 +146,7 @@ export function SaleDetailPage() {
           <Card>
             <CardHeader title="Actions" />
             <CardBody className="flex flex-col gap-2">
-              {(sale.status === 'SOLD' || sale.status === 'PAID') && (
+              {sale.status !== 'CANCELLED' && (
                 <Button
                   variant="secondary"
                   onClick={() => navigate(`/sales/${sale.id}/edit`)}
@@ -154,7 +155,7 @@ export function SaleDetailPage() {
                   Edit sale
                 </Button>
               )}
-              {sale.status === 'SOLD' && (
+              {(sale.status === 'SOLD' || sale.status === 'PARTIALLY_PAID') && (
                 <Button
                   isLoading={markPaid.isPending}
                   onClick={() => runAction(() => markPaid.mutateAsync(sale.id))}
@@ -162,7 +163,7 @@ export function SaleDetailPage() {
                   Mark as paid
                 </Button>
               )}
-              {isAdmin && (sale.status === 'SOLD' || sale.status === 'PAID') && (
+              {isAdmin && sale.status !== 'CANCELLED' && (
                 <Button
                   variant="danger"
                   isLoading={cancelSale.isPending}
@@ -174,13 +175,13 @@ export function SaleDetailPage() {
               {sale.status === 'CANCELLED' && (
                 <p className="text-sm text-graphite-400">No further actions available.</p>
               )}
-              {(sale.status === 'SOLD' || sale.status === 'PAID') && (
+              {sale.status !== 'CANCELLED' && (
                 <Button
                   variant="secondary"
                   onClick={() => setPdfOpen(true)}
                   icon={<FileText className="h-4 w-4" strokeWidth={2} />}
                 >
-                  View / download invoice
+                  {sale.status === 'PAID' ? 'View / download invoice' : 'View / download credit note'}
                 </Button>
               )}
             </CardBody>
@@ -189,7 +190,7 @@ export function SaleDetailPage() {
       </div>
 
       {pdfOpen && (
-        <InvoicePdfModal saleId={sale.id} saleNumber={sale.saleNumber} onClose={() => setPdfOpen(false)} />
+        <InvoicePdfModal sale={sale} onClose={() => setPdfOpen(false)} />
       )}
     </div>
   );
