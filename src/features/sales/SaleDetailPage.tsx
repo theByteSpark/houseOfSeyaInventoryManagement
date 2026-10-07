@@ -73,6 +73,12 @@ export function SaleDetailPage() {
                     <span className="font-medium text-graphite-900">{formatCurrency(item.unitPrice)}</span>
                   </div>
 
+                  {item.product.status === 'ORDERED' && (
+                    <p className="mt-2 text-xs font-medium text-amber-600">
+                      Ordered — not yet received from the vendor.
+                    </p>
+                  )}
+
                   <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-5">
                     <div className="flex justify-between gap-2 sm:block">
                       <dt className="text-graphite-500">Metal cost</dt>

@@ -79,9 +79,10 @@ const SECTIONS: GuideSection[] = [
     summary: 'A sale is recorded straight to Sold, and stays editable from there.',
     points: [
       'Add a sale for a customer with one or more products — it\'s recorded as Sold immediately, and stock is deducted right away.',
+      'A product can be billed even while it\'s still Ordered (on its way from a vendor, not yet received) — useful for a backorder sale. It\'s marked Sold right away; when its purchase is later received it stays Sold instead of becoming available again.',
       'Status follows the money received: Sold (nothing yet), Partially paid (some received, balance due) and Paid (settled in full). Edit a sale any time to record a payment, or use Mark as paid to settle the balance.',
-      'Admins can cancel a Sold or Paid sale if the deal falls through — the item returns to stock.',
-      'Download the invoice as a PDF any time after it\'s sold.',
+      'Admins can cancel a Sold, Partially paid, or Paid sale if the deal falls through — the item returns to stock (or back to Ordered, if it was never actually received in the first place).',
+      'Download the sale\'s PDF any time — it\'s a Credit Note until the balance is fully settled, then becomes the Tax Invoice once Paid.',
     ],
   },
   {

@@ -48,8 +48,11 @@ export function SaleFormPage() {
     setInitialized(true);
   }, [isEdit, existingSale, initialized]);
 
+  // An Ordered product (on its way from a vendor, not yet received) can
+  // still be billed in advance — only one already Sold is off the table.
   const availableProducts = useMemo(
-    () => products?.filter((p) => p.status === 'ACTIVE' && !lines.some((l) => l.productId === p.id)) ?? [],
+    () =>
+      products?.filter((p) => (p.status === 'ACTIVE' || p.status === 'ORDERED') && !lines.some((l) => l.productId === p.id)) ?? [],
     [products, lines],
   );
 
@@ -190,7 +193,7 @@ export function SaleFormPage() {
                               onChange={(p) => updateLine(index, { productId: p.id })}
                               getOptionLabel={(p) => p.name}
                               getOptionValue={(p) => p.id}
-                              getOptionSublabel={(p) => p.designNumber}
+                              getOptionSublabel={(p) => (p.status === 'ORDERED' ? `${p.designNumber} — Ordered, not yet received` : p.designNumber)}
                               placeholder="Search product by name or design number…"
                             />
                           </div>
@@ -198,6 +201,12 @@ export function SaleFormPage() {
                             <Trash2 className="h-4 w-4" strokeWidth={2} />
                           </IconButton>
                         </div>
+
+                        {product?.status === 'ORDERED' && (
+                          <p className="mt-2 text-xs font-medium text-amber-600">
+                            Ordered — not yet received from the vendor. Billing now sells it in advance.
+                          </p>
+                        )}
 
                         {product && (
                           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-5">
