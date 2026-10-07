@@ -105,12 +105,16 @@ export function SaleFormPage() {
       setError('Select a product for every line item, or remove the empty line.');
       return;
     }
+    if (receivedAmount === '' || Number(receivedAmount) <= 0) {
+      setError('Enter the amount received — every sale collects something upfront.');
+      return;
+    }
     const input = {
       customerId,
       items: lines.map((l) => ({ productId: l.productId, quantity: 1 })),
       discountPercent: discountPercent === '' ? undefined : discountPercent,
       discountAmount: discountAmount === '' ? undefined : discountAmount,
-      receivedAmount: receivedAmount === '' ? undefined : receivedAmount,
+      receivedAmount,
     };
 
     try {
@@ -288,8 +292,9 @@ export function SaleFormPage() {
                   <Input
                     label="Received amount"
                     type="number"
-                    min="0"
+                    min="0.01"
                     step="0.01"
+                    hint="Required — every sale collects something upfront"
                     value={receivedAmount}
                     onChange={(e) => setReceivedAmount(e.target.value === '' ? '' : Number(e.target.value))}
                   />

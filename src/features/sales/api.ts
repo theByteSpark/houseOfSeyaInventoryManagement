@@ -12,7 +12,8 @@ export interface SaleInput {
   items: SaleLineInput[];
   discountPercent?: number;
   discountAmount?: number;
-  receivedAmount?: number;
+  // Required: every sale collects something upfront, so this is never 0.
+  receivedAmount: number;
 }
 
 export interface FetchSalesPageParams {
