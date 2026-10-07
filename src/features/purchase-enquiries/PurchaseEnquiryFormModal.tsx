@@ -30,10 +30,15 @@ export function PurchaseEnquiryFormModal({
   isOpen,
   onClose,
   enquiry,
+  initialValues,
 }: {
   isOpen: boolean;
   onClose: () => void;
   enquiry?: PurchaseEnquiry | null;
+  // Partial defaults for create mode only — e.g. carried over from a
+  // converted Enquiry, which only ever captures a subset of this form (no
+  // vendor, since a customer enquiry has no vendor to carry over).
+  initialValues?: Partial<FormValues>;
 }) {
   const isEditing = !!enquiry;
   const { data: vendors } = useVendors();
@@ -61,18 +66,32 @@ export function PurchaseEnquiryFormModal({
   useEffect(() => {
     if (isOpen) {
       setSubmitError(null);
-      reset({
-        vendorId: enquiry?.vendorId ?? '',
-        subcategoryId: enquiry?.subcategoryId ?? '',
-        metalType: enquiry?.metalType ?? '',
-        grossWeight: enquiry?.grossWeight ?? 0,
-        diamondShape: enquiry?.diamondShape ?? '',
-        diamondQuality: enquiry?.diamondQuality ?? '',
-        diamondPieces: enquiry?.diamondPieces ?? undefined,
-        diamondCaratWeight: enquiry?.diamondCaratWeight ?? undefined,
-      });
+      reset(
+        enquiry
+          ? {
+              vendorId: enquiry.vendorId,
+              subcategoryId: enquiry.subcategoryId ?? '',
+              metalType: enquiry.metalType,
+              grossWeight: enquiry.grossWeight,
+              diamondShape: enquiry.diamondShape ?? '',
+              diamondQuality: enquiry.diamondQuality ?? '',
+              diamondPieces: enquiry.diamondPieces ?? undefined,
+              diamondCaratWeight: enquiry.diamondCaratWeight ?? undefined,
+            }
+          : {
+              vendorId: '',
+              subcategoryId: '',
+              metalType: '',
+              grossWeight: 0,
+              diamondShape: '',
+              diamondQuality: '',
+              diamondPieces: undefined,
+              diamondCaratWeight: undefined,
+              ...initialValues,
+            },
+      );
     }
-  }, [isOpen, enquiry, reset]);
+  }, [isOpen, enquiry, initialValues, reset]);
 
   const onSubmit = async (values: FormOutput) => {
     setSubmitError(null);

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRightCircle, Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   Button,
   Card,
@@ -21,6 +22,7 @@ import { EnquiryFormModal } from './EnquiryFormModal';
 import type { Enquiry } from '@/types';
 
 export function EnquiriesListPage() {
+  const navigate = useNavigate();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
@@ -46,6 +48,22 @@ export function EnquiriesListPage() {
   const openEdit = (enquiry: Enquiry) => {
     setEditingEnquiry(enquiry);
     setFormOpen(true);
+  };
+
+  const convertToPurchaseOrder = (enquiry: Enquiry) => {
+    navigate('/purchase-enquiries', {
+      state: {
+        prefill: {
+          subcategoryId: enquiry.subcategoryId ?? undefined,
+          metalType: enquiry.metalType,
+          grossWeight: enquiry.grossWeight,
+          diamondShape: enquiry.diamondShape ?? undefined,
+          diamondQuality: enquiry.diamondQuality ?? undefined,
+          diamondPieces: enquiry.diamondPieces ?? undefined,
+          diamondCaratWeight: enquiry.diamondCaratWeight ?? undefined,
+        },
+      },
+    });
   };
 
   const columns: Column<Enquiry>[] = [
@@ -99,6 +117,16 @@ export function EnquiriesListPage() {
       align: 'right',
       render: (e) => (
         <div className="flex justify-end gap-1">
+          <IconButton
+            label="Convert to purchase order"
+            tone="brand"
+            onClick={(ev) => {
+              ev.stopPropagation();
+              convertToPurchaseOrder(e);
+            }}
+          >
+            <ArrowRightCircle className="h-4 w-4" strokeWidth={2} />
+          </IconButton>
           <IconButton
             label="Edit enquiry"
             tone="brand"

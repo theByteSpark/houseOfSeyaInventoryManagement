@@ -46,6 +46,7 @@ const SECTIONS: GuideSection[] = [
       'Add an enquiry against an existing or new customer.',
       'Optionally describe the metal, subcategory, and a single diamond (shape/quality/pcs/carat weight).',
       'Edit or delete any enquiry from the list.',
+      '"Convert to purchase order" jumps straight to Purchase Order with the subcategory and cost-sheet detail already filled in — you only pick a vendor, since a customer enquiry never has one.',
       'Nothing here is priced or automatic — someone builds the real product later if it goes ahead.',
     ],
   },
@@ -114,7 +115,7 @@ const SECTIONS: GuideSection[] = [
     icon: MessageCircleQuestion,
     summary: 'Note down what you\'re asking a vendor about, before you commit to an actual purchase.',
     points: [
-      'Add a purchase order against an existing or new vendor.',
+      'Add a purchase order against an existing or new vendor — or arrive here already filled in via an Enquiry\'s "Convert to purchase order".',
       'Optionally describe the metal, subcategory, and a single diamond (shape/quality/pcs/carat weight).',
       'Edit or delete any purchase order from the list.',
       '"Convert to purchase" jumps straight to Add Purchase with the vendor and cost-sheet detail already filled in — you only fill in what wasn\'t captured here (design number, name, rates, making charge, other cost, selling price).',

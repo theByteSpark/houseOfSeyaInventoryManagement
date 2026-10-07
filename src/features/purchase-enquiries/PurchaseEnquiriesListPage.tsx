@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRightCircle, Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   Button,
@@ -21,8 +21,21 @@ import { PurchaseEnquiryFormModal } from './PurchaseEnquiryFormModal';
 import type { PurchaseEnquiry } from '@/types';
 import { formatDate } from '@/lib/format';
 
+interface EnquiryPrefillState {
+  prefill?: {
+    subcategoryId?: string;
+    metalType?: string;
+    grossWeight?: number;
+    diamondShape?: string;
+    diamondQuality?: string;
+    diamondPieces?: number;
+    diamondCaratWeight?: number;
+  };
+}
+
 export function PurchaseEnquiriesListPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const query = useTableQuery({ defaultSortBy: 'createdAt' });
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
@@ -37,15 +50,34 @@ export function PurchaseEnquiriesListPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingEnquiry, setEditingEnquiry] = useState<PurchaseEnquiry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PurchaseEnquiry | null>(null);
+  const [productPrefill, setProductPrefill] = useState<EnquiryPrefillState['prefill']>(undefined);
 
   const enquiries = data?.data ?? [];
 
+  // Arrived here from an Enquiry's "Convert to purchase order" — open the
+  // form pre-filled with whatever the enquiry captured (no vendor, a
+  // customer enquiry never has one). Consumed once, then cleared so a
+  // refresh doesn't re-trigger it.
+  useEffect(() => {
+    const state = location.state as EnquiryPrefillState | null;
+    if (!state?.prefill) return;
+    setProductPrefill(state.prefill);
+    setEditingEnquiry(null);
+    setFormOpen(true);
+    navigate(location.pathname, { replace: true, state: null });
+    // Deliberately runs once on mount only — location/navigate are excluded
+    // since navigate() itself changes location and would otherwise re-fire.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const openCreate = () => {
+    setProductPrefill(undefined);
     setEditingEnquiry(null);
     setFormOpen(true);
   };
 
   const openEdit = (enquiry: PurchaseEnquiry) => {
+    setProductPrefill(undefined);
     setEditingEnquiry(enquiry);
     setFormOpen(true);
   };
@@ -196,7 +228,15 @@ export function PurchaseEnquiriesListPage() {
         )}
       </Card>
 
-      <PurchaseEnquiryFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} enquiry={editingEnquiry} />
+      <PurchaseEnquiryFormModal
+        isOpen={formOpen}
+        onClose={() => {
+          setFormOpen(false);
+          setProductPrefill(undefined);
+        }}
+        enquiry={editingEnquiry}
+        initialValues={editingEnquiry ? undefined : productPrefill}
+      />
 
       <ConfirmModal
         isOpen={!!deleteTarget}

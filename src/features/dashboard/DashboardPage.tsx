@@ -80,6 +80,22 @@ export function DashboardPage() {
     setPoModalOpen(true);
   };
 
+  const convertEnquiryToPurchaseOrder = (enquiry: Enquiry) => {
+    navigate('/purchase-enquiries', {
+      state: {
+        prefill: {
+          subcategoryId: enquiry.subcategoryId ?? undefined,
+          metalType: enquiry.metalType,
+          grossWeight: enquiry.grossWeight,
+          diamondShape: enquiry.diamondShape ?? undefined,
+          diamondQuality: enquiry.diamondQuality ?? undefined,
+          diamondPieces: enquiry.diamondPieces ?? undefined,
+          diamondCaratWeight: enquiry.diamondCaratWeight ?? undefined,
+        },
+      },
+    });
+  };
+
   const convertToPurchase = (enquiry: PurchaseEnquiry) => {
     navigate('/purchases/new', {
       state: {
@@ -124,13 +140,16 @@ export function DashboardPage() {
             <div className={LIST_HEIGHT}>
               <div className="divide-y divide-graphite-100">
                 {recentEnquiries.map((e) => (
-                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_100px_80px] items-center gap-3 px-4 py-2 text-xs sm:px-5">
+                  <div key={e.id} className="grid grid-cols-[1.2fr_1fr_100px_120px] items-center gap-3 px-4 py-2 text-xs sm:px-5">
                     <span className="truncate font-medium text-graphite-900">{e.customerName}</span>
                     <span className="truncate text-graphite-600">{e.subcategoryName ?? '—'}</span>
                     <span className="truncate text-right font-medium text-graphite-800">
                       {e.sellingAmount !== null ? formatCurrency(e.sellingAmount) : '—'}
                     </span>
                     <div className="flex justify-end gap-1">
+                      <IconButton label="Convert to purchase order" tone="brand" onClick={() => convertEnquiryToPurchaseOrder(e)}>
+                        <ArrowRightCircle className="h-4 w-4" strokeWidth={2} />
+                      </IconButton>
                       <IconButton label="Edit enquiry" tone="brand" onClick={() => openEditEnquiry(e)}>
                         <Pencil className="h-4 w-4" strokeWidth={2} />
                       </IconButton>
