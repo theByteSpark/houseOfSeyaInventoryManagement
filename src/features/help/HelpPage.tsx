@@ -56,8 +56,8 @@ const SECTIONS: GuideSection[] = [
     summary: 'Your full catalog — every design\'s cost sheet and status.',
     points: [
       'Add a product with its metal, diamond, and charge details — cost and price update live as you type.',
-      'Every product has a status: Ordered (created via a purchase, not yet received), Active (in stock, sellable), or Sold (a sale was issued for it). Status updates automatically as purchases are received and sales are issued.',
-      'Filter the list by subcategory.',
+      'Every product has a status: Ordered (added to a purchase that hasn\'t been received yet), Active (in stock, sellable), or Sold. Status updates automatically as purchases are received and sales are recorded.',
+      'Filter the list by subcategory or status.',
       'Import products in bulk from a spreadsheet using the template.',
     ],
   },

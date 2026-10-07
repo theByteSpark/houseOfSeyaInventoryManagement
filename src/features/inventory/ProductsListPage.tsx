@@ -56,8 +56,7 @@ export function ProductsListPage() {
   const deleteProduct = useDeleteProduct();
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
 
-  // The server filters by status; re-checking here keeps the list correct even against an API that ignores the param.
-  const products = (data?.data ?? []).filter((p) => statusFilter === 'ALL' || p.status === statusFilter);
+  const products = data?.data ?? [];
 
   const handleSubcategoryChange = (value: string) => {
     setSubcategoryId(value);
