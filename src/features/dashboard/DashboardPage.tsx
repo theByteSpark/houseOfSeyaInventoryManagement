@@ -243,7 +243,7 @@ export function DashboardPage() {
                     <span className="truncate font-medium text-graphite-900">{p.vendorName}</span>
                     <span className="truncate text-right font-medium text-graphite-800">{formatCurrency(p.total)}</span>
                     <div className="flex justify-end gap-1">
-                      {p.status === 'ORDERED' && (
+                      {(p.status === 'ORDERED' || p.status === 'RECEIVED') && (
                         <IconButton
                           label="Edit purchase"
                           tone="brand"

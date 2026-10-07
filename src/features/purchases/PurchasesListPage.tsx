@@ -87,7 +87,7 @@ export function PurchasesListPage() {
       align: 'right',
       render: (p) => (
         <div className="flex justify-end gap-1">
-          {p.status === 'ORDERED' && (
+          {(p.status === 'ORDERED' || p.status === 'RECEIVED') && (
             <IconButton
               label="Edit purchase"
               tone="brand"

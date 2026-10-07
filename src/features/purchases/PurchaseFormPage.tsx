@@ -68,8 +68,8 @@ export function PurchaseFormPage() {
 
   useEffect(() => {
     if (!isEdit || !existingPurchase || initialized) return;
-    if (existingPurchase.status !== 'ORDERED') {
-      setError('Only ordered purchases can be edited.');
+    if (existingPurchase.status === 'CANCELLED') {
+      setError('A cancelled purchase cannot be edited.');
       return;
     }
     setVendorId(existingPurchase.vendorId);
@@ -307,7 +307,7 @@ export function PurchaseFormPage() {
                 {isEdit ? 'Save changes' : 'Create purchase'}
               </Button>
               <p className="mt-2 text-center text-xs text-graphite-400">
-                Stock is only updated when items are received.
+                Stock is updated immediately — a purchase is received as soon as it's created.
               </p>
             </CardBody>
           </Card>

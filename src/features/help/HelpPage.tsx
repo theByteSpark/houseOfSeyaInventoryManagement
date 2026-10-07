@@ -96,9 +96,9 @@ const SECTIONS: GuideSection[] = [
     icon: ClipboardList,
     summary: 'Order new designs from a vendor — this is how a new design enters your catalog.',
     points: [
-      'Add a purchase and define the new product\'s cost sheet right there — it\'s placed as Ordered immediately.',
-      'Edit an Ordered purchase, or mark it Received in one step once everything arrives.',
-      'Admins can cancel an Ordered or Received purchase. Cancelling a Received purchase deletes the product it created from Inventory entirely — blocked if that product has already been sold.',
+      'Add a purchase and define the new product\'s cost sheet right there — it\'s placed straight on Received and stock updates immediately, since the item has already arrived by the time it\'s entered.',
+      'Edit a Received purchase any time to fix a mistaken entry — removing a line deletes that product from Inventory (blocked if it\'s already been sold), adding one receives it right away too.',
+      'Admins can cancel a Received purchase. Cancelling deletes every product it created from Inventory entirely — blocked if any of them has already been sold.',
     ],
   },
   {

@@ -174,7 +174,7 @@ export function PurchaseDetailPage() {
           <Card>
             <CardHeader title="Actions" />
             <CardBody className="flex flex-col gap-2">
-              {purchase.status === 'ORDERED' && (
+              {(purchase.status === 'ORDERED' || purchase.status === 'RECEIVED') && (
                 <Button
                   variant="secondary"
                   onClick={() => navigate(`/purchases/${purchase.id}/edit`)}
@@ -201,9 +201,6 @@ export function PurchaseDetailPage() {
                 >
                   Cancel purchase
                 </Button>
-              )}
-              {purchase.status === 'RECEIVED' && !canCancel && (
-                <p className="text-sm text-graphite-400">All items received. No further actions available.</p>
               )}
               {purchase.status === 'CANCELLED' && (
                 <p className="text-sm text-graphite-400">This purchase has been cancelled.</p>
