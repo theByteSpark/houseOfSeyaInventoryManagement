@@ -130,7 +130,6 @@ function SalesReportTab() {
         status={status} setStatus={setStatus}
         statusOptions={[
           { value: 'ALL', label: 'All statuses' },
-          { value: 'SOLD', label: 'Sold' },
           { value: 'PARTIALLY_PAID', label: 'Partially paid' },
           { value: 'PAID', label: 'Paid' },
           { value: 'CANCELLED', label: 'Cancelled' },

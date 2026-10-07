@@ -175,7 +175,6 @@ export function SalesListPage() {
           onChange={(e) => handleStatusFilterChange(e.target.value as SaleStatus | 'ALL')}
         >
           <option value="ALL">All statuses</option>
-          <option value="SOLD">Sold</option>
           <option value="PARTIALLY_PAID">Partially paid</option>
           <option value="PAID">Paid</option>
           <option value="CANCELLED">Cancelled</option>
