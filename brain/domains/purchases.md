@@ -3,6 +3,8 @@
 > **Purpose:** The screens, DTO shapes, and state-machine UI rules for purchases and vendors — what this app expects the backend to return and enforce.
 >
 > **Related docs:** Backend's `brain/domains/purchases-and-vendors.md` (the state machine and receiving rules behind this) · feature: `src/features/purchases/`, `src/features/vendors/`
+>
+> **Drift note:** this whole doc describes the old `DRAFT → ORDERED → PARTIALLY_RECEIVED → RECEIVED` lifecycle, which no longer exists — `PurchaseStatus` is now `'ORDERED' | 'RECEIVED' | 'CANCELLED'`, a purchase commits immediately to `ORDERED` with every item already received (stock/status updated at creation), receiving is one atomic "Mark as received" action (no partial quantities, no separate Receive Items modal), and Edit/Cancel work on `ORDERED`/`RECEIVED` (admin-only for Cancel, which deletes the product(s) from Inventory if cancelling a `RECEIVED` purchase). Needs a full rewrite, not a patch — not done here, out of scope for the change that added this note.
 
 ---
 

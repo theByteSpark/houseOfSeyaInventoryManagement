@@ -3,6 +3,8 @@
 > **Purpose:** The screens, DTO shapes, and state-machine UI rules for sales — what this app expects the backend to return and enforce.
 >
 > **Related docs:** Backend's `brain/domains/sales-and-invoicing.md` (the state machine and stock-deduction rules behind this) · feature: `src/features/sales/`
+>
+> **Drift note:** this whole doc describes the old `DRAFT → ISSUED → PAID` lifecycle, which no longer exists — `SaleStatus` is now `'SOLD' | 'PAID' | 'CANCELLED'` with `'PARTIALLY_PAID'` as a derived display-only label (`saleStatus.ts`'s `withEffectiveStatus`), a sale commits immediately (no Draft), `receivedAmount` is required (> 0, no zero-deposit sales), Edit/Cancel work on `SOLD`/`PAID` (admin-only for Cancel), a product can be sold while still `Ordered` (backorder billing), and the invoice PDF is a Credit Note until `PAID`. Needs a full rewrite, not a patch — not done here, out of scope for the change that added this note.
 
 ---
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Input, Modal, SearchableCombobox, Select } from '@/components/ui';
+import { Button, Input, Modal, SearchableCombobox, Select, Textarea } from '@/components/ui';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { useCustomers } from '@/features/customers/hooks';
 import { CustomerFormModal } from '@/features/customers/CustomerFormModal';
@@ -22,6 +22,7 @@ const schema = z.object({
   diamondPieces: z.coerce.number().int().positive('Must be > 0').optional(),
   diamondCaratWeight: z.coerce.number().positive('Must be > 0').optional(),
   sellingAmount: z.coerce.number().positive('Must be greater than 0'),
+  notes: z.string().optional(),
 });
 
 type FormValues = z.input<typeof schema>;
@@ -72,6 +73,7 @@ export function EnquiryFormModal({
         diamondPieces: enquiry?.diamondPieces ?? undefined,
         diamondCaratWeight: enquiry?.diamondCaratWeight ?? undefined,
         sellingAmount: enquiry?.sellingAmount ?? 0,
+        notes: enquiry?.notes ?? '',
       });
     }
   }, [isOpen, enquiry, reset]);
@@ -200,6 +202,13 @@ export function EnquiryFormModal({
             />
           </div>
         </div>
+
+        <Textarea
+          label="Notes"
+          placeholder="Anything the client said about this custom order…"
+          error={errors.notes?.message}
+          {...register('notes')}
+        />
 
         {submitError && <p className="text-sm text-red-600">{submitError}</p>}
       </form>

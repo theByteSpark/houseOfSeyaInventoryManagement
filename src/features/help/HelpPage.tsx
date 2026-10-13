@@ -43,11 +43,11 @@ const SECTIONS: GuideSection[] = [
     icon: MessageCircleQuestion,
     summary: 'Note down what a customer is asking about, before it becomes a real product or sale.',
     points: [
-      'Add an enquiry against an existing or new customer.',
-      'Optionally describe the metal, subcategory, and a single diamond (shape/quality/pcs/carat weight).',
-      'Edit or delete any enquiry from the list.',
+      'Add an enquiry against an existing or new customer, with the expected selling amount.',
+      'Optionally describe the metal, subcategory, a single diamond (shape/quality/pcs/carat weight), and any notes — anything the client said about a custom order that doesn\'t fit the fields above.',
+      'Edit or delete any enquiry from the list (delete is admin-only).',
       '"Convert to purchase order" jumps straight to Purchase Order with the subcategory and cost-sheet detail already filled in — you only pick a vendor, since a customer enquiry never has one.',
-      'Nothing here is priced or automatic — someone builds the real product later if it goes ahead.',
+      'No real product or sale is created automatically — someone builds the costed product by hand later if the enquiry goes ahead.',
     ],
   },
   {

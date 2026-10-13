@@ -1,8 +1,8 @@
 # Domain: Enquiries
 
-> **Purpose:** The screens and DTO shape for recording customer interest — deliberately the lightest-weight form in this app, with no pricing at all.
+> **Purpose:** The screens and DTO shape for recording customer interest — the lightest-weight form in this app, with almost no pricing.
 >
-> **Related docs:** Backend's `brain/domains/enquiries.md` (why there's no pricing, no status yet) · `domains/inventory.md` (the costed sibling — `Product`) · feature: `src/features/enquiries/`
+> **Related docs:** Backend's `brain/domains/enquiries.md` (field-by-field why) · `domains/inventory.md` (the costed sibling — `Product`) · feature: `src/features/enquiries/`
 
 ---
 
@@ -10,10 +10,11 @@
 
 | Component | Route | Purpose |
 |---|---|---|
-| `EnquiriesListPage` | `/enquiries` | Paginated table, search by customer/subcategory/metal, sortable |
-| `EnquiryFormModal` | (modal, `size="xl"`) | Create/edit — opened from `EnquiriesListPage`'s "Add enquiry" **and** `DashboardPage`'s "Add enquiry" button in its `PageHeader` action slot |
+| `EnquiriesListPage` | `/enquiries` | Paginated table — Customer, Subcategory, Metal, Gr.Wt, Diamond, Selling amount, Recorded, Actions — search by customer/subcategory/metal, sortable |
+| `EnquiryFormModal` | (modal, `size="xl"`) | Create/edit — opened from `EnquiriesListPage`'s "Add enquiry", `DashboardPage`'s Enquiries card (its own Add/Edit icons), and the row-level Edit icon on both |
+| `DashboardPage`'s Enquiries card | `/` | Up to the last 10 enquiries, same columns as the list page minus Diamond, plus Edit/Delete/Convert-to-Purchase-Order icons per row |
 
-Unlike `ProductFormPage`/`AddPurchaseProductModal`, this stayed a modal rather than a full page — see `../architecture/feature-conventions.md`'s Modal-vs-Page note: one short section plus a repeatable diamond list with **no computation** doesn't cross the complexity threshold a full page exists for.
+Unlike `ProductFormPage`/`AddPurchaseProductModal`, this stayed a modal rather than a full page — see `../architecture/feature-conventions.md`'s Modal-vs-Page note: one short section with **no computation** doesn't cross the complexity threshold a full page exists for.
 
 ## The Customer Field Is a `Controller`, Not a Plain `useState`
 
@@ -34,16 +35,19 @@ Unlike `ProductFormPage`/`AddPurchaseProductModal`, this stayed a modal rather t
 ## DTO Shape Consumed
 
 ```ts
-interface EnquiryDiamond { id?: string; shape: string; quality: string; pieces: number; caratWeight: number; }
 interface Enquiry {
   id: string; customerId: string; customerName: string;
   subcategoryId: string | null; subcategoryName: string | null;
   categoryId: string | null; categoryName: string | null;
-  metalType: string; grossWeight: number; diamonds: EnquiryDiamond[]; createdAt: string;
+  metalType: string; grossWeight: number;
+  diamondShape: string | null; diamondQuality: string | null;
+  diamondPieces: number | null; diamondCaratWeight: number | null;
+  sellingAmount: number | null; notes: string | null;
+  createdAt: string;
 }
 ```
 
-No `amount`, no `rate`, no `weight` on the diamond rows, no cost/tax/final-amount anywhere on `Enquiry` itself — confirm against the backend's `brain/domains/enquiries.md` before assuming any of `Product`'s costing fields apply here; they deliberately don't.
+One flat diamond block directly on `Enquiry` (not a repeatable `diamonds[]` — that was an earlier shape, flattened in migration `20260930080000_flatten_enquiry_diamond`, same reasoning as `Product`'s own diamond flatten). `sellingAmount` is the one priced field — required by the form's Zod schema even though nullable in the DB (pre-existing rows). `notes` is free text for anything about a custom order that doesn't fit the structured fields. Still no `rate`/`weight`/cost/tax/final-amount anywhere — confirm against the backend's `brain/domains/enquiries.md` before assuming any of `Product`'s costing fields apply here; they deliberately don't.
 
 ## API Calls (`src/features/enquiries/api.ts`)
 
@@ -51,8 +55,13 @@ No `amount`, no `rate`, no `weight` on the diamond rows, no cost/tax/final-amoun
 |---|---|
 | `fetchEnquiries()` / `fetchEnquiriesPage(params)` | `GET /enquiries` |
 | `fetchEnquiry(id)` | `GET /enquiries/:id` |
-| `createEnquiry(input)` / `updateEnquiry(id, input)` / `deleteEnquiry(id)` | `POST` / `PATCH` / `DELETE /enquiries/:id` — `input.diamonds` is the full replacement list, same as `Product`'s diamonds |
+| `createEnquiry(input)` / `updateEnquiry(id, input)` | `POST` / `PATCH /enquiries/:id` |
+| `deleteEnquiry(id)` | `DELETE /enquiries/:id` — admin-only (`isAdmin` gate on the Delete icon in both `EnquiriesListPage` and `DashboardPage`, enforced again server-side) |
+
+## Convert to Purchase Order
+
+`EnquiriesListPage` and `DashboardPage` both have a "Convert to Purchase Order" icon per row (`convertToPurchaseOrder()`): `navigate('/purchase-enquiries', { state: { prefill: {...} } })` carrying `subcategoryId`/`metalType`/`grossWeight`/`diamondShape`/`diamondQuality`/`diamondPieces`/`diamondCaratWeight` — **not** `sellingAmount` or `notes`, since `PurchaseEnquiry` has neither field. `PurchaseEnquiriesListPage` reads `location.state.prefill` on mount and pre-opens `PurchaseEnquiryFormModal` with it via its `initialValues` prop, then clears the state (`navigate(..., { replace: true, state: null })`) so a refresh doesn't re-trigger it. No vendor is carried over — a customer enquiry never has one, so the vendor field starts empty. This is a pure client-side form-to-form handoff; nothing is persisted linking the two records (mirrors the identical `PurchaseEnquiry → Purchase` "Convert to purchase" pattern already in `domains/purchases.md`).
 
 ## Not Built Yet (On Purpose)
 
-No status/lifecycle, no "convert to product" action, no link from an `Enquiry` to the `Product` it might become — the request that created this domain only described the input fields, not a workflow. See the backend doc's "Extending This Domain" before adding any of these speculatively.
+No status/lifecycle, no stored link from an `Enquiry` to the `Product`/`PurchaseEnquiry` it might become beyond the one-shot form prefill above — the request that created this domain only described the input fields, not a persisted workflow. See the backend doc's "Extending This Domain" before adding any of these speculatively.

@@ -211,6 +211,7 @@ export interface Enquiry {
   diamondPieces: number | null;
   diamondCaratWeight: number | null;
   sellingAmount: number | null;
+  notes: string | null;
   createdAt: string;
 }
 
