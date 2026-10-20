@@ -46,6 +46,7 @@ const SECTIONS: GuideSection[] = [
       'Add an enquiry against an existing or new customer, with the expected selling amount.',
       'Optionally describe the metal, subcategory, a single diamond (shape/quality/pcs/carat weight), and any notes — anything the client said about a custom order that doesn\'t fit the fields above.',
       'Edit or delete any enquiry from the list (delete is admin-only).',
+      'Download the enquiry as an Estimate PDF any time — the same letterhead as a sale\'s invoice, with the customer and item details entered on the form.',
       '"Convert to purchase order" jumps straight to Purchase Order with the subcategory and cost-sheet detail already filled in — you only pick a vendor, since a customer enquiry never has one.',
       'No real product or sale is created automatically — someone builds the costed product by hand later if the enquiry goes ahead.',
     ],

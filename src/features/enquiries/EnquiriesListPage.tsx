@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRightCircle, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowRightCircle, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   Button,
   Card,
@@ -19,6 +19,7 @@ import { formatCurrency, formatDate } from '@/lib/format';
 import { useAuth } from '@/features/auth/useAuth';
 import { useDeleteEnquiry, useEnquiriesPage } from './hooks';
 import { EnquiryFormModal } from './EnquiryFormModal';
+import { EstimatePdfModal } from './EstimatePdfModal';
 import type { Enquiry } from '@/types';
 
 export function EnquiriesListPage() {
@@ -37,6 +38,7 @@ export function EnquiriesListPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingEnquiry, setEditingEnquiry] = useState<Enquiry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Enquiry | null>(null);
+  const [estimateTarget, setEstimateTarget] = useState<Enquiry | null>(null);
 
   const enquiries = data?.data ?? [];
 
@@ -117,6 +119,16 @@ export function EnquiriesListPage() {
       align: 'right',
       render: (e) => (
         <div className="flex justify-end gap-1">
+          <IconButton
+            label="Download estimate"
+            tone="brand"
+            onClick={(ev) => {
+              ev.stopPropagation();
+              setEstimateTarget(e);
+            }}
+          >
+            <FileText className="h-4 w-4" strokeWidth={2} />
+          </IconButton>
           <IconButton
             label="Convert to purchase order"
             tone="brand"
@@ -202,6 +214,8 @@ export function EnquiriesListPage() {
       </Card>
 
       <EnquiryFormModal isOpen={formOpen} onClose={() => setFormOpen(false)} enquiry={editingEnquiry} />
+
+      {estimateTarget && <EstimatePdfModal enquiry={estimateTarget} onClose={() => setEstimateTarget(null)} />}
 
       <ConfirmModal
         isOpen={!!deleteTarget}
