@@ -60,6 +60,10 @@ export async function cancelSale(id: string): Promise<Sale> {
   return data;
 }
 
+export async function deleteSale(id: string): Promise<void> {
+  await apiClient.delete(`/sales/${id}`);
+}
+
 export async function fetchInvoicePdfBlob(id: string): Promise<Blob> {
   const { data } = await apiClient.get(`/sales/${id}/invoice-pdf`, { responseType: 'blob' });
   return data;

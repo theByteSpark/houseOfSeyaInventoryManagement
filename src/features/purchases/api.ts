@@ -57,3 +57,7 @@ export async function cancelPurchase(id: string): Promise<Purchase> {
   const { data } = await apiClient.patch<Purchase>(`/purchases/${id}/cancel`);
   return data;
 }
+
+export async function deletePurchase(id: string): Promise<void> {
+  await apiClient.delete(`/purchases/${id}`);
+}

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ClipboardCheck, Pencil, Plus, Upload, XCircle } from 'lucide-react';
+import { ClipboardCheck, Pencil, Plus, Trash2, Upload, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency, formatDate } from '@/lib/format';
 import {
   Button,
   Card,
+  ConfirmModal,
   CsvImportModal,
   EmptyState,
   FullPageSpinner,
@@ -20,7 +21,7 @@ import {
 } from '@/components/ui';
 import { useTableQuery } from '@/lib/useTableQuery';
 import { importPurchasesCsv } from '@/features/import-export/api';
-import { purchaseKeys, useCancelPurchase, useReceivePurchase, usePurchasesPage } from './hooks';
+import { purchaseKeys, useCancelPurchase, useDeletePurchase, useReceivePurchase, usePurchasesPage } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { useAuth } from '@/features/auth/useAuth';
 import type { Purchase, PurchaseStatus } from '@/types';
@@ -41,7 +42,9 @@ export function PurchasesListPage() {
   const navigate = useNavigate();
   const receivePurchase = useReceivePurchase();
   const cancelPurchase = useCancelPurchase();
+  const deletePurchase = useDeletePurchase();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Purchase | null>(null);
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
@@ -131,6 +134,19 @@ export function PurchasesListPage() {
               <XCircle className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
+          {isAdmin && (
+            <IconButton
+              label="Delete purchase"
+              tone="danger"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActionError(null);
+                setDeleteTarget(p);
+              }}
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+          )}
         </div>
       ),
     },
@@ -218,6 +234,28 @@ export function PurchasesListPage() {
         onUpload={importPurchasesCsv}
         onImported={() => queryClient.invalidateQueries({ queryKey: purchaseKeys.all })}
         rowLabel={(r) => String(r.purchaseNumber ?? r.row)}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          deletePurchase.mutate(deleteTarget.id, {
+            onSuccess: () => setDeleteTarget(null),
+            onError: (err) => setActionError(extractErrorMessage(err, 'Could not delete purchase.')),
+          });
+        }}
+        title="Delete purchase"
+        description={
+          <>
+            Are you sure you want to permanently delete purchase <strong>{deleteTarget?.purchaseNumber}</strong>? This
+            removes the record and the products it created from Inventory entirely (not just a cancel) and cannot be
+            undone. Blocked if any of its products have already been sold.
+          </>
+        }
+        confirmLabel="Delete"
+        isLoading={deletePurchase.isPending}
       />
     </div>
   );

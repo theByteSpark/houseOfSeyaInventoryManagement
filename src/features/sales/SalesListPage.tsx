@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Banknote, FileText, Pencil, Plus, Upload, XCircle } from 'lucide-react';
+import { Banknote, FileText, Pencil, Plus, Trash2, Upload, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import {
   Button,
   Card,
+  ConfirmModal,
   CsvImportModal,
   EmptyState,
   FullPageSpinner,
@@ -21,7 +22,7 @@ import { useTableQuery } from '@/lib/useTableQuery';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { useAuth } from '@/features/auth/useAuth';
 import { importSalesCsv } from '@/features/import-export/api';
-import { saleKeys, useCancelSale, useMarkSalePaid, useSalesPage } from './hooks';
+import { saleKeys, useCancelSale, useDeleteSale, useMarkSalePaid, useSalesPage } from './hooks';
 import { SaleStatusBadge } from './statusBadge';
 import { InvoicePdfModal } from './InvoicePdfModal';
 import type { Sale, SaleStatus } from '@/types';
@@ -42,10 +43,12 @@ export function SalesListPage() {
   const navigate = useNavigate();
   const markSalePaid = useMarkSalePaid();
   const cancelSale = useCancelSale();
+  const deleteSale = useDeleteSale();
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
   const [actionError, setActionError] = useState<string | null>(null);
   const [pdfSale, setPdfSale] = useState<Sale | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Sale | null>(null);
 
   const sales = data?.data ?? [];
 
@@ -130,6 +133,19 @@ export function SalesListPage() {
               }}
             >
               <FileText className="h-4 w-4" strokeWidth={2} />
+            </IconButton>
+          )}
+          {isAdmin && (
+            <IconButton
+              label="Delete sale"
+              tone="danger"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActionError(null);
+                setDeleteTarget(sale);
+              }}
+            >
+              <Trash2 className="h-4 w-4" strokeWidth={2} />
             </IconButton>
           )}
         </div>
@@ -223,6 +239,27 @@ export function SalesListPage() {
         onUpload={importSalesCsv}
         onImported={() => queryClient.invalidateQueries({ queryKey: saleKeys.all })}
         rowLabel={(r) => String(r.saleNumber ?? r.row)}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          deleteSale.mutate(deleteTarget.id, {
+            onSuccess: () => setDeleteTarget(null),
+            onError: (err) => setActionError(extractErrorMessage(err, 'Could not delete sale.')),
+          });
+        }}
+        title="Delete sale"
+        description={
+          <>
+            Are you sure you want to permanently delete sale <strong>{deleteTarget?.saleNumber}</strong>? This removes the
+            record entirely (not just a cancel) and cannot be undone.
+          </>
+        }
+        confirmLabel="Delete"
+        isLoading={deleteSale.isPending}
       />
     </div>
   );

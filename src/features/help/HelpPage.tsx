@@ -83,6 +83,7 @@ const SECTIONS: GuideSection[] = [
       'A product can be billed even while it\'s still Ordered (on its way from a vendor, not yet received) — useful for a backorder sale, paid as an advance. The product is marked Sold right away; when its purchase is later received it stays Sold instead of becoming available again.',
       'Status follows the money received: Partially paid (balance still due) or Paid (settled in full). Edit a sale any time to record more payment, or use Mark as paid to settle the balance.',
       'Admins can cancel a sale at any payment stage if the deal falls through — the item returns to stock (or back to Ordered, if it was never actually received in the first place).',
+      'Admins can also permanently delete a sale (any status, including Cancelled) — unlike Cancel, this removes the record entirely and cannot be undone. Use it to clean up a mistaken or test entry, not to unwind a real sale.',
       'Download the sale\'s PDF any time — it\'s a Credit Note until the balance is fully settled, then becomes the Tax Invoice once Paid.',
     ],
   },
@@ -102,6 +103,7 @@ const SECTIONS: GuideSection[] = [
       'Add a purchase and define the new product\'s cost sheet right there — it\'s placed straight on Received and stock updates immediately, since the item has already arrived by the time it\'s entered.',
       'Edit a Received purchase any time to fix a mistaken entry — removing a line deletes that product from Inventory (blocked if it\'s already been sold), adding one receives it right away too.',
       'Admins can cancel a Received purchase. Cancelling deletes every product it created from Inventory entirely — blocked if any of them has already been sold.',
+      'Admins can also permanently delete a purchase (any status) — unlike Cancel, this removes the record entirely and cannot be undone, and still removes the products it created from Inventory (blocked if any have already been sold). Use it to clean up a mistaken or test entry.',
     ],
   },
   {

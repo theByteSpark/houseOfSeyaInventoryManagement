@@ -79,3 +79,14 @@ export function useCancelPurchase() {
     },
   });
 }
+
+// Hard delete (admin-only) — removes the row entirely instead of marking it
+// CANCELLED, and removes the one-of-a-kind products it created from
+// Inventory too, so the product cache needs invalidating as well.
+export function useDeletePurchase() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.deletePurchase,
+    onSuccess: (_void, id) => invalidateAfterStockChange(queryClient, id),
+  });
+}

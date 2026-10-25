@@ -78,3 +78,14 @@ export function useCancelSale() {
     onSuccess: (sale) => invalidateAfterStockChange(queryClient, sale.id),
   });
 }
+
+// Hard delete (admin-only) — removes the row entirely instead of marking it
+// CANCELLED. Also reconciles stock server-side, same as cancel, so the
+// product cache needs invalidating too.
+export function useDeleteSale() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.deleteSale,
+    onSuccess: (_void, id) => invalidateAfterStockChange(queryClient, id),
+  });
+}

@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { PackageCheck, Pencil, XCircle } from 'lucide-react';
 import { extractErrorMessage } from '@/lib/apiClient';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/format';
-import { Badge, Button, Card, CardBody, CardHeader, FullPageSpinner, PageHeader } from '@/components/ui';
-import { useCancelPurchase, useReceivePurchase, usePurchase } from './hooks';
+import { Badge, Button, Card, CardBody, CardHeader, ConfirmModal, FullPageSpinner, PageHeader } from '@/components/ui';
+import { useCancelPurchase, useDeletePurchase, useReceivePurchase, usePurchase } from './hooks';
 import { PurchaseStatusBadge } from './statusBadge';
 import { useAuth } from '@/features/auth/useAuth';
 
@@ -14,7 +14,9 @@ export function PurchaseDetailPage() {
   const { data: purchase, isLoading } = usePurchase(id);
   const receivePurchase = useReceivePurchase();
   const cancelPurchase = useCancelPurchase();
+  const deletePurchase = useDeletePurchase();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
@@ -205,10 +207,37 @@ export function PurchaseDetailPage() {
               {purchase.status === 'CANCELLED' && (
                 <p className="text-sm text-graphite-400">This purchase has been cancelled.</p>
               )}
+              {isAdmin && (
+                <Button variant="danger" onClick={() => setDeleteOpen(true)} icon={<XCircle className="h-4 w-4" strokeWidth={2} />}>
+                  Delete purchase
+                </Button>
+              )}
             </CardBody>
           </Card>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => {
+          setActionError(null);
+          deletePurchase.mutate(purchase.id, {
+            onSuccess: () => navigate('/purchases'),
+            onError: (err) => setActionError(extractErrorMessage(err, 'Could not delete purchase.')),
+          });
+        }}
+        title="Delete purchase"
+        description={
+          <>
+            Are you sure you want to permanently delete purchase <strong>{purchase.purchaseNumber}</strong>? This removes
+            the record and the products it created from Inventory entirely (not just a cancel) and cannot be undone.
+            Blocked if any of its products have already been sold.
+          </>
+        }
+        confirmLabel="Delete"
+        isLoading={deletePurchase.isPending}
+      />
     </div>
   );
 }
