@@ -64,17 +64,20 @@ export function PurchasesListPage() {
     },
     { key: 'vendor', header: 'Vendor', sortField: 'vendor', render: (p) => p.vendorName },
     {
-      key: 'items',
-      header: 'Items',
-      render: (p) => (
-        <div className="flex flex-col gap-0.5">
-          {p.items.map((item) => (
-            <span key={item.id} className="truncate text-graphite-700">
-              {item.productName}
-            </span>
-          ))}
-        </div>
-      ),
+      key: 'totalItems',
+      header: 'Total items',
+      align: 'right',
+      render: (p) => p.items.reduce((sum, item) => sum + item.quantity, 0),
+    },
+    {
+      key: 'vendorInvoiceNumber',
+      header: 'Invoice #',
+      render: (p) => p.vendorInvoiceNumber ?? <span className="text-graphite-300">—</span>,
+    },
+    {
+      key: 'vendorInvoiceDate',
+      header: 'Invoice date',
+      render: (p) => (p.vendorInvoiceDate ? formatDate(p.vendorInvoiceDate) : <span className="text-graphite-300">—</span>),
     },
     { key: 'status', header: 'Status', sortField: 'status', render: (p) => <PurchaseStatusBadge status={p.status} /> },
     { key: 'total', header: 'Total', align: 'right', render: (p) => formatCurrency(p.total) },
