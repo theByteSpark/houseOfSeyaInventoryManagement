@@ -83,14 +83,16 @@ export function useRestockProduct() {
     mutationFn: ({
       id,
       quantity,
+      direction,
       reason,
       warehouseId,
     }: {
       id: string;
       quantity: number;
+      direction?: api.RestockDirection;
       reason?: string;
       warehouseId?: string;
-    }) => api.restockProduct(id, quantity, reason, warehouseId),
+    }) => api.restockProduct(id, quantity, direction, reason, warehouseId),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: productKeys.all });
       queryClient.invalidateQueries({ queryKey: productKeys.movements(variables.id) });

@@ -107,7 +107,7 @@ const SECTIONS: GuideSection[] = [
     summary: 'The product catalog and its stock levels at the currently-selected warehouse.',
     points: [
       '"Add inventory item" — name, category, description, starting stock quantity, and reorder level. A SKU is generated automatically from the name.',
-      'Stock quantity is only set once, at creation. To add more afterward, use "Restock" on that row — never edited directly.',
+      'Stock quantity is only set once, at creation. To change it afterward, use "Restock" on that row — never edited directly. Restock has an Action dropdown: Increase adds to stock, Decrease removes from it (blocked if you try to remove more than is currently in stock at that warehouse).',
       'A "Low" badge flags anything at or below its reorder level; the stock filter toggle shows only those.',
       '"Blocked" quantity — reserve a portion of a product’s stock against something without removing it from stock yet. Lock a quantity, edit it, confirm it (which finalizes the reservation), or delete it, all from that row’s actions.',
       '"Import" bulk adds or updates products from a CSV file, matched by product name.',

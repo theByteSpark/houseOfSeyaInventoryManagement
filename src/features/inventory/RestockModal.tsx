@@ -1,14 +1,16 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useEffect } from 'react';
-import { Button, Input, Modal } from '@/components/ui';
+import { useEffect, useState } from 'react';
+import { Button, Input, Modal, Select } from '@/components/ui';
+import { extractErrorMessage } from '@/lib/apiClient';
 import { useWarehouseContext } from '@/features/warehouses/WarehouseContext';
 import { useRestockProduct } from './hooks';
 import type { Product } from '@/types';
 
 const schema = z.object({
   quantity: z.coerce.number().int().positive('Enter a quantity greater than 0'),
+  direction: z.enum(['INCREASE', 'DECREASE']),
   reason: z.string().optional(),
 });
 
@@ -26,33 +28,43 @@ export function RestockModal({
 }) {
   const { selectedWarehouseId } = useWarehouseContext();
   const restock = useRestockProduct();
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues, unknown, FormOutput>({
     resolver: zodResolver(schema),
-    defaultValues: { quantity: 1, reason: '' },
+    defaultValues: { quantity: 1, direction: 'INCREASE', reason: '' },
   });
+  const direction = watch('direction');
 
   useEffect(() => {
     if (isOpen) {
-      reset({ quantity: 1, reason: '' });
+      setSubmitError(null);
+      reset({ quantity: 1, direction: 'INCREASE', reason: '' });
     }
   }, [isOpen, reset]);
 
   if (!product) return null;
 
   const onSubmit = async (values: FormOutput) => {
-    await restock.mutateAsync({
-      id: product.id,
-      quantity: values.quantity,
-      reason: values.reason,
-      warehouseId: selectedWarehouseId ?? undefined,
-    });
-    reset();
-    onClose();
+    setSubmitError(null);
+    try {
+      await restock.mutateAsync({
+        id: product.id,
+        quantity: values.quantity,
+        direction: values.direction,
+        reason: values.reason,
+        warehouseId: selectedWarehouseId ?? undefined,
+      });
+      reset();
+      onClose();
+    } catch (err) {
+      setSubmitError(extractErrorMessage(err, 'Could not update stock.'));
+    }
   };
 
   return (
@@ -66,7 +78,7 @@ export function RestockModal({
             Cancel
           </Button>
           <Button type="submit" form="restock-form" isLoading={isSubmitting}>
-            Add stock
+            {direction === 'DECREASE' ? 'Remove stock' : 'Add stock'}
           </Button>
         </>
       }
@@ -75,8 +87,19 @@ export function RestockModal({
         <p className="text-sm text-graphite-500">
           Current stock: <span className="font-medium text-graphite-800">{product.quantityInStock} kgs</span>
         </p>
-        <Input label="Quantity to add (kgs)" type="number" min="1" error={errors.quantity?.message} {...register('quantity')} />
+        <Select label="Action" error={errors.direction?.message} {...register('direction')}>
+          <option value="INCREASE">Increase</option>
+          <option value="DECREASE">Decrease</option>
+        </Select>
+        <Input
+          label={direction === 'DECREASE' ? 'Quantity to remove (kgs)' : 'Quantity to add (kgs)'}
+          type="number"
+          min="1"
+          error={errors.quantity?.message}
+          {...register('quantity')}
+        />
         <Input label="Reason (optional)" placeholder="e.g. Supplier delivery #4521" error={errors.reason?.message} {...register('reason')} />
+        {submitError && <p className="text-sm text-red-600">{submitError}</p>}
       </form>
     </Modal>
   );

@@ -63,14 +63,18 @@ export async function deleteProduct(id: string): Promise<void> {
   await apiClient.delete(`/inventory/products/${id}`);
 }
 
+export type RestockDirection = 'INCREASE' | 'DECREASE';
+
 export async function restockProduct(
   id: string,
   quantity: number,
+  direction: RestockDirection = 'INCREASE',
   reason?: string,
   warehouseId?: string,
 ): Promise<Product> {
   const { data } = await apiClient.post<Product>(`/inventory/products/${id}/restock`, {
     quantity,
+    direction,
     reason,
     warehouseId,
   });
