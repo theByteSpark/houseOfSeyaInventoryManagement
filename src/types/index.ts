@@ -114,10 +114,13 @@ export interface Sale {
   status: SaleStatus;
   items: SaleItem[];
   subtotal: number;
-  tax: number;
   discountPercent: number | null;
   discountAmount: number | null;
   discountValue: number;
+  // Taxable Value = subtotal - discountValue; tax is charged on top of this,
+  // and total (Grand Total / amount payable) = taxableValue + tax.
+  taxableValue: number;
+  tax: number;
   total: number;
   receivedAmount: number;
   balanceDue: number;

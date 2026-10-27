@@ -80,29 +80,6 @@ export function SaleDetailPage() {
                       Ordered — not yet received from the vendor.
                     </p>
                   )}
-
-                  <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-5">
-                    <div className="flex justify-between gap-2 sm:block">
-                      <dt className="text-graphite-500">Metal cost</dt>
-                      <dd className="text-graphite-800">{formatCurrency(item.product.metalCost)}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2 sm:block">
-                      <dt className="text-graphite-500">Diamond cost</dt>
-                      <dd className="text-graphite-800">{formatCurrency(item.product.diamondCost)}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2 sm:block">
-                      <dt className="text-graphite-500">Labour cost</dt>
-                      <dd className="text-graphite-800">{formatCurrency(item.product.labourCost)}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2 sm:block">
-                      <dt className="text-graphite-500">Other cost</dt>
-                      <dd className="text-graphite-800">{formatCurrency(item.product.fixedExpense)}</dd>
-                    </div>
-                    <div className="flex justify-between gap-2 sm:block">
-                      <dt className="text-graphite-500">Selling price</dt>
-                      <dd className="font-medium text-graphite-900">{formatCurrency(item.product.sellingPrice)}</dd>
-                    </div>
-                  </dl>
                 </div>
               ))}
             </CardBody>
@@ -118,10 +95,6 @@ export function SaleDetailPage() {
                   <dt className="text-graphite-500">Subtotal</dt>
                   <dd className="font-medium text-graphite-800">{formatCurrency(sale.subtotal)}</dd>
                 </div>
-                <div className="flex justify-between">
-                  <dt className="text-graphite-500">Collected tax (3%, included)</dt>
-                  <dd className="font-medium text-graphite-800">{formatCurrency(sale.tax)}</dd>
-                </div>
                 {sale.discountValue > 0 && (
                   <div className="flex justify-between">
                     <dt className="text-graphite-500">
@@ -130,8 +103,16 @@ export function SaleDetailPage() {
                     <dd className="font-medium text-graphite-800">-{formatCurrency(sale.discountValue)}</dd>
                   </div>
                 )}
+                <div className="flex justify-between">
+                  <dt className="text-graphite-500">Taxable value</dt>
+                  <dd className="font-medium text-graphite-800">{formatCurrency(sale.taxableValue)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-graphite-500">Tax (GST @ 3%)</dt>
+                  <dd className="font-medium text-graphite-800">{formatCurrency(sale.tax)}</dd>
+                </div>
                 <div className="mt-1 flex justify-between border-t border-graphite-100 pt-2 text-base">
-                  <dt className="font-semibold text-graphite-900">Total</dt>
+                  <dt className="font-semibold text-graphite-900">Total payable</dt>
                   <dd className="font-semibold text-graphite-900">{formatCurrency(sale.total)}</dd>
                 </div>
                 <div className="flex justify-between">

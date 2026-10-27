@@ -79,7 +79,8 @@ const SECTIONS: GuideSection[] = [
     icon: ShoppingCart,
     summary: 'A sale always collects something upfront, and stays editable from there.',
     points: [
-      'Add a sale for a customer with one or more products and the amount received — required, since every sale collects at least a full payment or a custom-order advance, never nothing. Stock is deducted right away.',
+      'Add a sale for a customer with one or more products and the amount received — required, since every sale collects at least a full payment or a custom-order advance, never nothing. Stock is deducted right away. Each line only shows the Selling price — not the internal cost-sheet breakdown.',
+      'The summary follows standard GST invoice order: Subtotal, Discount, Taxable value (subtotal minus discount), Tax (GST @ 3%, charged on the taxable value), then Total payable.',
       'A product can be billed even while it\'s still Ordered (on its way from a vendor, not yet received) — useful for a backorder sale, paid as an advance. The product is marked Sold right away; when its purchase is later received it stays Sold instead of becoming available again.',
       'Status follows the money received: Partially paid (balance still due) or Paid (settled in full). Edit a sale any time to record more payment, or use Mark as paid to settle the balance.',
       'Admins can cancel a sale at any payment stage if the deal falls through — the item returns to stock (or back to Ordered, if it was never actually received in the first place).',

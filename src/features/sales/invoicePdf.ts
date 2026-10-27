@@ -124,14 +124,18 @@ export async function buildSalePdf(sale: Sale, customer: Customer | undefined): 
     y += rowH;
   });
 
+  // Standard GST shape: Subtotal - Discount = Taxable Value; CGST/SGST are
+  // charged on top of the taxable value (never on the raw subtotal) to
+  // arrive at the total payable — matches sales.service.ts's computeSaleTotals.
   const halfTax = Math.round((sale.tax / 2) * 100) / 100;
   const rows: { label: string; value: string; bold?: boolean }[] = [
     { label: 'SUBTOTAL', value: money(sale.subtotal), bold: true },
-    { label: 'CGST @1.5% (incl.)', value: money(halfTax) },
-    { label: 'SGST @1.5% (incl.)', value: money(sale.tax - halfTax) },
   ];
   if (sale.discountValue > 0) rows.push({ label: 'DISCOUNT', value: `-${money(sale.discountValue)}` });
-  rows.push({ label: 'TOTAL', value: money(sale.total), bold: true });
+  rows.push({ label: 'TAXABLE VALUE', value: money(sale.taxableValue) });
+  rows.push({ label: 'CGST @1.5%', value: money(halfTax) });
+  rows.push({ label: 'SGST @1.5%', value: money(sale.tax - halfTax) });
+  rows.push({ label: 'TOTAL PAYABLE', value: money(sale.total), bold: true });
   if (!isPaid) {
     rows.push({ label: 'RECEIVED', value: money(sale.receivedAmount) });
     rows.push({ label: 'BALANCE DUE', value: money(Math.max(sale.balanceDue, 0)), bold: true });
