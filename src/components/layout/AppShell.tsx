@@ -111,7 +111,7 @@ function loadCollapsedGroups(): Record<string, boolean> {
   }
 }
 
-const WAREHOUSE_ORDER = ['prime bengaluru', 'hyderabad', 'mangalore', 'kalor', 'hubli', 'guntur'];
+const WAREHOUSE_ORDER = ['prime bengaluru', 'hyderabad', 'mangalore', 'kolar', 'hubli', 'guntur'];
 
 function sortWarehouses<T extends { name: string }>(warehouses: T[] | undefined): T[] | undefined {
   if (!warehouses) return warehouses;
