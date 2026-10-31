@@ -242,7 +242,14 @@ export interface InventoryReport {
   recentMovements: { id: string; productName: string; sku: string; type: StockMovementType; quantity: number; reason: string | null; createdAt: string }[];
 }
 
-export type NotificationType = 'LOW_STOCK' | 'PURCHASE_RECEIVED' | 'SALE_ISSUED' | 'SYSTEM';
+export type NotificationType =
+  | 'LOW_STOCK'
+  | 'PURCHASE_RECEIVED'
+  | 'SALE_ISSUED'
+  | 'SYSTEM'
+  | 'ACTIVITY_CREATE'
+  | 'ACTIVITY_UPDATE'
+  | 'ACTIVITY_DELETE';
 
 export interface AppNotification {
   id: string;

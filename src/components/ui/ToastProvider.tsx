@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { PackageX, ShoppingCart, ClipboardCheck, Info, X } from 'lucide-react';
+import { PackageX, ShoppingCart, ClipboardCheck, Info, PlusCircle, Pencil, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { NotificationType } from '@/types';
 
@@ -25,6 +25,9 @@ const typeIcon: Record<NotificationType, typeof Info> = {
   PURCHASE_RECEIVED: ClipboardCheck,
   SALE_ISSUED: ShoppingCart,
   SYSTEM: Info,
+  ACTIVITY_CREATE: PlusCircle,
+  ACTIVITY_UPDATE: Pencil,
+  ACTIVITY_DELETE: Trash2,
 };
 
 const typeTone: Record<NotificationType, string> = {
@@ -32,6 +35,9 @@ const typeTone: Record<NotificationType, string> = {
   PURCHASE_RECEIVED: 'text-emerald-600 bg-emerald-50',
   SALE_ISSUED: 'text-brand-600 bg-brand-50',
   SYSTEM: 'text-graphite-500 bg-graphite-100',
+  ACTIVITY_CREATE: 'text-green-600 bg-green-50',
+  ACTIVITY_UPDATE: 'text-blue-600 bg-blue-50',
+  ACTIVITY_DELETE: 'text-red-600 bg-red-50',
 };
 
 const TOAST_DURATION_MS = 6000;

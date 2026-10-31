@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, CheckCheck, PackageX, ShoppingCart, ClipboardCheck, Info } from 'lucide-react';
+import { Bell, CheckCheck, PackageX, ShoppingCart, ClipboardCheck, Info, PlusCircle, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import {
   useMarkAllNotificationsRead,
@@ -15,6 +15,11 @@ const typeIcon: Record<NotificationType, typeof Bell> = {
   PURCHASE_RECEIVED: ClipboardCheck,
   SALE_ISSUED: ShoppingCart,
   SYSTEM: Info,
+  // A Warehouse Manager created/edited/deleted something -- color-coded so
+  // Admin can tell which kind of action it was at a glance.
+  ACTIVITY_CREATE: PlusCircle,
+  ACTIVITY_UPDATE: Pencil,
+  ACTIVITY_DELETE: Trash2,
 };
 
 const typeTone: Record<NotificationType, string> = {
@@ -22,6 +27,9 @@ const typeTone: Record<NotificationType, string> = {
   PURCHASE_RECEIVED: 'text-emerald-600 bg-emerald-50',
   SALE_ISSUED: 'text-brand-600 bg-brand-50',
   SYSTEM: 'text-graphite-500 bg-graphite-100',
+  ACTIVITY_CREATE: 'text-green-600 bg-green-50',
+  ACTIVITY_UPDATE: 'text-blue-600 bg-blue-50',
+  ACTIVITY_DELETE: 'text-red-600 bg-red-50',
 };
 
 function timeAgo(iso: string): string {
