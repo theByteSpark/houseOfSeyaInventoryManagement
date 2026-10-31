@@ -290,10 +290,18 @@ export function AppShell() {
   const location = useLocation();
   const isFullWidthPage = location.pathname === '/';
   const { user, logout } = useAuth();
+  const isWarehouseManager = user?.role === 'USER';
   const isWarehouseAdmin = user?.role === 'ADMIN';
   const isCompanyLevel = user?.role === 'COMPANY_ADMIN' || user?.role === 'SUPER_ADMIN';
   const navGroups = [
-    ...baseNavGroups,
+    // Reports shows business conclusions (revenue, costs) a Warehouse
+    // Manager shouldn't see -- everything else they work with day to day
+    // (Dashboard, Help, and every other section) stays open.
+    ...baseNavGroups.map((group) =>
+      group.key === 'insights' && isWarehouseManager
+        ? { ...group, items: group.items.filter((item) => item.to !== '/reports') }
+        : group,
+    ),
     ...(isWarehouseAdmin || isCompanyLevel ? [adminNavGroup] : []),
     ...(isCompanyLevel ? [companyNavGroup] : []),
   ];

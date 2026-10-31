@@ -50,7 +50,14 @@ export function AppRoutes() {
         <Route path="/purchases/new" element={<PurchaseFormPage />} />
         <Route path="/purchases/:id/edit" element={<PurchaseFormPage />} />
         <Route path="/purchases/:id" element={<PurchaseDetailPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
+        <Route
+          path="/reports"
+          element={
+            <RequireRole roles={['ADMIN', 'COMPANY_ADMIN', 'SUPER_ADMIN']}>
+              <ReportsPage />
+            </RequireRole>
+          }
+        />
         <Route
           path="/users"
           element={

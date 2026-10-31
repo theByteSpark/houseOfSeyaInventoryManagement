@@ -51,6 +51,7 @@ const SECTIONS: GuideSection[] = [
     id: 'reports',
     title: 'Reports',
     icon: BarChart3,
+    warehouseAdminOnly: true,
     summary: 'Sales, Purchases, and Inventory performance, filterable by date range and status.',
     points: [
       'Sales tab — totals, a status breakdown, top-selling products, and the filtered sales list.',
@@ -139,6 +140,7 @@ const SECTIONS: GuideSection[] = [
     points: [
       'Add, edit, or delete accounts.',
       'Warehouse Manager and Warehouse Admin roles must be assigned to a specific warehouse; Admin and Super Admin are not tied to one.',
+      'Warehouse Admin, Admin, and Super Admin get a notification — color-coded by action — whenever a Warehouse Manager creates, edits, or deletes something. Warehouse Manager never sees these.',
     ],
   },
   {
